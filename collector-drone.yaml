@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: collector-drone
+    environment: prod
+    app.kubernetes.io/name: crossd
+    app.kubernetes.io/instance: crossd-alpha
+    app.kubernetes.io/version: "0.1"
+    # app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/component: collector-drone
+    app.kubernetes.io/part-of: crossd
+  name: collector-drone
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: collector-drone
+  strategy: {type: RollingUpdate}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: collector-drone
+        pod: collector-drone
+    spec:
+      restartPolicy: Always
+      securityContext:
+        runAsUser: 1337
+        runAsGroup: 1337
+      containers:
+      - image: localhost:32000/collector-drone
+        # args:
+        #     - sh
+        #     - -c
+        #     - ' docker-entrypoint.sh --appendonly "yes" '
+        # ports:
+        # - containerPort: 6379
+        imagePullPolicy: Always
+        name: collector-drone
+        resources: {}
+        securityContext:
+          allowPrivilegeEscalation: false
+        # volumeMounts:
+        #     - mountPath: /data
+        #       name: redis-pvc
+              # readOnly: true
+      # volumes:
+      #   - name: redis-pvc
+      #     persistentVolumeClaim:
+      #       claimName: redis-pvc
+            # readOnly: true
+status: {}

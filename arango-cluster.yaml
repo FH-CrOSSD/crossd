@@ -1,0 +1,14 @@
+apiVersion: "database.arangodb.com/v1"
+kind: "ArangoDeployment"
+metadata:
+  name: "cluster"
+spec:
+  mode: Cluster
+  dbservers:
+    count: 2 # 3
+  coordinators:
+    count: 2 # 3
+  agents:
+    count: 3 # 3
+  externalAccess:
+    type: None
