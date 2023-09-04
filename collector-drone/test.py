@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding=utf-8 -*-
 
-from mdi_thesis.base import *
+from mdi_thesis.base.base import *
 from arango import ArangoClient
 import time
 import requests
@@ -23,7 +23,9 @@ def main():
     # print(selected_repos.selected_repos_dict)
 
     # print(selected_repos.get_single_object(feature="issue_comments"))
-    health = selected_repos.get_repo_request(["community_health"])
+
+    # health = selected_repos.get_repo_request(["community_health"])
+    health = selected_repos.query_repository(["community_health"], {})
     print(health)
     # "forks" 1914 pages
     # .get("community_health")  # .get(191113739))

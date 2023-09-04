@@ -10,5 +10,6 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 100Mi
+      storage: 8Gi
+      # storage: 100Mi
 # status: {}

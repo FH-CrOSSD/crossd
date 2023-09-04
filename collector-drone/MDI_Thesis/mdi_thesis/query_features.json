@@ -93,14 +93,7 @@
                 "request_url_2": "/forks",
                 "request_url_3": "",
                 "feature_list": [
-                    "id",
-                    "name",
-                    "owner",
-                    "fork",
-                    "is_template",
-                    "pushed_at",
-                    "created_at"
-                ]
+                    "id"]
             }
         ],
         "pull_requests": [
@@ -133,6 +126,19 @@
                 ]
             }
         ],
+        "users": [
+            {
+                "request_url_1": "https://api.github.com/users/",
+                "request_url_2": "",
+                "request_url_3": "",
+                "feature_list": [
+                    "login",
+                    "id",
+                    "company"
+                ],
+                "feature_key": "login"
+            }
+        ],
         "commits": [
             {
                 "request_url_1": "https://api.github.com/repositories/",
@@ -148,6 +154,41 @@
                     "comment_count",
                     "status",
                     "stats"
+                ]
+            }
+        ],
+        "dependency_diff": [
+            {
+                "request_url_1": "https://api.github.com/repositories/",
+                "request_url_2": "/dependabot/alerts",
+                "request_url_3": "",
+                "feature_list": [
+                    "sha"
+                ],
+                "feature_key": "sha",
+                "subfeature_list": [
+                    "change_type",
+                    "ecosystem",
+                    "name",
+                    "license",
+                    "vulnerabilities"
+                ]
+            }
+        ],
+        "advisories": [
+            {
+                "request_url_1": "https://api.github.com/repositories/",
+                "request_url_2": "/security-advisories",
+                "request_url_3": "",
+                "feature_list": [
+                    "ghsa_id",
+                    "cve_id",
+                    "severity",
+                    "state",
+                    "vulnerabilities",
+                    "cvss",
+                    "cwes",
+                    "cwe_ids"
                 ]
             }
         ],

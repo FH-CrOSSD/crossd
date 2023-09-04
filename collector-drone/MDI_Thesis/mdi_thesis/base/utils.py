@@ -3,6 +3,8 @@ Module for functions required to gather information
 from the GitHub API
 """
 import logging
+from datetime import date, datetime
+from dateutil import relativedelta
 from typing import Dict, List, Any
 import requests
 
@@ -100,27 +102,6 @@ def get_subfeatures(
     return subfeature_dict
 
 
-def get_users(user_list: list):
-    """
-    TODO: Placeholder for getting users to check if they belong to a company.
-    :param user_list: list with user ids
-    :return:
-
-    """
-    feature_list = ["login", "id", "name", "company"]
-    request_url = ""
-    for user in user_list:
-        request_url = "https://api.github.com/users/" + str(user)
-
-    return feature_list, request_url
-
-
-def get_commits():
-    feature_list = ["comment_count", "stats", "files"]
-    # https://api.github.com/repos/OWNER/REPO/commits/REF
-    return feature_list
-
-
 def get_dependency_diff(commits):
     """
     TODO: Note from the documentation conc. BASEHEAD:
@@ -141,3 +122,89 @@ def get_dependency_diff(commits):
         "vulnerabilities",
     ]
     return request_url_1, request_url_2, feature_list
+
+
+def get_repo_age_score(repo_data) -> Dict[int, int]:
+    """
+    :param repo_data:
+    :return:
+    """
+    today = date.today()
+    age_score = {}
+    for repo, data in repo_data.items():
+        created_at = data[0].get("created_at")
+        created_at = datetime.strptime(created_at, '%Y-%m-%dT%H:%M:%SZ')
+        # updated_at = data[0].get("updated_at")
+        dates = relativedelta.relativedelta(today, created_at)
+        years = dates.years
+        months = dates.months
+        score = 0
+        # Age > 3 years
+        if (years == 3 and months > 0) or (years > 3):
+            score = 5
+        # Age > 2-3 years
+        elif (years == 2 and months > 0) or (years == 3 and months == 0):
+            score = 4
+        # Age > 1-2 years
+        elif (years == 2 and months == 0) or (years == 1 and months > 0):
+            score = 3
+        # Age 2-12 months
+        elif (years == 1 and months == 0) or (years == 0 and months >= 2):
+            score = 2
+        # Age < 2 months
+        elif years == 0 and months < 2:
+            score = 1
+        score = score/5
+        age_score[repo] = score
+    return age_score
+
+
+def get_repo_issue_score(repo_data) -> Dict[int, int]:
+    """
+    :param repo_data:
+    :return:
+    """
+    issue_score = {}
+    score = 0
+    for rep, data in repo_data.get("issue").items():
+        nr_of_issues = len(data)
+        if nr_of_issues > 1000:
+            score = 1
+        elif nr_of_issues > 500 and nr_of_issues < 1000:
+            score = 2
+        elif nr_of_issues > 100 and nr_of_issues <= 500:
+            score = 3
+        elif nr_of_issues > 50 and nr_of_issues <= 100:
+            score = 4
+        elif nr_of_issues <= 50:
+            score = 5
+        score = score/5
+        issue_score[rep] = score
+    return issue_score
+
+
+def get_repo_release_score(repo_data) -> Dict[int, int]:
+    """
+    :param repo_data:
+    :return:
+    """
+    today = date.today()
+    release_score = {}
+    for repo, data in repo_data.get("release").items():
+        releases_filt = []
+        for release in data:
+            pub_date = release.get("published_at")
+            pub_date = datetime.strptime(pub_date, '%Y-%m-%dT%H:%M:%SZ')
+            date_diff = relativedelta.relativedelta(today, pub_date)
+            if (date_diff.years == 1 and date_diff.months == 0) or (date_diff.years == 0):
+                releases_filt.append(release)
+        if releases_filt:
+            if len(releases_filt) >= 1 and len(releases_filt) <= 3:
+                score = 3
+            else:
+                score = 5
+        else:
+            score = 1
+        score = score/5
+        release_score[repo] = score
+    return release_score

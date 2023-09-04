@@ -12,7 +12,7 @@ import json
 from typing import Dict, List, Any
 import requests
 import mdi_thesis.constants as constants
-import mdi_thesis.utils as utils
+import mdi_thesis.base.utils as utils
 import logging
 import os
 
@@ -22,7 +22,7 @@ formatter = logging.Formatter(
     "%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.CRITICAL)
 
 
 class Request:
@@ -32,13 +32,14 @@ class Request:
 
     def __init__(self) -> None:
         self.token = constants.API_TOKEN
-        self.results_per_page = 25
+        self.results_per_page = 100
         self.headers = {"Authorization": "token " + self.token}
         self.session = requests.Session()
         self.response = requests.Response()
         self.selected_repos_dict = {}  # type: dict[int, dict]
         self.repository_dict = {}  # type: dict[int, list[dict[str, Any]]]
-        query_features_file = open(os.path.join(os.path.dirname(__file__), 'query_features.json'))
+        # TODO: Move filepath to other location
+        query_features_file = open(os.path.join(os.path.dirname(__file__), '..', 'query_features.json'), encoding="utf-8")
         self.query_features = json.load(query_features_file)
 
     def select_repos(
@@ -99,26 +100,44 @@ class Request:
                 logger.error("Unexpected %s, %s", err, type(err))
                 logger.debug("Error raised at data result: %s", results)
                 raise
+            
+            if "last" in response.links:
+                nr_of_pages = response.links.get(
+                    "last").get("url").split("&page=", 1)[1]
+                if results:
+                    if int(nr_of_pages) > 1 and repo_nr_queried < repo_nr:
+                        repo_nr_queried += self.results_per_page
+                        for page in range(2, int(nr_of_pages) + 1):
+                            url_repo = (
+                                f"{search_url}?simple=yes"
+                                f"&per_page=100&page={page}"
+                            )
+                            res = self.session.get(
+                                url_repo, headers=self.headers, timeout=100)
+                            logger.info("Query page %s of %s",
+                                        page, nr_of_pages)
+                            logging.info("Extending results...")
+                            try:
+                                if "items" in res.json():
+                                    next_res = res.json()["items"]
+                                    results_items.extend(next_res)
+                            except Exception as error:
+                                logger.error(
+                                    "Could not extend: %s...\nError: %s",
+                                    res.json(), error)
 
-            while "next" in response.links.keys() and \
-                    repo_nr_queried < repo_nr:
-                # Repos are counted to stop the requests when limit is reached
-                repo_nr_queried += self.results_per_page
-                res = self.session.get(
-                    response.links["next"]["url"],
-                    headers=self.headers, timeout=100
-                )
-                if "items" in res.json():
-                    next_res = res.json()["items"]
-                    results_items.extend(next_res)
             selected_repos = results_items[:repo_nr]
-        self.selected_repos_dict = utils.clean_results(selected_repos)
+        print(selected_repos)
+        self.selected_repos_dict = utils.clean_results(
+            selected_repos)
 
         return selected_repos
 
-    def get_repo_request(
+    def query_repository(
         self,
         queried_features: List[str],
+        filters: Dict[str, Any],
+        repo_list: List[int] = []
     ) -> Dict[str, List[Dict[str, Any]]]:
         """
         Calls functions which perform actual query.
@@ -143,19 +162,21 @@ class Request:
                 )
                 query_dict[feature] = [
                     feature_list, request_url_1, request_url_2]
-
         request_data_dict = {}
         for param, query in query_dict.items():
             param_list = self.get_repository_data(
                 feature_list=query[0],
                 request_url_1=query[1],
                 request_url_2=query[2],
+                filters=filters,
+                repo_list=repo_list
             )
             request_data_dict[param] = param_list
         return request_data_dict
 
     def get_single_object(self,
-                          feature: str
+                          feature: str,
+                          filters: Dict[str, Any]
                           ) -> Dict[int,
                                     List[Dict[int,
                                               List[Dict[str,
@@ -175,8 +196,8 @@ class Request:
             feature)[0].get("request_url_3")
         logger.info("Starting query for repository request...")
         objects_per_repo = []  # objects_per_repo type: List[Dict[str, Any]]
-        objects_per_repo = self.get_repo_request(
-            queried_features=[feature]).get(
+        objects_per_repo = self.query_repository(
+            queried_features=[feature], filters=filters).get(
             feature
         )  # Object e.g. issue or commit
         logger.info("Finished query for repository request.")
@@ -210,7 +231,9 @@ class Request:
         return single_object_dict
 
     def get_repository_data(
-        self, feature_list: List[str], request_url_1: str, request_url_2: str
+        self, feature_list: List[str], request_url_1: str,
+        request_url_2: str, filters: Dict[str, Any],
+        repo_list: List[int]
     ) -> Dict[int, List[Dict[str, Any]]]:
         """
         Query data from repositories
@@ -223,13 +246,22 @@ class Request:
         :param request_url_2: Second part of the url,
          pointing to the GitHub API subcategory.
 
-        :return:
+        :return: Repository data of the selected features.
         """
+        filter_str = ""
+        if filters:
+            for key, value in filters.items():
+                filter_str = filter_str + key + "=" + value + "&"
         logger.info(
             "Getting repository data of %s repositories",
             len(self.selected_repos_dict)
         )
-        for repo_id in self.selected_repos_dict:
+        if repo_list:
+            repositories = repo_list
+        else:
+            repositories = self.selected_repos_dict
+
+        for repo_id in repositories:
             logger.info("Getting repository %s", repo_id)
             if request_url_2:
                 url_repo = str(request_url_1 + str(repo_id) + request_url_2)
@@ -237,13 +269,12 @@ class Request:
                 url_repo = str(request_url_1 + str(repo_id))
             logger.info("Getting page 1")
             start_url = (str(url_repo) +
-                         "?simple=yes&per_page=" +
+                         "?simple=yes&" +
+                         str(filter_str) +
+                         "per_page=" +
                          str(self.results_per_page) +
                          "&page=1"
                          )
-            # start_url =
-            # f"{url_repo}
-            # ?simple=yes&per_page={self.results_per_page}&page=1"
             response = self.session.get(
                 start_url, headers=self.headers, timeout=100)
             results = response.json()
@@ -258,7 +289,9 @@ class Request:
                     for page in range(2, int(nr_of_pages) + 1):
                         logger.info("Query page %s of %s", page, nr_of_pages)
                         url = (str(url_repo) +
-                               "?simple=yes&per_page=" +
+                               "?simple=yes&" +
+                               str(filter_str) +
+                               "per_page=" +
                                str(self.results_per_page) +
                                "&page=" +
                                str(page))
@@ -290,32 +323,38 @@ class Request:
         logger.info("Done getting repository data.")
         return self.repository_dict
 
-    def __del__(self):
-        self.session.close()
+    def get_context_information(self, main_feature: str,
+                                sub_feature: str, filters: Dict[str, Any]
+                                ) -> Dict[int, List[Dict[str, Any]]]:
+        """
+        :param main_feature: Feature which concerns the main information.
+        :param sub_feature: Feature which concerns the context information.
+        :return: Dictionary with context information of main feature.
+        """
+        main_data = self.query_repository([main_feature], filters=filters)
+        request_url_1 = self.query_features[0].get(
+            sub_feature)[0].get("request_url_1")
+        request_url_2 = self.query_features[0].get(
+            sub_feature)[0].get("request_url_2")
+        feature_list = self.query_features[0].get(
+            sub_feature)[0].get("feature_list")
+        feature_key = self.query_features[0].get(
+            sub_feature)[0].get("feature_key")
+        return_data = {}
+        for repository, data in main_data.get(main_feature).items():
+            data_list = []
+            for element in data:
+                element_dict = {}
+                key = element.get(feature_key)
+                element_url = request_url_1 + str(key) + request_url_2
+                result = self.session.get(
+                            element_url, headers=self.headers, timeout=100)
+                sub_data = result.json()
+                for feature in feature_list:
+                    element_dict[feature] = sub_data.get(feature)
+                data_list.append(element_dict)
+            return_data[repository] = data_list
+        return return_data
 
-
-def main():
-    """
-    Main in progress
-    """
-
-    repo_ids_path = "mdi_thesis/preselected_repos.txt"
-    repo_ids = utils.__get_ids_from_txt__(path=repo_ids_path)
-    selected_repos = Request()
-    # Statement for selecting number of queried repositories
-    # selected_repos.select_repos(repo_nr=1, order="desc")
-    # Statement for selecting repositories according to list (for developing)
-    selected_repos.select_repos(repo_list=repo_ids)
-
-    # print(selected_repos.selected_repos_dict)
-
-    # print(selected_repos.get_single_object(feature="issue_comments"))
-    
-    print(selected_repos.get_repo_request(["community_health"]))
-    # .get("community_health")  # .get(191113739))
-    print(len(selected_repos.get_repo_request(["community_health"])))
-    # .get("community_health")  # .get(191113739)))
-
-
-if __name__ == "__main__":
-    main()
+#    def __del__(self):
+#        self.session.close()

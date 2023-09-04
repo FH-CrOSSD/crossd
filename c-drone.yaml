@@ -3,34 +3,34 @@ kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
-    app: collector-drone
+    app: c-drone
     environment: prod
     app.kubernetes.io/name: crossd
     app.kubernetes.io/instance: crossd-alpha
     app.kubernetes.io/version: "0.1"
     # app.kubernetes.io/managed-by: helm
-    app.kubernetes.io/component: collector-drone
+    app.kubernetes.io/component: c-drone
     app.kubernetes.io/part-of: crossd
-  name: collector-drone
+  name: c-drone
 spec:
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
-      app: collector-drone
+      app: c-drone
   strategy: {type: RollingUpdate}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: collector-drone
-        pod: collector-drone
+        app: c-drone
+        pod: c-drone
     spec:
       restartPolicy: Always
       securityContext:
         runAsUser: 1337
         runAsGroup: 1337
       containers:
-      - image: localhost:32000/collector-drone
+      - image: localhost:32000/worker-drone
         # args:
         #     - sh
         #     - -c
@@ -38,10 +38,22 @@ spec:
         # ports:
         # - containerPort: 6379
         imagePullPolicy: Always
-        name: collector-drone
+        name: c-drone
+        args: ["-Q", "collect", "-c", "1"]
         resources: {}
         securityContext:
           allowPrivilegeEscalation: false
+        env:
+        - name: GH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: ghtoken
+              key: GH_TOKEN
+        volumeMounts:
+        # name must match the volume name below
+        - name: secret-volume
+          mountPath: /home/collector-drone/.env
+          readOnly: true
         # volumeMounts:
         #     - mountPath: /data
         #       name: redis-pvc
@@ -51,4 +63,8 @@ spec:
       #     persistentVolumeClaim:
       #       claimName: redis-pvc
             # readOnly: true
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: ghtoken
 status: {}
