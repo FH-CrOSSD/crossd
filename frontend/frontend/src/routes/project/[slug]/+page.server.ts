@@ -14,7 +14,7 @@ export async function load({ params }) {
         return post;
     }
 
-    throw error(404, 'Not found');
+    error(404, 'Not found');
 }
 
 let a = [

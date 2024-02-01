@@ -10,7 +10,7 @@ const inputRegex = /^[a-zA-Z0-9-_./]+$/;
 export async function POST({ request }) {
     const { term } = await request.json();
     if (!term.match(inputRegex)) {
-        throw error(422, { message: "Only alphanumeric characters and -_./ allowed" })
+        error(422, { message: "Only alphanumeric characters and -_./ allowed" });
     }
     const sterm = '%' + term + '%';
     try {
