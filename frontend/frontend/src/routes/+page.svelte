@@ -19,7 +19,7 @@
 	<Button pill href="/project/Joplin">Joplin</Button>
 </div>
 <div class="justify-center" style="object-position:bottom">
-	<!-- transition:fly={{ y: '-200%', duration: 2000, opacity: 100 }} -->
+	<!-- transition:fly|global={{ y: '-200%', duration: 2000, opacity: 100 }} -->
 	<Card size="xl" padding="xl" class="mx-auto">
 		<form method="GET" class="flex gap-0" action="/search">
 			<Search class="rounded-r-none py-2.5" id="project" name="project"/>
