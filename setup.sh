@@ -8,6 +8,10 @@ for item in $addons; do
     microk8s enable $item
 done
 
+mkdir -p secrets
+chown root:root secrets -R
+chmod o-r-w-x secrets -R
+
 microk8s kubectl apply -f arango-setup/arango-crd.yaml
 microk8s kubectl apply -f arango-setup/arango-deployment.yaml
 microk8s kubectl apply -f arango-setup/arango-storage.yaml
@@ -16,8 +20,8 @@ cd $SCRIPTPATH/worker-drone
 sudo ./buildah.sh
 cd $SCRIPTPATH/bak-rest-drone
 sudo ./buildah.sh
-# cd $SCRIPTPATH/frontend
-# sudo ./buildah.sh
+cd $SCRIPTPATH/frontend
+sudo ./buildah.sh
 cd $SCRIPTPATH
 
 # microk8s kubectl apply -f secrets/ghtoken.yaml
