@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: arangodb-cluster-internal
+spec:
+  selector:
+    arango_deployment: cluster
+    role: coordinator
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 8529
+    targetPort: 8529
