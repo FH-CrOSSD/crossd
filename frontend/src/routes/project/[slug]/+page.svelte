@@ -29,11 +29,13 @@
 	let selected: string;
 	let overlayID: string;
 	let showChart: Boolean = false;
+	let showDefinition: Boolean = false;
 	let overlayMD: string;
 	let scrollFinished = false;
 	let drawerHidden = true;
 	// open and close modal along with drawer, if chart should be shown
-	let modalOpen = false;
+	// let modalOpen = false;
+	$:{drawerHidden=showDefinition===true?!showChart:true;}
 	const transitionParamsRight = {
 		x: 320,
 		duration: 200,
@@ -44,8 +46,10 @@
 		console.log('store sub');
 		if (value) {
 			showChart = value.chart;
+			showDefinition = value.definition;
 			console.log(value);
 			if (value.definition === true) {
+				console.log("show def");
 				overlayID = value.current_id;
 				goToDefinition(value.current_md);
 				// scroll(value.current_id);
@@ -82,7 +86,7 @@
 		chartOptions.xaxis.categories = snapshots.map((x) => {
 			return new Date(Date.parse(x.name)).toLocaleString('eo');
 		});
-		modalOpen = true;
+		// modalOpen = true;
 	}
 
 	async function scroll() {
@@ -114,7 +118,7 @@
 		};
 	}
 
-	$: modalOpen = showChart ? !drawerHidden : false;
+	// $: modalOpen = showChart;
 	$: {
 		snapshots = data.snapshots;
 		updateSelected();
@@ -187,11 +191,28 @@
 	</div>
 </div>
 
+
+<!-- outsideclose only if drawer not shown, otherwise you need to double close -->
+	<!-- outsideclose={drawerHidden ? true : false} -->
+
+<Modal
+	title={chartOptions.series[0].name}
+	bind:open={showChart}
+	size="lg"
+	autoclose
+	outsideclose={true}
+>
+	<div class="chart-container">
+		<Chart options={chartOptions} size="lg" />
+	</div>
+</Modal>
 <Drawer
 	placement="right"
 	transitionType="fly"
 	transitionParams={transitionParamsRight}
 	bind:hidden={drawerHidden}
+	backdrop={!showChart?true:false}
+	activateClickOutside={!showChart?true:false}
 	id="sidebar6"
 >
 	<div class="flex items-center" use:onShown>
@@ -199,19 +220,6 @@
 	</div>
 	{@html overlayMD}
 </Drawer>
-<!-- outsideclose only if drawer not shown, otherwise you need to double close -->
-<Modal
-	title={chartOptions.series[0].name}
-	bind:open={modalOpen}
-	size="lg"
-	autoclose
-	outsideclose={drawerHidden ? true : false}
->
-	<div class="chart-container">
-		<Chart options={chartOptions} size="lg" />
-	</div>
-</Modal>
-
 <style>
 	:global(.apexcharts-svg) {
 		overflow: visible;
