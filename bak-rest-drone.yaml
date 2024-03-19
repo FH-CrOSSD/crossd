@@ -3,34 +3,34 @@ kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
-    app: c-drone
+    app: bak-rest-drone
     environment: prod
     app.kubernetes.io/name: crossd
     app.kubernetes.io/instance: crossd-alpha
     app.kubernetes.io/version: "0.1"
     # app.kubernetes.io/managed-by: helm
-    app.kubernetes.io/component: c-drone
+    app.kubernetes.io/component: bak-rest-drone
     app.kubernetes.io/part-of: crossd
-  name: c-drone
+  name: bak-rest-drone
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: c-drone
+      app: bak-rest-drone
   strategy: {type: RollingUpdate}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: c-drone
-        pod: c-drone
+        app: bak-rest-drone
+        pod: bak-rest-drone
     spec:
       restartPolicy: Always
       securityContext:
         runAsUser: 1337
         runAsGroup: 1337
       containers:
-      - image: localhost:32000/worker-drone
+      - image: localhost:32000/bak-rest-drone
         # args:
         #     - sh
         #     - -c
@@ -38,8 +38,8 @@ spec:
         # ports:
         # - containerPort: 6379
         imagePullPolicy: Always
-        name: c-drone
-        args: ["-Q", "collect", "-c", "1"]
+        name: bak-rest-drone
+        args: ["-Q", "bak", "-c", "1"]
         resources: {}
         securityContext:
           allowPrivilegeEscalation: false
@@ -63,12 +63,22 @@ spec:
         - name: PYTHONUNBUFFERED
           value: "1"
         volumeMounts:
-        - name: tmp
-          mountPath: /tmp
         # name must match the volume name below
         # - name: secret-volume
-        #   mountPath: /home/collector-drone/.env
+        #   mountPath: /home/bak-rest-drone/.env
         #   readOnly: true
+        - name: data
+          mountPath: /home/collector-drone/thesis_metrics-main/outputs/data
+        - name: results
+          mountPath: /home/collector-drone/thesis_metrics-main/outputs/results
+        - name: tmp
+          mountPath: /tmp
+        - name: logs
+          mountPath: /home/collector-drone/thesis_metrics-main/outputs/logs
+        - name: selenium
+          mountPath: /.cache/selenium
+        - mountPath: /dev/shm
+          name: dshm
         # volumeMounts:
         #     - mountPath: /data
         #       name: redis-pvc
@@ -79,10 +89,26 @@ spec:
       #       claimName: redis-pvc
             # readOnly: true
       volumes:
-      - name: tmp
-        emptyDir:
-          sizeLimit: 500Mi
       # - name: secret-volume
       #   secret:
       #     secretName: ghtoken
+      - name: data
+        emptyDir:
+          sizeLimit: 500Mi
+      - name: results
+        emptyDir:
+          sizeLimit: 500Mi
+      - name: tmp
+        emptyDir:
+          sizeLimit: 500Mi
+      - name: logs
+        emptyDir:
+          sizeLimit: 500Mi
+      - name: selenium
+        emptyDir:
+          sizeLimit: 500Mi
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 1Gi
 status: {}

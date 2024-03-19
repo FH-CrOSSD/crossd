@@ -43,28 +43,46 @@ spec:
         resources: {}
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
         env:
         - name: GH_TOKEN
           valueFrom:
             secretKeyRef:
               name: ghtoken
               key: GH_TOKEN
+        - name: WORKER_USER
+          valueFrom:
+            secretKeyRef:
+              name: arango-worker-pwd
+              key: username
+        - name: WORKER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: arango-worker-pwd
+              key: password
+        - name: PYTHONUNBUFFERED
+          value: "1"
         volumeMounts:
+        - name: tmp
+          mountPath: /tmp
         # name must match the volume name below
-        - name: secret-volume
-          mountPath: /home/m-drone/.env
-          readOnly: true
+        # - name: secret-volume
+        #   mountPath: /home/m-drone/.env
+        #   readOnly: true
         # volumeMounts:
         #     - mountPath: /data
         #       name: redis-pvc
               # readOnly: true
-      # volumes:
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 500Mi
       #   - name: redis-pvc
       #     persistentVolumeClaim:
       #       claimName: redis-pvc
             # readOnly: true
-      volumes:
-      - name: secret-volume
-        secret:
-          secretName: ghtoken
+      # volumes:
+      # - name: secret-volume
+      #   secret:
+      #     secretName: ghtoken
 status: {}

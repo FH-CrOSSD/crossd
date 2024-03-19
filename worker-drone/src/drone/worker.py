@@ -3,8 +3,12 @@ from celery import Celery, Task
 import re
 from crossd_metrics.Repository import Repository
 from crossd_metrics.metrics import get_metrics
+from crossd_metrics.constants import readmes
+from crossd_metrics.utils import get_readme_index
 import pyArango
 from rich.console import Console
+import time
+import os
 
 console = Console(force_terminal=True)
 err_console = Console(stderr=True, style="bold red")
@@ -95,12 +99,14 @@ class CollectTask(BaseTask):
 app = Celery(
     "collect",
     broker="redis://redis-service:6379/0",
-    backend="arangodb://root:@arangodb-cluster-internal:8529/crossd/task_results",
+    backend="arangodb://{}:@arangodb-cluster-internal:8529/crossd/task_results".format(
+        os.environ.get("WORKER_USER", "root")
+    ),
     broker_connection_retry_on_startup=True,
     arangodb_backend_settings={
         "http_protocol": "https",
-        "username": "root",
-        "password": "",
+        "username": os.environ.get("WORKER_USER", "root"),
+        "password": os.environ.get("WORKER_PASSWORD", ""),
         # "database": "crossd",
     },
 )
@@ -124,16 +130,24 @@ app.conf.task_routes = {
 
 
 @app.task(name="retrieve_github", base=CollectTask, bind=True)
-def retrieve_github(self, owner: str, name: str, sub: bool = False):
+def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     if not sub:
         console.print("starting task [dodger_blue1]retrieve_github[/]")
     console.print("collecting repository data from github")
     res = Repository(owner, name).ask_all().execute()
-    res['task_id'] = self.request.id
+    res["task_id"] = self.request.id
+    res["timestamp"] = time.time()
+    res["scan_id"] = scan
+    res["repository"]["readmes"] = {}
+    for readme in readmes:
+        res["repository"]["readmes"][get_readme_index(readme)] = res["repository"][
+            get_readme_index(readme)
+        ]
+        del res["repository"][get_readme_index(readme)]
     console.print("storing repository data in database")
     doc = self.repos.createDocument(initDict=res)
     doc.save()
-    res = {"repository_key": doc._key}
+    res = {"repository_key": doc._key, "scan_id": scan}
     return res
     # return (Repository(owner, name)
     #         # .ask_dependencies()
@@ -150,10 +164,10 @@ def retrieve_github(self, owner: str, name: str, sub: bool = False):
 
 
 @app.task(name="retrieve_github_url", base=CollectTask, bind=True)
-def retrieve_github_url(self, url: str):
+def retrieve_github_url(self, url: str, scan: str):
     console.print("starting task [dodger_blue1]retrieve_github_url[/]")
     parts = re.match(r"(?:http[s]*://)*github\.com/([^/]*)/([^/]*)", url).groups()
-    return retrieve_github(*parts, sub=True)
+    return retrieve_github(*parts, scan, sub=True)
 
 
 @app.task(name="do_metrics", bind=True, base=BaseTask)
@@ -161,8 +175,12 @@ def do_metrics(self, retval: str):
     self.repos
     console.print("starting task [dodger_blue1]do_metrics[/]")
     console.print("calculating metrics")
-    res = get_metrics(app.backend.db['repositories'].fetchDocument(retval['repository_key']))
-    res['task_id'] = self.request.id
+    res = get_metrics(
+        app.backend.db["repositories"].fetchDocument(retval["repository_key"])
+    )
+    res["task_id"] = self.request.id
+    res["timestamp"] = time.time()
+    res["scan_id"] = retval["scan_id"]
     console.print("storing metric data in database")
     self.metrics.createDocument(initDict=res).save()
     return res

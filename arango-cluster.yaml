@@ -4,6 +4,9 @@ metadata:
   name: "cluster"
 spec:
   mode: Cluster
+  bootstrap:
+    passwordSecretNames:
+      root: arango-root-pwd
   dbservers:
     count: 2 # 3
   coordinators:

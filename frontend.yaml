@@ -3,34 +3,34 @@ kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
-    app: c-drone
+    app: frontend
     environment: prod
     app.kubernetes.io/name: crossd
     app.kubernetes.io/instance: crossd-alpha
     app.kubernetes.io/version: "0.1"
     # app.kubernetes.io/managed-by: helm
-    app.kubernetes.io/component: c-drone
+    app.kubernetes.io/component: frontend
     app.kubernetes.io/part-of: crossd
-  name: c-drone
+  name: frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: c-drone
+      app: frontend
   strategy: {type: RollingUpdate}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: c-drone
-        pod: c-drone
+        app: frontend
+        pod: frontend
     spec:
       restartPolicy: Always
       securityContext:
         runAsUser: 1337
         runAsGroup: 1337
       containers:
-      - image: localhost:32000/worker-drone
+      - image: localhost:32000/frontend
         # args:
         #     - sh
         #     - -c
@@ -38,33 +38,39 @@ spec:
         # ports:
         # - containerPort: 6379
         imagePullPolicy: Always
-        name: c-drone
-        args: ["-Q", "collect", "-c", "1"]
+        name: frontend
+        # args: ["-Q", "collect", "-c", "1"]
         resources: {}
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
         env:
-        - name: GH_TOKEN
+        # - name: GH_TOKEN
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: ghtoken
+        #       key: GH_TOKEN
+        - name: NODE_ENV
+          value: "production"
+        - name: FRONTEND_USER
           valueFrom:
             secretKeyRef:
-              name: ghtoken
-              key: GH_TOKEN
-        - name: WORKER_USER
-          valueFrom:
-            secretKeyRef:
-              name: arango-worker-pwd
+              name: arango-frontend-pwd
               key: username
-        - name: WORKER_PASSWORD
+        - name: FRONTEND_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: arango-worker-pwd
+              name: arango-frontend-pwd
               key: password
-        - name: PYTHONUNBUFFERED
-          value: "1"
-        volumeMounts:
-        - name: tmp
-          mountPath: /tmp
+        - name: ARANGO_URL
+          value: "https://arangodb-cluster-internal:8529"
+        - name: ORIGIN
+          value: http://172.23.101.111:30380
+        # - name: PYTHONUNBUFFERED
+        #   value: "1"
+        # volumeMounts:
+        # - name: tmp
+        #   mountPath: /tmp
         # name must match the volume name below
         # - name: secret-volume
         #   mountPath: /home/collector-drone/.env
@@ -78,10 +84,10 @@ spec:
       #     persistentVolumeClaim:
       #       claimName: redis-pvc
             # readOnly: true
-      volumes:
-      - name: tmp
-        emptyDir:
-          sizeLimit: 500Mi
+      # volumes:
+      # - name: tmp
+      #   emptyDir:
+      #     sizeLimit: 500Mi
       # - name: secret-volume
       #   secret:
       #     secretName: ghtoken

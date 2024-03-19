@@ -1,0 +1,17 @@
+[project]
+name = ""
+version = ""
+description = ""
+authors = [
+    {name = "tdam", email = "20456596+tobiasdam@users.noreply.github.com"},
+]
+dependencies = [
+    "celery[arangodb,auth,brotli,msgpack,redis]>=5.3.6",
+    "rich>=13.7.0",
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "MIT"}
+
+[tool.pdm.scripts]
+worker = "pdm run celery -A src.drone.worker worker"
