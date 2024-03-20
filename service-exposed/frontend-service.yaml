@@ -1,12 +1,13 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: frontend-service
+  name: frontend-service-exposed
 spec:
   selector:
     pod: frontend
-  type: ClusterIP
+  type: NodePort
   ports:
   - protocol: TCP
     port: 3000
     targetPort: 3000
+    nodePort: 30380
