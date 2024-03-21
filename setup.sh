@@ -12,10 +12,17 @@ mkdir -p secrets
 chown root:root secrets -R
 chmod o-r-w-x secrets -R
 
+# microk8s helm repo add cert-manager https://charts.jetstack.io
+# microk8s helm install trust-manager cert-manager/trust-manager
+
 microk8s kubectl apply -f arango-setup/arango-crd.yaml
 microk8s kubectl apply -f arango-setup/arango-deployment.yaml
 microk8s kubectl apply -f arango-setup/arango-storage.yaml
 
+microk8s kubectl apply -f arango
+
+cd $SCRIPTPATH/tools/add_task
+sudo ./buildah.sh
 cd $SCRIPTPATH/worker-drone
 sudo ./buildah.sh
 cd $SCRIPTPATH/bak-rest-drone
