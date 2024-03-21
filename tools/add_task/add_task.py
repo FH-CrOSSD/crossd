@@ -50,46 +50,56 @@ def main(args):
     )
     if not conn["crossd"].hasCollection("scans"):
         conn["crossd"].createCollection(name="scans")
-    coll = conn["crossd"]["scans"]
-    # coll = db.createCollection(name="scans")
-    doc = coll.createDocument(
-        {
-            "issuedAt": time.time(),
-            "tasks": {
-                "bak_tasks": (args.owner, args.name),
-                "retrieve_github": (args.owner, args.name),
-            },
-        }
-    )
-    doc.save()
-    print(doc._id)
+
     if not conn["crossd"].hasCollection("projects"):
         conn["crossd"].createCollection(name="projects")
         conn["crossd"]["projects"].ensurePersistentIndex(["identifier"], unique=True)
-    aql = """UPSERT { identifier: @identifier }
-                INSERT { identifier: @identifier, scans: [@scanid] }
-                UPDATE { scans: APPEND(OLD.scans, @scanid) }
-                IN projects
-        """
-    queryResult = conn["crossd"].AQLQuery(
-        aql,
-        bindVars={"identifier": args.owner + "/" + args.name, "scanid": doc._id},
-    )
 
-    if not args.only:
-        app.send_task("bak_tasks", (args.owner, args.name, doc._id))
-        app.send_task("retrieve_github", (args.owner, args.name, doc._id))
-    else:
-        if args.only == "bak":
-            app.send_task("bak_tasks", (args.owner, args.name, doc._id))
-        elif args.only == "metric":
-            app.send_task("retrieve_github", (args.owner, args.name, doc._id))
+    coll = conn["crossd"]["scans"]
+    # coll = db.createCollection(name="scans")
+    for entry in args.owner_with_name:
+        try:
+            owner,name=entry.strip().split("/")
+        except ValueError:
+            print("invalid repository identifier {}".format(entry))
+            continue
+        doc = coll.createDocument(
+            {
+                "issuedAt": time.time(),
+                "tasks": {
+                    "bak_tasks": (owner, name),
+                    "retrieve_github": (owner, name),
+                },
+            }
+        )
+        doc.save()
+        print(doc._id)
+
+        aql = """UPSERT { identifier: @identifier }
+                    INSERT { identifier: @identifier, scans: [@scanid] }
+                    UPDATE { scans: APPEND(OLD.scans, @scanid) }
+                    IN projects
+            """
+        queryResult = conn["crossd"].AQLQuery(
+            aql,
+            bindVars={"identifier": owner + "/" + name, "scanid": doc._id},
+        )
+
+        if not args.only:
+            app.send_task("bak_tasks", (owner, name, doc._id))
+            app.send_task("retrieve_github", (owner, name, doc._id))
+        else:
+            if args.only == "bak":
+                app.send_task("bak_tasks", (owner, name, doc._id))
+            elif args.only == "metric":
+                app.send_task("retrieve_github", (owner, name, doc._id))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Add a repository to the queue")
-    parser.add_argument("owner", help="owner of the repository")
-    parser.add_argument("name", help="name of the repository")
+    parser.add_argument(metavar="owner/name", help="owner of the repository", dest="owner_with_name", nargs="+")
+    # parser.add_argument("owner", help="owner of the repository")
+    # parser.add_argument("name", help="name of the repository")
     parser.add_argument(
         "--only", choices=["bak", "metric"], help="limit execution to a single task"
     )

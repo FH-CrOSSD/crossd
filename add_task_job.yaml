@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: add-task-job
+    environment: prod
+    app.kubernetes.io/name: crossd
+    app.kubernetes.io/instance: crossd-alpha
+    app.kubernetes.io/version: "0.1"
+    app.kubernetes.io/component: add-task-job
+    app.kubernetes.io/part-of: crossd
+  name: add-task-job
+spec:
+  template:
+    spec:
+      # initContainers:
+      # - name: wait-for-cluster
+      #   image: curlimages/curl:latest
+      #   # command: ["sh","-c",'until test $(curl -s -o /dev/null -w "%{http_code}" https://arango-deployment-operator:8528/ready --insecure) -eq 200; do echo waiting for arango cluster init to finish; sleep 2; done']
+      #   command: ["sh","-c",'until test $(curl -s -o /dev/null -w "%{http_code}" https://arangodb-cluster-internal:8529 --insecure --connect-timeout 2 -L) -eq 200; do echo waiting for arango cluster init to finish; sleep 2; done']
+      containers:
+      - name: add-task-job
+        image: localhost:32000/add-task
+        # command: ["echo","test"]
+        command: ["sh" , "-c"]
+        # command: ["sh" , "-c", "/usr/bin/arangosh --server.endpoint https://arangodb-cluster-internal:8529 --server.username @ROOT_USER@ --javascript.execute /init.js --server.password \"@ROOT_PW@\""]
+        # command: ["sh" , "-c", "/usr/bin/arangosh --server.endpoint https://arangodb-cluster-internal:8529 --server.username root --javascript.execute-string 'try{db._createDatabase(\"crossd\");}catch(ArangoError){};try{db._useDatabase(\"crossd\"); db._createDocumentCollection(\"task_results\");}catch(ArangoError){}' --server.password \"\""]
+        args:
+        - >
+          python3 add_task.py --user $USER --password $PASSWORD
+          sveltejs/kit torvalds/linux cli/cli
+        env:
+        - name: USER
+          valueFrom:
+            secretKeyRef:
+              name: arango-worker-pwd
+              key: username
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: arango-worker-pwd
+              key: password
+        # volumeMounts:
+        #   - name: "arango-init"
+        #     mountPath: "/init.js"
+        #     subPath: "arango_init.js"
+      restartPolicy: Never
+      volumes:
+      # - name: root-user
+      #   secret:
+      #     secretName: arango-root-pwd
+      # - name: frontend-user
+      #   secret:
+      #     secretName: arango-frontend-pwd
+      # - name: worker-user
+      #   secret:
+      #     secretName: arango-worker-pwd
+      # - name: "arango-init"
+      #   configMap:
+      #     name: "arango-init"
+  backoffLimit: 4
