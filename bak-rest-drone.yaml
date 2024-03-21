@@ -45,6 +45,10 @@ spec:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
         env:
+        - name: XDG_CONFIG_HOME
+          value: /tmp/.chromium
+        - name: XDG_CACHE_HOME
+          value: /tmp/.chromium
         - name: GH_TOKEN
           valueFrom:
             secretKeyRef:
