@@ -129,7 +129,16 @@ app.conf.task_routes = {
 #         raise ce
 
 
-@app.task(name="retrieve_github", base=CollectTask, bind=True)
+@app.task(
+    name="retrieve_github",
+    base=CollectTask,
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=5 * 60,
+    max_retries=5,
+    retry_backoff_max=3500 * 60,
+    retry_jitter=True,
+)
 def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     if not sub:
         console.print("starting task [dodger_blue1]retrieve_github[/]")
@@ -163,7 +172,16 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     #         .execute())
 
 
-@app.task(name="retrieve_github_url", base=CollectTask, bind=True)
+@app.task(
+    name="retrieve_github_url",
+    base=CollectTask,
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=5 * 60,
+    max_retries=5,
+    retry_backoff_max=3500 * 60,
+    retry_jitter=True,
+)
 def retrieve_github_url(self, url: str, scan: str):
     console.print("starting task [dodger_blue1]retrieve_github_url[/]")
     parts = re.match(r"(?:http[s]*://)*github\.com/([^/]*)/([^/]*)", url).groups()

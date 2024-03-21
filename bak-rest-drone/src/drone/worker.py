@@ -104,7 +104,16 @@ app.conf.task_routes = {
 }
 
 
-@app.task(name="bak_tasks", base=CollectTask, bind=True)
+@app.task(
+    name="bak_tasks",
+    base=CollectTask,
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=5 * 60,
+    max_retries=5,
+    retry_backoff_max=3500 * 60,
+    retry_jitter=True,
+)
 def bak_tasks(self, owner: str, name: str, scan: str, sub: bool = False):
     DataMinePipeline(
         language="csv",
@@ -131,58 +140,3 @@ def bak_tasks(self, owner: str, name: str, scan: str, sub: bool = False):
 
     # pipeline.run_metrics_to_json()
     return res
-
-
-# @app.task(name="retrieve_github", base=CollectTask, bind=True)
-# def retrieve_github(self, owner: str, name: str, sub: bool = False):
-#     if not sub:
-#         console.print("starting task [dodger_blue1]retrieve_github[/]")
-#     console.print("collecting repository data from github")
-#     res = Repository(owner, name).ask_all().execute()
-#     res["task_id"] = self.request.id
-#     res["timestamp"] = time.time()
-#     res["repository"]["readmes"] = {}
-#     for readme in readmes:
-#         res["repository"]["readmes"][get_readme_index(readme)] = res["repository"][
-#             get_readme_index(readme)
-#         ]
-#         del res["repository"][get_readme_index(readme)]
-#     console.print("storing repository data in database")
-#     doc = self.repos.createDocument(initDict=res)
-#     doc.save()
-#     res = {"repository_key": doc._key}
-#     return res
-#     # return (Repository(owner, name)
-#     #         # .ask_dependencies()
-#     #         .ask_funding_links()
-#     #         .ask_security_policy()
-#     #         .ask_contributing()
-#     #         .ask_feature_requests()
-#     #         .ask_closed_feature_requests()
-#     #         .ask_dependents()
-#     #         .ask_pull_requests()
-#     #         .ask_readme()
-#     #         .ask_workflows()
-#     #         .execute())
-
-
-# @app.task(name="retrieve_github_url", base=CollectTask, bind=True)
-# def retrieve_github_url(self, url: str):
-#     console.print("starting task [dodger_blue1]retrieve_github_url[/]")
-#     parts = re.match(r"(?:http[s]*://)*github\.com/([^/]*)/([^/]*)", url).groups()
-#     return retrieve_github(*parts, sub=True)
-
-
-# @app.task(name="do_metrics", bind=True, base=BaseTask)
-# def do_metrics(self, retval: str):
-#     self.repos
-#     console.print("starting task [dodger_blue1]do_metrics[/]")
-#     console.print("calculating metrics")
-#     res = get_metrics(
-#         app.backend.db["repositories"].fetchDocument(retval["repository_key"])
-#     )
-#     res["task_id"] = self.request.id
-#     res["timestamp"] = time.time()
-#     console.print("storing metric data in database")
-#     self.metrics.createDocument(initDict=res).save()
-#     return res
