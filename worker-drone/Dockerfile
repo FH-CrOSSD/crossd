@@ -8,8 +8,8 @@ RUN --mount=type=secret,id=ghtoken,target=/run/secrets/ghtoken \
 # RUN unzip main.zip 
 
 # install PDM
-RUN pip install -U pip setuptools wheel
-RUN pip install pdm
+RUN pip install -U pip setuptools wheel --no-cache-dir
+RUN pip install pdm --no-cache-dir
 
 WORKDIR /home/collector-drone/metrics-main
 RUN mkdir __pypackages__ && pdm sync --prod --no-editable
@@ -20,7 +20,7 @@ RUN mkdir __pypackages__ && pdm sync --prod --no-editable
 # # WORKDIR /home/collector-drone/MDI_Thesis
 # RUN pip3 install -e MDI_Thesis
 FROM python:3.11-alpine 
-RUN pip install pdm
+RUN pip install pdm --no-cache-dir
 ENV PYTHONPATH=/project/pkgs
 COPY --from=build /home/collector-drone/metrics-main/__pypackages__/3.11/lib /project/pkgs
 
@@ -29,6 +29,7 @@ COPY --from=build /home/collector-drone/metrics-main/__pypackages__/3.11/bin/* /
 WORKDIR /home/collector-drone
 COPY . .
 RUN pdm install
+RUN pdm cache clear
 # RUN pip3 install -r requirements.txt
 # RUN apk add coreutils
 USER 1337:1337
