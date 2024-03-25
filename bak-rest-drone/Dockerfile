@@ -1,6 +1,6 @@
 FROM python:3.10-alpine as build
 
-RUN apk add build-base chromium chromium-chromedriver
+RUN apk add --no-cache build-base chromium chromium-chromedriver tini
 
 WORKDIR /home/collector-drone
 # ARG GH_TOKEN
@@ -11,13 +11,13 @@ RUN --mount=type=secret,id=ghtoken,target=/run/secrets/ghtoken \
 
 WORKDIR /home/collector-drone/thesis_metrics-main
 
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt --no-cache-dir 
 # WORKDIR /home/collector-drone/thesis_metrics-main
-RUN pip3 install -e .
+RUN pip3 install -e . --no-cache-dir 
 
 # install PDM
-RUN pip install -U pip setuptools wheel
-RUN pip install pdm
+RUN pip install -U pip setuptools wheel --no-cache-dir 
+RUN pip install pdm --no-cache-dir 
 
 RUN mkdir -p outputs/logs && chown -R 1337:1337 outputs
 
@@ -40,10 +40,11 @@ WORKDIR /home/collector-drone
 COPY . .
 RUN pdm add -e /home/collector-drone/thesis_metrics-main --dev
 RUN pdm install --dev
+RUN pdm cache clear
 RUN mkdir -p /.cache/selenium && chown -R 1337:1337 /.cache/selenium
 # RUN pip3 install -r requirements.txt
 # RUN apk add coreutils
 USER 1337:1337 
 # ENTRYPOINT [ "python3", "mdi_thesis/base.py"]
-ENTRYPOINT [ "pdm", "run", "worker"]
+ENTRYPOINT ["/sbin/tini", "--", "pdm", "run", "worker"]
 # ENTRYPOINT [ "tail", "-f", "/dev/null"]
