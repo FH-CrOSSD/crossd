@@ -5,7 +5,7 @@
 	import { SearchOutline } from 'flowbite-svelte-icons';
 	import { Heading, P, A, Mark, Secondary } from 'flowbite-svelte';
 	import { toFixed2 } from '$lib/util';
-	import {filesize} from "filesize";
+	import { filesize } from 'filesize';
 	// import { fly, scale } from 'svelte/transition';
 	let visible = true;
 	console.log(data);
@@ -44,7 +44,7 @@
 				<P>Scanned projects:</P>
 				<P class="max-w-fit">{stats['unique_projects']}</P>
 				<P>Ø Scans per Project:</P>
-				<P class="max-w-fit">{toFixed2(stats['avg_scans_per_project'])}</P>
+				<P class="max-w-fit">{toFixed2(stats['avg_scans_per_project']) ?? 0}</P>
 				<P>Size of Documents:</P>
 				<P class="max-w-fit">{filesize(data['results']['figures']['docsSize'])}</P>
 				<P>Number of Documents</P>
