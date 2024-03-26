@@ -102,7 +102,7 @@ app = Celery(
 app.conf.task_routes = {
     "bak_tasks": {"queue": "bak", "routing_key": "bak"},
 }
-
+app.conf.result_extended = True
 
 @app.task(
     name="bak_tasks",

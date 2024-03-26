@@ -116,6 +116,7 @@ app.conf.task_routes = {
     "retrieve_github_url": {"queue": "collect", "routing_key": "collect"},
     "do_metrics": {"queue": "metric", "routing_key": "metric"},
 }
+app.conf.result_extended=True
 
 # try:
 #     repos = app.backend.db.createCollection(name="repositories")
