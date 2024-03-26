@@ -166,7 +166,8 @@
 
 <div class="">
 	<div class="flex flex-wrap justify-between">
-		<Heading class="max-w-fit break-words" tag="h1">{data.title}</Heading>
+		<!-- max-w-sm is 24 rem, so make max heading width slightly smaller -->
+		<Heading class="max-w-fit break-words max-w-[calc(100%-25rem)]" tag="h1">{data.title}</Heading>
 		<Select underline items={snapshots} bind:value={selected} class="max-w-sm min-w-sm" />
 	</div>
 	<Hr />
