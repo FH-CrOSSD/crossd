@@ -75,12 +75,12 @@
 		selector={bakGenericDataFn('osi_approved_license', project_id)}
 		iconFn={osiIcon}>OSI approved license:</IconMetricRow
 	>
-	<MetricRow
+	<FloatMetricRow
 		{selected}
 		selector={bakGenericDataFn('criticality_score', project_id)}
 		{chart}
 		data_id="criticality-score"
-		data_md="criticality_score">Criticality score:</MetricRow
+		data_md="criticality_score">Criticality score:</FloatMetricRow
 	>
 	<FloatMetricRow
 		data_id="support-rate"
