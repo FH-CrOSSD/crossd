@@ -15,18 +15,21 @@
 
 	function get_readme(item: { [key: string]: any }): string {
 		let res: string = '';
-		const prepare = (x: { [key: string]: any }, index: string) =>
-			x.repository.readmes[index]['text']
-				.split(' ')
-				.slice(0, 50)
-				.join(' ')
-				.replace(/<[^>]*>?/gm, '') + ' ...';
+		const prepare = (x: { [key: string]: any }, index: string) => {
+			return x.repository.readmes[index]
+				? x.repository.readmes[index]?.['text']
+						.split(' ')
+						.slice(0, 50)
+						.join(' ')
+						.replace(/<[^>]*>?/gm, '') + ' ...'
+				: undefined;
+		};
 
 		if (!item.repository.readmes) {
 			return res;
 		}
 
-		if ('README_md' in item.repository.readmes) {
+		if ('README_md' in item.repository.readmes && item.repository.readmes['README_md']) {
 			res = prepare(item, 'README_md');
 		} else {
 			for (let rm in item.repository.readmes) {
