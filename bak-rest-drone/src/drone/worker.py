@@ -15,10 +15,14 @@ import time
 import json
 from datetime import date, timedelta
 import os
+import os.path
 
 console = Console(force_terminal=True)
 err_console = Console(stderr=True, style="bold red")
 
+OUT_PATH = "/home/collector-drone/thesis_metrics-main/outputs"
+DATA_PATH = os.path.join(OUT_PATH, "data")
+RESULT_FILE_PATH = os.path.join(OUT_PATH, "results/csv_metrics.json")
 # from arango import ArangoClient
 
 # client = ArangoClient(hosts='https://arangodb-cluster-internal:8529',verify_override=False)
@@ -104,6 +108,7 @@ app.conf.task_routes = {
 }
 app.conf.result_extended = True
 
+
 @app.task(
     name="bak_tasks",
     base=CollectTask,
@@ -122,12 +127,25 @@ def bak_tasks(self, owner: str, name: str, scan: str, sub: bool = False):
         get_existing_repos=False,
         repo_list=[f"{owner}/{name}"],
     )
+    data = {}
+    for filename in os.listdir(DATA_PATH):
+        if filename.endswith(".json"):
+            data[filename.removesuffix(".json")] = json.loads(
+                open(os.path.join(DATA_PATH, filename)).read()
+            )
+
+    data["task_id"] = self.request.id
+    data["timestamp"] = time.time()
+    data["scan_id"] = scan
+    data["identity"] = {
+        "name": name,
+        "owner": owner,
+        "name_with_owner": f"{owner}/{name}",
+    }
+    self._get_collection("bak_repos").createDocument(initDict=data).save()
+
     MetricsPipeline(filter_date=date.today() - timedelta(days=1)).run_metrics_to_json()
-    res = json.loads(
-        open(
-            "/home/collector-drone/thesis_metrics-main/outputs/results/csv_metrics.json"
-        ).read()
-    )
+    res = json.loads(open(RESULT_FILE_PATH).read())
     res["task_id"] = self.request.id
     res["timestamp"] = time.time()
     res["scan_id"] = scan
@@ -137,6 +155,11 @@ def bak_tasks(self, owner: str, name: str, scan: str, sub: bool = False):
         "name_with_owner": f"{owner}/{name}",
     }
     doc = self.collection.createDocument(initDict=res).save()
+
+    for filename in os.listdir(DATA_PATH):
+        if filename.endswith(".json"):
+            os.remove(os.path.join(DATA_PATH, filename))
+    os.remove(RESULT_FILE_PATH)
 
     # pipeline.run_metrics_to_json()
     return res
