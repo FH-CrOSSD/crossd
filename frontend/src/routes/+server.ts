@@ -5,7 +5,7 @@ import { error } from '@sveltejs/kit';
 import { db } from "$hook.server";
 
 const coll = db.collection("projects");
-const collections = ["repositories", "metrics", "bak_metrics", "task_results", "scans", "projects"];
+const collections = ["repositories", "metrics", "bak_metrics", "task_results", "scans", "projects", "bak_repos"];
 /** @type {import('./$types').RequestHandler} */
 export async function POST() {
     let figures = { docsSize: 0, docsCount: 0 };
