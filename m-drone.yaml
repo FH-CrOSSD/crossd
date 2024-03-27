@@ -45,6 +45,8 @@ spec:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
         env:
+        - name: PDM_LOG_DIR
+          value: /tmp
         - name: GH_TOKEN
           valueFrom:
             secretKeyRef:

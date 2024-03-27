@@ -45,6 +45,8 @@ spec:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
         env:
+        - name: PDM_LOG_DIR
+          value: /tmp
         - name: XDG_CONFIG_HOME
           value: /tmp/.chromium
         - name: XDG_CACHE_HOME

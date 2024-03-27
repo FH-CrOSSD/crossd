@@ -45,6 +45,8 @@ spec:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
         env:
+        - name: PDM_LOG_DIR
+          value: /tmp
         - name: GH_TOKEN
           valueFrom:
             secretKeyRef:
@@ -65,24 +67,8 @@ spec:
         volumeMounts:
         - name: tmp
           mountPath: /tmp
-        # name must match the volume name below
-        # - name: secret-volume
-        #   mountPath: /home/collector-drone/.env
-        #   readOnly: true
-        # volumeMounts:
-        #     - mountPath: /data
-        #       name: redis-pvc
-              # readOnly: true
-      # volumes:
-      #   - name: redis-pvc
-      #     persistentVolumeClaim:
-      #       claimName: redis-pvc
-            # readOnly: true
       volumes:
       - name: tmp
         emptyDir:
           sizeLimit: 500Mi
-      # - name: secret-volume
-      #   secret:
-      #     secretName: ghtoken
 status: {}
