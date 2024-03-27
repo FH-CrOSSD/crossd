@@ -18,6 +18,7 @@ try {
     db._createDocumentCollection("projects");
     db._createDocumentCollection("scans");
     db._createDocumentCollection("bak_metrics");
+    db._createDocumentCollection("bak_repos");
     db._createDocumentCollection("metrics");
     db._createDocumentCollection("repositories");
 }
