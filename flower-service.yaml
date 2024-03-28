@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flower-service
+spec:
+  # externalIPs:
+  # - 10.0.2.15
+  # type: NodePort
+  type: ClusterIP
+  selector:
+    # app.kubernetes.io/component: redis
+    pod: flower
+  ports:
+    - protocol: TCP
+      port: 5555
+      targetPort: 5555
+      #nodePort: 30555

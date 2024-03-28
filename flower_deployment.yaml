@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: flower
+    environment: prod
+    app.kubernetes.io/name: crossd
+    app.kubernetes.io/instance: crossd-alpha
+    app.kubernetes.io/version: "0.1"
+    app.kubernetes.io/component: flower
+    app.kubernetes.io/part-of: crossd
+  name: flower
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  selector:
+    matchLabels:
+      # run: flower
+      app: flower
+  strategy:
+    rollingUpdate:
+      maxSurge: 20%
+      maxUnavailable: 0%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        # run: flower
+        app: flower
+        pod: flower
+    spec:
+      containers:
+      - name: flower
+        image: mher/flower
+        ports:
+          - containerPort: 5555
+        # args:
+        # - --broker=redis://redis-service:6379/0
+        command: ["celery", "--broker=redis://redis-service:6379/0", "flower"]
+        #command: ["tail", "-f", "/dev/null"]
+        imagePullPolicy: Always
+        env:
+        - name: FLOWER_BASIC_AUTH
+          valueFrom:
+            secretKeyRef:
+              name: flower-basic-auth
+              key: AUTH
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
