@@ -12,8 +12,13 @@ mkdir -p secrets
 chown root:root secrets -R
 chmod o-r-w-x secrets -R
 
-# microk8s helm repo add cert-manager https://charts.jetstack.io
-# microk8s helm install trust-manager cert-manager/trust-manager
+microk8s helm repo add cert-manager https://charts.jetstack.io
+microk8s helm install trust-manager cert-manager/trust-manager
+
+microk8s kubectl apply -f certificates/clusterIssuer.yaml -f certificates/CAIssuer.yaml -f certificates/CACertificate.yaml
+microk8s kubectl apply -f certificates/trustBundle.yaml -f certificates/redisCertificate
+sleep 2
+microk8s kubectl create secret generic arango-ca --from-literal=ca.crt="$(microk8s kubectl get secret root-secret --namespace=cert-manager -o jsonpath="{.data['ca\.crt']}" | base64 -d)" --from-literal=ca.key="$(microk8s kubectl get secret root-secret --namespace=cert-manager -o jsonpath="{.data['tls\.key']}" | base64 -d)"
 
 microk8s kubectl apply -f arango-setup/arango-crd.yaml
 microk8s kubectl apply -f arango-setup/arango-deployment.yaml
