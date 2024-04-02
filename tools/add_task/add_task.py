@@ -7,7 +7,7 @@ import argparse
 
 app = Celery(
     "collect",
-    broker="redis://redis-service:6379/0",
+    broker="redis://redis-service:6379/0?ssl_cert_reqs=required",
     # backend="arangodb://root:@arangodb-cluster-internal:8529/crossd/task-results",
     broker_connection_retry_on_startup=True,
 )
@@ -46,7 +46,7 @@ def main(args):
         arangoURL="https://arangodb-cluster-internal:8529",
         username=args.user,
         password=args.password,
-        verify=False,
+        verify=True,
     )
     if not conn["crossd"].hasCollection("scans"):
         conn["crossd"].createCollection(name="scans")

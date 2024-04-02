@@ -28,8 +28,10 @@ spec:
         args:
         - >
           python3 add_task.py --user $USER --password $PASSWORD
-          sveltejs/kit torvalds/linux cli/cli
+          Peacexo/PAJAApp
         env:
+        - name: REQUESTS_CA_BUNDLE
+          value: /etc/ssl/certs/ca-certificates.crt
         - name: USER
           valueFrom:
             secretKeyRef:
@@ -40,12 +42,23 @@ spec:
             secretKeyRef:
               name: arango-worker-pwd
               key: password
-        # volumeMounts:
+        volumeMounts:
+        - name: ca-certificates
+          mountPath: /etc/ssl/certs/
+          readOnly: true
         #   - name: "arango-init"
         #     mountPath: "/init.js"
         #     subPath: "arango_init.js"
       restartPolicy: Never
       volumes:
+      - name: ca-certificates
+        configMap:
+          name: cert-bundle
+          defaultMode: 0644
+          optional: false
+          items:
+          - key: ca-certificates.crt
+            path: ca-certificates.crt
       # - name: root-user
       #   secret:
       #     secretName: arango-root-pwd

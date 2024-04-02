@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 celery = {version = "*", extras = ["arangodb", "auth", "brotli", "msgpack", "redis"]}
 pyarango = "*"
+requests-toolbelt = "*"
 
 [dev-packages]
 
