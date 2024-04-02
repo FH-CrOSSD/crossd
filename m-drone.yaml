@@ -45,6 +45,8 @@ spec:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
         env:
+        - name: REQUESTS_CA_BUNDLE
+          value: /etc/ssl/certs/ca-certificates.crt
         - name: PDM_LOG_DIR
           value: /tmp
         - name: GH_TOKEN
@@ -65,6 +67,9 @@ spec:
         - name: PYTHONUNBUFFERED
           value: "1"
         volumeMounts:
+        - name: ca-certificates
+          mountPath: /etc/ssl/certs/
+          readOnly: true
         - name: tmp
           mountPath: /tmp
         # name must match the volume name below
@@ -79,6 +84,14 @@ spec:
         - name: tmp
           emptyDir:
             sizeLimit: 500Mi
+        - name: ca-certificates
+          configMap:
+            name: cert-bundle
+            defaultMode: 0644
+            optional: false
+            items:
+            - key: ca-certificates.crt
+              path: ca-certificates.crt
       #   - name: redis-pvc
       #     persistentVolumeClaim:
       #       claimName: redis-pvc

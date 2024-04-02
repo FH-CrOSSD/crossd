@@ -45,6 +45,8 @@ spec:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
         env:
+        - name: REQUESTS_CA_BUNDLE
+          value: /etc/ssl/certs/ca-certificates.crt
         - name: PDM_LOG_DIR
           value: /tmp
         - name: GH_TOKEN
@@ -67,8 +69,19 @@ spec:
         volumeMounts:
         - name: tmp
           mountPath: /tmp
+        - name: ca-certificates
+          mountPath: /etc/ssl/certs/
+          readOnly: true
       volumes:
       - name: tmp
         emptyDir:
           sizeLimit: 500Mi
+      - name: ca-certificates
+        configMap:
+          name: cert-bundle
+          defaultMode: 0644
+          optional: false
+          items:
+          - key: ca-certificates.crt
+            path: ca-certificates.crt
 status: {}
