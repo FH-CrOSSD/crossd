@@ -4,6 +4,9 @@ metadata:
   name: "cluster"
 spec:
   mode: Cluster
+  tls:
+    caSecretName: arango-ca
+    altNames: ["arangodb-cluster-internal"]
   bootstrap:
     passwordSecretNames:
       root: arango-root-pwd
