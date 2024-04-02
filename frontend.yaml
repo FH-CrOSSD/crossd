@@ -50,6 +50,10 @@ spec:
         #     secretKeyRef:
         #       name: ghtoken
         #       key: GH_TOKEN
+        # - name: NODE_EXTRA_CA_CERTS
+        #   value: /etc/ssl/certs/ca-certificates.crt
+        - name: NODE_OPTIONS
+          value: --use-openssl-ca
         - name: NODE_ENV
           value: "production"
         - name: FRONTEND_USER
@@ -75,11 +79,22 @@ spec:
         # - name: secret-volume
         #   mountPath: /home/collector-drone/.env
         #   readOnly: true
-        # volumeMounts:
+        volumeMounts:
+        - name: ca-certificates
+          mountPath: /etc/ssl/certs/
+          readOnly: true
         #     - mountPath: /data
         #       name: redis-pvc
               # readOnly: true
-      # volumes:
+      volumes:
+      - name: ca-certificates
+        configMap:
+          name: cert-bundle
+          defaultMode: 0644
+          optional: false
+          items:
+          - key: ca-certificates.crt
+            path: ca-certificates.crt
       #   - name: redis-pvc
       #     persistentVolumeClaim:
       #       claimName: redis-pvc
