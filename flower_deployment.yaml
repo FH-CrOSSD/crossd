@@ -36,14 +36,29 @@ spec:
           - containerPort: 5555
         # args:
         # - --broker=redis://redis-service:6379/0
-        command: ["celery", "--broker=redis://redis-service:6379/0", "flower"]
+        command: ["celery", "--broker=redis://redis-service:6379/0?ssl_cert_reqs=required", "flower"]
         #command: ["tail", "-f", "/dev/null"]
         imagePullPolicy: Always
         env:
+        - name: REQUESTS_CA_BUNDLE
+          value: /etc/ssl/certs/ca-certificates.crt
         - name: FLOWER_BASIC_AUTH
           valueFrom:
             secretKeyRef:
               name: flower-basic-auth
               key: AUTH
+        volumeMounts:
+        - name: ca-certificates
+          mountPath: /etc/ssl/certs/
+          readOnly: true
+      volumes:
+        - name: ca-certificates
+          configMap:
+            name: cert-bundle
+            defaultMode: 0644
+            optional: false
+            items:
+            - key: ca-certificates.crt
+              path: ca-certificates.crt
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
