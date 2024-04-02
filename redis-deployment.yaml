@@ -34,7 +34,7 @@ spec:
         args:
             - sh
             - -c
-            - ' docker-entrypoint.sh --appendonly "yes" '
+            - ' docker-entrypoint.sh --appendonly "yes" --tls-port 6379 --port 0 --tls-cert-file /tls/tls.crt --tls-key-file /tls/tls.key --tls-ca-cert-file /tls/ca.crt --tls-auth-clients no'
         ports:
         - containerPort: 6379
         imagePullPolicy: Always
@@ -46,9 +46,15 @@ spec:
             - mountPath: /data
               name: redis-pvc
               # readOnly: true
+            - name: certs
+              mountPath: "/tls"
+              readOnly: true
       volumes:
         - name: redis-pvc
           persistentVolumeClaim:
             claimName: redis-pvc
+        - name: certs
+          secret:
+            secretName: redis-cert-secret
             # readOnly: true
 status: {}
