@@ -34,7 +34,7 @@ spec:
         args:
             - sh
             - -c
-            - ' docker-entrypoint.sh --appendonly "yes" --tls-port 6379 --port 0 --tls-cert-file /tls/tls.crt --tls-key-file /tls/tls.key --tls-ca-cert-file /tls/ca.crt --tls-auth-clients no'
+            - " docker-entrypoint.sh --appendonly \"yes\" --requirepass $RAUTH --tls-port 6379 --port 0 --tls-cert-file /tls/tls.crt --tls-key-file /tls/tls.key --tls-ca-cert-file /tls/ca.crt --tls-auth-clients no"
         ports:
         - containerPort: 6379
         imagePullPolicy: Always
@@ -42,6 +42,12 @@ spec:
         resources: {}
         securityContext:
           allowPrivilegeEscalation: false
+        env:
+        - name: RAUTH
+          valueFrom:
+            secretKeyRef:
+              name: redis-auth
+              key: RAUTH
         volumeMounts:
             - mountPath: /data
               name: redis-pvc
