@@ -90,7 +90,7 @@ class CollectTask(BaseTask):
 
 app = Celery(
     "collect",
-    broker="redis://redis-service:6379/0",
+    broker="redis://redis-service:6379/0?ssl_cert_reqs=required",
     backend="arangodb://{}:@arangodb-cluster-internal:8529/crossd/task_results".format(
         os.environ.get("WORKER_USER", "root")
     ),
@@ -99,6 +99,7 @@ app = Celery(
         "http_protocol": "https",
         "username": os.environ.get("WORKER_USER", "root"),
         "password": os.environ.get("WORKER_PASSWORD", ""),
+        "verify": True,
         # "database": "crossd",
     },
 )

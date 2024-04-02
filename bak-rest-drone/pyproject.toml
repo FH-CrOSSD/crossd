@@ -8,6 +8,7 @@ authors = [
 dependencies = [
     "celery[arangodb,auth,brotli,msgpack,redis]>=5.3.6",
     "rich>=13.7.0",
+    "requests-toolbelt>=1.0.0",
 ]
 requires-python = ">=3.10"
 readme = "README.md"

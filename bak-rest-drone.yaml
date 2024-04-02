@@ -45,6 +45,8 @@ spec:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
         env:
+        - name: REQUESTS_CA_BUNDLE
+          value: /etc/ssl/certs/ca-certificates.crt
         - name: PDM_LOG_DIR
           value: /tmp
         - name: XDG_CONFIG_HOME
@@ -85,6 +87,9 @@ spec:
           mountPath: /.cache/selenium
         - mountPath: /dev/shm
           name: dshm
+        - name: ca-certificates
+          mountPath: /etc/ssl/certs/
+          readOnly: true
         # volumeMounts:
         #     - mountPath: /data
         #       name: redis-pvc
@@ -117,4 +122,12 @@ spec:
         emptyDir:
           medium: Memory
           sizeLimit: 1Gi
+      - name: ca-certificates
+        configMap:
+          name: cert-bundle
+          defaultMode: 0644
+          optional: false
+          items:
+          - key: ca-certificates.crt
+            path: ca-certificates.crt
 status: {}
