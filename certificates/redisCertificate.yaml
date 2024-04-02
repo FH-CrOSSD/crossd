@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: redis-cert
+spec:
+  secretName: redis-cert-secret
+  isCA: false
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+  - "redis-service"
+  issuerRef:
+    name: my-ca-issuer
+    kind: ClusterIssuer
+  # additionalOutputFormats:
+  # - type: CombinedPEM
+  # - type: DER
