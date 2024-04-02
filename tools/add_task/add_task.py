@@ -3,11 +3,14 @@
 from celery import Celery
 import pyArango.connection
 import time
+import os
 import argparse
 
 app = Celery(
     "collect",
-    broker="redis://redis-service:6379/0?ssl_cert_reqs=required",
+    broker="redis://:{}@redis-service:6379/0?ssl_cert_reqs=required".format(
+        os.environ.get("RAUTH", "")
+    ),
     # backend="arangodb://root:@arangodb-cluster-internal:8529/crossd/task-results",
     broker_connection_retry_on_startup=True,
 )

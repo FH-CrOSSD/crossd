@@ -49,6 +49,11 @@ spec:
           value: /etc/ssl/certs/ca-certificates.crt
         - name: PDM_LOG_DIR
           value: /tmp
+        - name: RAUTH
+          valueFrom:
+            secretKeyRef:
+              name: redis-auth
+              key: RAUTH
         - name: GH_TOKEN
           valueFrom:
             secretKeyRef:

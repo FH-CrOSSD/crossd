@@ -54,6 +54,11 @@ spec:
             secretKeyRef:
               name: ghtoken
               key: GH_TOKEN
+        - name: RAUTH
+          valueFrom:
+            secretKeyRef:
+              name: redis-auth
+              key: RAUTH
         - name: WORKER_USER
           valueFrom:
             secretKeyRef:

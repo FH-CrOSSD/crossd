@@ -68,6 +68,11 @@ spec:
             secretKeyRef:
               name: arango-worker-pwd
               key: password
+        - name: RAUTH
+          valueFrom:
+            secretKeyRef:
+              name: redis-auth
+              key: RAUTH
         - name: PYTHONUNBUFFERED
           value: "1"
         volumeMounts:

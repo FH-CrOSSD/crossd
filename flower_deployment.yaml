@@ -36,7 +36,9 @@ spec:
           - containerPort: 5555
         # args:
         # - --broker=redis://redis-service:6379/0
-        command: ["celery", "--broker=redis://redis-service:6379/0?ssl_cert_reqs=required", "flower"]
+        command: ["sh", "-c"]
+        args: 
+        - "celery --broker=redis://:$RAUTH@redis-service:6379/0?ssl_cert_reqs=required flower"
         #command: ["tail", "-f", "/dev/null"]
         imagePullPolicy: Always
         env:
@@ -47,6 +49,11 @@ spec:
             secretKeyRef:
               name: flower-basic-auth
               key: AUTH
+        - name: RAUTH
+          valueFrom:
+            secretKeyRef:
+              name: redis-auth
+              key: RAUTH
         volumeMounts:
         - name: ca-certificates
           mountPath: /etc/ssl/certs/

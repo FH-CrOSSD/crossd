@@ -42,6 +42,11 @@ spec:
             secretKeyRef:
               name: arango-worker-pwd
               key: password
+        - name: RAUTH
+          valueFrom:
+            secretKeyRef:
+              name: redis-auth
+              key: RAUTH
         volumeMounts:
         - name: ca-certificates
           mountPath: /etc/ssl/certs/
