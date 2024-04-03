@@ -110,7 +110,7 @@ spec:
       #     secretName: ghtoken
       - name: data
         emptyDir:
-          sizeLimit: 500Mi
+          sizeLimit: 1Gi
       - name: results
         emptyDir:
           sizeLimit: 500Mi
