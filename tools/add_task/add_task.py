@@ -73,6 +73,7 @@ def main(args):
                     "bak_tasks": (owner, name),
                     "retrieve_github": (owner, name),
                 },
+                "tags": args.tag
             }
         )
         doc.save()
@@ -111,6 +112,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--password", help="arangodb password", default="worker"
+    )
+    parser.add_argument(
+        "-t", "--tag", action="append", help="Set a tag for the scan", default=[]
     )
     args = parser.parse_args()
     main(args)
