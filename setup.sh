@@ -1,5 +1,7 @@
 #!/bin/bash
 
+if [ "$(id -u)" -ne 0 ]; then echo "Please run as root." >&2; exit 1; fi
+
 SCRIPTPATH=$(dirname "$(realpath "$0")")
 
 addons="registry dns hostpath-storage ingress cert-manager"
