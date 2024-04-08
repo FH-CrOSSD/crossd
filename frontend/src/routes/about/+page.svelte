@@ -30,7 +30,7 @@
 	<P
 		>We are regularly crawling selected sets of projects and recording their metrics. Currently, we
 		are limiting our scope to projects publicly listed on GitHub, but we are actively developing it
-		and continously improving it. If you have suggestions for desirable features or wish to
+		and continuously improving it. If you have suggestions for desirable features or wish to
 		contribute yourself, please let us know!
 	</P>
 </div>
