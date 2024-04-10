@@ -22,6 +22,14 @@ projects in need of help.
 - Resource definitions for running components in a Kubernetes cluster
 - Setup script for MicroK8s 
 
+## Quick Start Guide
+
+- Clone this repository
+- Install requirements buildah, microk8s (see [requirements](#requirements))
+- Create the secrets (see [secrets](#secrets))
+- Create ingress files if needed (see [ingress](#ingress))
+- Execute `./setup.sh`
+
 ## Installation
 
 ### Requirements
@@ -139,11 +147,6 @@ This project contains the setup script `setup.sh`, which performs the necessary 
     - Workers
     - Frontend
     - Flower
-
-You need to:
-- create the secrets (see [secrets](#secrets))
-- create ingress files if needed (see [ingress](#ingress))
-- execute `./setup.sh`
 
 ### Ingress
 
