@@ -47,17 +47,17 @@ Microk8s needs the following plugins (enabled inside the setup script):
 
 ### Secrets
 
-The projects needs several secrets (passwords and users) in order to enable the services to interact securely.
+The project needs several secrets (passwords and users) in order to enable the services to interact securely.
 
 The folder `secret_templates` contains all necessary templates.
-Copy it with `cp -r secret_templates secrets` and replace all placeholders (`<username>`, `<password>`, `github token`) with the base64 encoded corresponding values. 
+Copy it with `cp -r secret_templates secrets` and replace all placeholders (`<username>`, `<password>`, `<github token>`) with the base64 encoded corresponding values. 
 
 You can encode your values with e.g.:
 ```bash
 echo -n "replace-me" | base64 -w0
 ```
 
-The project need following secrets:
+The project needs following secrets:
 
 #### arango-frontend-pwd
 
@@ -183,21 +183,215 @@ options:
 ## Components
 ![cluster drawio](https://github.com/FH-CrOSSD/crossd/assets/20456596/cb1b92f1-779c-4f09-ab2c-d422c4552556)
 
+Our project uses [MicroK8s](https://microk8s.io/) and in turn various components which are realised as Kubernetes Pods, Deployments, etc. 
+
+Pod can interact with each other only via defined interfaces (so-called Services) and use TLS to encrypt the traffic. Specifically, connections to ArangoDB and Redis are encrypted via TLS using self-signed certificates created with [cert-manager](https://cert-manager.io/).
+
+> ArangoDB creates self-signed certificates for the agents, coordinators and db-servers. ArangoDB handles issuing the certificates itself and is therefore provided with the CA certificate and key from cert-manager.
+
+The containers establishing a connection to ArangoDB or Redis are provided with the CA certificate using trust bundles of [trust-manager](https://cert-manager.io/docs/trust/trust-manager/).
+
+
 ### ArangoDB
-### Celery Task Queue (+ Redis)
+[ArangoDB](https://arangodb.com/) is used as a persistent storage for data such as repository information and calculated metrics. We utilise the [ArangoDB Kubernetes Operator](https://arangodb.github.io/kube-arangodb/docs/using-the-operator) for deploying a database cluster.
+
+Collections inside the `crossd` database:
+- task_results
+  - Stores Celery task results, statuses, errors, ...
+- scans
+  - Stores information about the scans such as tasks for the repository, tags and connects other documents via the scan id
+- projects
+  - Contains owner/name of all scanned projects and the corresponding scan ids
+- repositories
+  - Stores information about repositories collected by c-drone
+- metrics
+  - Stores results of calculated metrics provided by m-drone
+- bak_repos
+  - Stores information about repositories collected by bak-rest-drone
+- bak_metrics
+  - Stores results of calculated metrics provided by bak-rest-drone
+
+Secrets:
+- arango-frontend-pwd
+- arango-worker-pwd
+- arango-root-pwd
+
+Services:
+- arango-cluster-internal:8529 (internal)
+- arango-cluster-exposed:30529 (optional, external, dev)
+
+Ingress:
+- arangodb-ingress:443 (optional, external)
+
+Interacting Components:
+- Frontend
+- Add Task Job
+- m-drone
+- c-drone
+- bak-rest-drone
+- Arango Init Job
+
+### Redis (Celery Task Queue)
+[Redis](https://redis.io/) acts as the broker for our [Celery Task Queue](https://docs.celeryq.dev/en/stable/#). It stores and distributes the tasks for our workers.
+
+Secrets:
+- redis-auth
+
+Services:
+- redis-service:6379 (internal)
+
+Interacting Components:
+- Flower
+- Add Task Job
+- m-drone
+- c-drone
+- bak-rest-drone
+
+> We did not provide a (development) external service for Redis, as we deemed it not necessary. If you need to inspect the Redis database, get into the pod, establish a TLS connection and authenticate to Redis.
+```bash
+# connect into pod
+microk8s kubectl exec -it <pod name> -- sh
+# connect to redis
+redis-cli --tls --cacert /tls/ca.crt
+# authenticate inside redis
+127.0.0.1:6379> auth <password in redis-auth>
+```
+
 ### Flower
-### Crawlers
-### Metrics
+[Flower](https://flower.readthedocs.io/en/latest/) is used to monitor our Celery workers and tasks. It uses HTTP basic authentication.
+
+Secrets:
+- flower-basic-auth
+
+Services:
+- flower-service:5555 (internal)
+- flower-service-exposed:30555 (optional, external, dev)
+
+Ingress:
+- flower-ingress:443 (optional, external)
+
+Interacting Components:
+- Redis
+
+### Crawlers & Metrics
+
+These pods retrieve the necessary information about repositories and calculate our [defined metrics](https://health.crossd.tech/doc) for assessing the health of OSS projects. 
+
+Secrets:
+- arango-worker-pwd
+- redis-auth
+- ghtoken
+
+Interacting Components:
+- Redis
+- ArangoDB
+
+#### c-drone
+
+A Python [Celery](https://docs.celeryq.dev/en/stable/#) worker that queries GitHub mostly via GraphQL, but also via REST API and crawls the github.com repository pages.
+
+Stores the results in the `repositories` collection in ArangoDB and calls the subsequent task for calculating the metrics processed by m-drone.
+
+#### m-drone
+
+A Python [Celery](https://docs.celeryq.dev/en/stable/#) worker that receives the results from c-drone and calculates metrics.
+
+Stores the results in the `metrics` collection in ArangoDB.
+
+#### bak-rest-drone
+
+A Python [Celery](https://docs.celeryq.dev/en/stable/#) worker that queries GitHub mostly REST API, but also crawls the github.com repository pages.
+
+Stores the data about the repositories in the `bak_repos` and the calculated metrics in the `bak_metrics` collection in ArangoDB.
+
+We mostly use the [source code](https://github.com/JacquelineSchmatz/MDI_Thesis) developed by Jacqueline Schmatz for her master thesis (with some modifications). The metrics Jacqueline Schmatz chose are listed [here](https://health.crossd.tech/doc). 
+
 ### Frontend
 
+Our web interface uses [Svelte](https://svelte.dev/) and [Svelte Kit](https://kit.svelte.dev/) and provides access to the metrics of OSS projects. It also contains a list of the metrics.
 
+Our public instance is available [here](https://health.crossd.tech).
+
+Secrets:
+- arango-frontend-pwd
+
+Services:
+- frontend-service:3000 (internal)
+- frontend-service-exposed:30380 (optional, external, dev)
+
+Ingress:
+- frontend-ingress:443 (optional, external)
+
+Interacting Components:
+- ArangoDB
+
+### Add Task Job
+
+[Kubernetes Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) for adding tasks to our Celery task queue as well as creating `scans` and `projects` entries in ArangoDB.
+
+> We decided to use jobs and therefore separate pods and container images for adding tasks, because we need the certificates for the TLS connections to Redis and ArangoDB (stored inside Kubernetes secrets) and also users and passwords (also stored in Kubernetes secrets). 
+
+> Additionally, we did not want to require NodePort services (opening the ports on the node) as this cannot be limited to localhost.
+
+> Connecting to ClusterIP services (internal) would work, but the IPs are dynamic and we did not want to require changes to the DNS resolver on the host.
+
+Our example `add_task_job.yaml` uses repositories owner/name arguments provided inside the yaml file, but they could also be provided e.g. via a Kubernetes [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/).
+
+Secrets:
+- arango-worker-pwd
+- redis-auth
+
+Interacting Components:
+- ArangoDB
+- Redis
+
+### Arango Init Job
+This [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) waits for ArangoDB to be up and running and runs the script `arango-init/arango_init.js`, which creates the `crossd` database, all necessary collections and additional users for the frontend (readonly) and the workers (read/write).
+
+The script `arango-init/arango_init.js` is mounted as a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/).
+
+Secrets:
+- arango-root-pwd
+- arango-worker-pwd
+- arango-frontend-pwd
+
+Interacting Components:
+- ArangoDB
+
+### External Services
+
+All external services (Kubernetes type [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport)) are optional and should only be used in development environment. They open up ports on the node, which can be used to connect to the service from outside the cluster.
+
+We defined external service for:
+- ArangoDB
+  - arangodb-cluster-exposed:30529
+- Frontend
+  - frontend-service-exposed:30380
+- Flower
+  - flower-service-exposed:30555
+
+### Ingress
+
+[Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) acts a reverse proxy and load balancer and provides access to service from the outside. It is also able to terminate TLS connections and request Let's Encrypt certificates. As we use MicroK8s `ingress` plugin, `nginx` acts as our [Ingress Controller](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/).
+
+The ClusterIssuer `lets-encrypt` retrieves the Let's Encrypt certificates for our cluster. It is optional and the template is located at `ingress_templates/cluster-issuer.yaml`.
+
+We defined templates for ingress endpoints for:
+- ArangoDB
+  - `ingress_templates/arangodb-ingress.yaml`
+- Frontend
+  - `ingress_templates/frontend-ingress.yaml`
+- Flower
+  - `ingress_templates/flower-ingress.yaml`
+
+> All ingress endpoints use TCP port 443 for providing HTTPS connections.
 
 ## Known issues and limitations
 
-- This projects was tested with microk8s using a single node cluster
+- This project was tested with microk8s using a single node cluster
 - This project is currently only intended for use with GitHub repositories
 - The CPU needs to support AVX as this is a requirement of ArangoDB
-- All Kubernetes resources use currently the default namespace
+- All Kubernetes resources currently use the default namespace
 
 ## Acknowledgements
 
