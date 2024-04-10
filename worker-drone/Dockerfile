@@ -1,11 +1,7 @@
 FROM python:3.11-alpine as build
 
 WORKDIR /home/collector-drone
-# ARG GH_TOKEN
-# ENV GH_TOKEN=$GH_TOKEN
-RUN --mount=type=secret,id=ghtoken,target=/run/secrets/ghtoken \
- wget --header "Authorization: Bearer $(cat /run/secrets/ghtoken)" https://github.com/FH-CrOSSD/metrics/archive/refs/heads/main.zip -O - | unzip -
-# RUN unzip main.zip 
+RUN wget https://github.com/FH-CrOSSD/metrics/archive/refs/heads/main.zip -O - | unzip -
 
 # install PDM
 RUN pip install -U pip setuptools wheel --no-cache-dir
@@ -13,12 +9,7 @@ RUN pip install pdm --no-cache-dir
 
 WORKDIR /home/collector-drone/metrics-main
 RUN mkdir __pypackages__ && pdm sync --prod --no-editable
-# RUN pdm add pdm
 
-# COPY . .
-# RUN pip3 install -r requirements.txt
-# # WORKDIR /home/collector-drone/MDI_Thesis
-# RUN pip3 install -e MDI_Thesis
 FROM python:3.11-alpine 
 RUN pip install pdm --no-cache-dir
 ENV PYTHONPATH=/project/pkgs
@@ -30,9 +21,6 @@ WORKDIR /home/collector-drone
 COPY . .
 RUN pdm install
 RUN pdm cache clear
-# RUN pip3 install -r requirements.txt
-# RUN apk add coreutils
+
 USER 1337:1337
-# ENTRYPOINT [ "python3", "mdi_thesis/base.py"]
 ENTRYPOINT [ "pdm", "run", "worker"]
-# ENTRYPOINT [ "tail", "-f", "/dev/null"]
