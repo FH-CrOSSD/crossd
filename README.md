@@ -181,7 +181,7 @@ options:
 ```
 
 ## Components
-<insert image>
+![cluster drawio](https://github.com/FH-CrOSSD/crossd/assets/20456596/cb1b92f1-779c-4f09-ab2c-d422c4552556)
 
 ### ArangoDB
 ### Celery Task Queue (+ Redis)
@@ -202,5 +202,7 @@ options:
 ## Acknowledgements
 
 The financial support from Internetstiftung/Netidee is gratefully acknowledged. The mission of Netidee is to support development of open-source tools for more accessible and versatile use of the Internet in Austria.
+
+
 
 
