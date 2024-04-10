@@ -184,7 +184,7 @@ options:
 ```
 
 ## Components
-![cluster drawio](https://github.com/FH-CrOSSD/crossd/assets/20456596/cb1b92f1-779c-4f09-ab2c-d422c4552556)
+![cluster](https://github.com/FH-CrOSSD/crossd/assets/20456596/3b1e8458-9dc6-465e-a7bb-8be67de3dfcd)
 
 Our project uses [MicroK8s](https://microk8s.io/) and in turn various components which are realised as Kubernetes Pods, Deployments, etc. 
 
@@ -201,6 +201,7 @@ The containers establishing a connection to ArangoDB or Redis are provided with 
 Collections inside the `crossd` database:
 - task_results
   - Stores Celery task results, statuses, errors, ...
+
 - scans
   - Stores information about the scans such as tasks for the repository, tags and connects other documents via the scan id
 - projects
