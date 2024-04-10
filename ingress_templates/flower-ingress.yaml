@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+ name: flower-ingress
+ annotations:
+   cert-manager.io/cluster-issuer: lets-encrypt
+   nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+ tls:
+ - hosts:
+   - <domain>
+   secretName: flower-ingress-tls
+ rules:
+ - host: <domain>
+   http:
+     paths:
+     - backend:
+         service:
+           name: flower-service
+           port:
+             number: 5555
+       path: /
+       pathType: Prefix

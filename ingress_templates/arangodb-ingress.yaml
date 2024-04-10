@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+ name: arangodb-ingress
+ annotations:
+   cert-manager.io/cluster-issuer: lets-encrypt
+   nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+   nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+ tls:
+ - hosts:
+   - <domain>
+   secretName: arangodb-ingress-tls
+ rules:
+ - host: <domain>
+   http:
+     paths:
+     - backend:
+         service:
+           name: arangodb-cluster-internal
+           port:
+             number: 8529
+       path: /
+       pathType: Prefix

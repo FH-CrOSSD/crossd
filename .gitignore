@@ -1,2 +1,4 @@
 secrets/*
 !secrets/.gitkeep
+ingress/*
+!ingress/.gitkeep
