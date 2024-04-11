@@ -28,6 +28,7 @@ projects in need of help.
 - Install requirements buildah, microk8s (see [requirements](#requirements))
 - Create the secrets (see [secrets](#secrets))
 - Create ingress files if needed (see [ingress](#ingress))
+- Modify `ORIGIN` env variable in `frontend.yaml` (see [origin](#frontend-origin))
 - Execute `./setup.sh`
 
 ## Installation
@@ -129,6 +130,24 @@ chmod o-r-w-x secrets -R
 ```
 
 After being applied (either by `setup.sh` or manually), the secret files can be deleted as they are stored in microk8s.
+
+### Frontend Origin
+
+You need to modify the `ORIGIN` env variable inside `frontend.yaml`, since otherwise the [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) will prevent the web interface from functioning.
+
+For instance replace 
+
+```yaml
+- name: ORIGIN
+  value: http://172.23.101.111:30380
+```
+
+with
+
+```yaml
+- name: ORIGIN
+  value: https://<domain.for.frontend.tld>
+```
 
 ### Setup
 
