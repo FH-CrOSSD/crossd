@@ -5,7 +5,7 @@ metadata:
  annotations:
    cert-manager.io/cluster-issuer: lets-encrypt
    nginx.ingress.kubernetes.io/rewrite-target: /
-   nginx.ingress.kubernetes.io/limit-rpm: 1000
+   nginx.ingress.kubernetes.io/limit-rpm: "1000"
 spec:
  tls:
  - hosts:
