@@ -1,0 +1,56 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: add-task-job
+    environment: prod
+    app.kubernetes.io/name: crossd
+    app.kubernetes.io/instance: crossd-alpha
+    app.kubernetes.io/version: "0.1"
+    app.kubernetes.io/component: add-task-job
+    app.kubernetes.io/part-of: crossd
+  name: add-task-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: add-task-job
+        image: localhost:32000/add-task
+        command: ["sh" , "-c"]
+        args:
+        - >
+          python3 add_task.py --user $USER --password $PASSWORD
+          Peacexo/PAJAApp
+        env:
+        - name: REQUESTS_CA_BUNDLE
+          value: /etc/ssl/certs/ca-certificates.crt
+        - name: USER
+          valueFrom:
+            secretKeyRef:
+              name: arango-worker-pwd
+              key: username
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: arango-worker-pwd
+              key: password
+        - name: RAUTH
+          valueFrom:
+            secretKeyRef:
+              name: redis-auth
+              key: RAUTH
+        volumeMounts:
+        - name: ca-certificates
+          mountPath: /etc/ssl/certs/
+          readOnly: true
+      restartPolicy: Never
+      volumes:
+      - name: ca-certificates
+        configMap:
+          name: cert-bundle
+          defaultMode: 0644
+          optional: false
+          items:
+          - key: ca-certificates.crt
+            path: ca-certificates.crt
+  backoffLimit: 4

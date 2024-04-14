@@ -17,7 +17,7 @@ spec:
       template:
         spec:
           containers:
-          - name: add-task-job
+          - name: weekly-most-starred-job
             image: localhost:32000/add-task
             command: ["sh" , "-c"]
             args:

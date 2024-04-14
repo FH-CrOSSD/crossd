@@ -2,14 +2,14 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   labels:
-    app: weekly-most-starred-job
+    app: weekly-random-sample-job
     environment: prod
     app.kubernetes.io/name: crossd
     app.kubernetes.io/instance: crossd-alpha
     app.kubernetes.io/version: "0.1"
-    app.kubernetes.io/component: weekly-most-starred-job
+    app.kubernetes.io/component: weekly-random-sample-job
     app.kubernetes.io/part-of: crossd
-  name: weekly-most-starred-job
+  name: weekly-random-sample-job
 spec:
   schedule: "16 13 * * 4"
   jobTemplate:
@@ -17,7 +17,7 @@ spec:
       template:
         spec:
           containers:
-          - name: add-task-job
+          - name: weekly-random-sample-job
             image: localhost:32000/add-task
             command: ["sh" , "-c"]
             args:
