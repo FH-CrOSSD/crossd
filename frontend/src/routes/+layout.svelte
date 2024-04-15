@@ -49,22 +49,6 @@
 		font-family: Anta;
 		src: url('/Anta-Regular.ttf');
 	}
-	@font-face {
-		font-family: Micro5;
-		src: url('/Micro5-Regular.ttf');
-	}
-	@font-face {
-		font-family: ProtestGuerrilla;
-		src: url('/ProtestGuerrilla-Regular.ttf');
-	}
-	@font-face {
-		font-family: ProtestRevolution;
-		src: url('/ProtestRevolution-Regular.ttf');
-	}
-	@font-face {
-		font-family: KodeMono;
-		src: url('/KodeMono-VariableFont_wght.ttf');
-	}
 	.heading {
 		font-family: 'Anta';
 	}
