@@ -1,5 +1,13 @@
 # CrOSSD
 
+* [About](About-The-Project)
+* [Quick Start](Quick-Start-Guide)
+* [Installation](Installation)
+* [Components](Components)
+  * [API](API)
+* [Known issues and limitations](Known-issues-and-limitations)
+* [Acknowledgements](Acknowledgements)
+
 ## About The Project
 
 The Critical Open-Source Software Database (CrOSSD) is an open-source software (OSS) project
@@ -15,10 +23,11 @@ own codebase and which projects might benefit from their involvement and assista
 funding agencies or companies to allocate funding or support to critically important OSS
 projects in need of help.
 
-## Features
+### Features
 
 - Different crawlers for retrieving data about repositories and calculating our metrics
 - Web UI for presenting calculated metrics for projects
+- API endpoints to query the collected projects and metrics
 - Resource definitions for running components in a Kubernetes cluster
 - Setup script for MicroK8s
 
@@ -180,7 +189,7 @@ This project contains the setup script `setup.sh`, which performs the necessary 
 
 ### Ingress
 
-Per default all Kubernetes services are can only be used inside the cluster. In order to be able to access the web interfaces from the Internet, we have to make them available via Ingress.
+Per default all Kubernetes services can only be used inside the cluster. To access the web interfaces from the Internet, we have to make them available via Ingress.
 Our Ingress resources redirect incoming HTTPS traffic to the corresponding pods (determined by domain main) and automatically retrieve the [Let's Encrypt](https://letsencrypt.org/de/) certificates for the TLS connection.
 
 The folder `ingress_templates` contains all necessary templates.
