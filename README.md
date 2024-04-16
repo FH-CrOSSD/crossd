@@ -1,12 +1,12 @@
 # CrOSSD
 
-* [About](About-The-Project)
-* [Quick Start](Quick-Start-Guide)
-* [Installation](Installation)
-* [Components](Components)
-  * [API](API)
-* [Known issues and limitations](Known-issues-and-limitations)
-* [Acknowledgements](Acknowledgements)
+* [About](#about-the-project)
+* [Quick Start](#quick-start-guide)
+* [Installation](#installation)
+* [Components](#components)
+  * [API](#api)
+* [Known issues and limitations](#known-issues-and-limitations)
+* [Acknowledgements](#acknowledgements)
 
 ## About The Project
 
