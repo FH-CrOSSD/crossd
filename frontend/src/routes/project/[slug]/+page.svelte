@@ -82,8 +82,12 @@
 			console.log(x);
 			let val = $clickedSelector(x.value);
 			return val % 1 === 0 ? val : toFixed2(val);
-		});
-		chartOptions.xaxis.categories = snapshots.map((x) => {
+		}).filter(item => !(item === undefined || item === null));
+		console.log(chartOptions.series[0].data);
+		chartOptions.xaxis.categories = snapshots.filter(item => {
+			let val = $clickedSelector(item.value);
+			return !(val === undefined || val === null)
+		}).map((x) => {
 			return new Date(Date.parse(x.name)).toLocaleString('eo');
 		});
 		// modalOpen = true;
