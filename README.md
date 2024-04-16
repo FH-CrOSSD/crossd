@@ -1,6 +1,7 @@
 # CrOSSD
 
 ## About The Project
+
 The Critical Open-Source Software Database (CrOSSD) is an open-source software (OSS) project
 meant to assist a variety of stakeholders to make informed decisions about which OSS projects to
 use, assist or support.
@@ -14,13 +15,12 @@ own codebase and which projects might benefit from their involvement and assista
 funding agencies or companies to allocate funding or support to critically important OSS
 projects in need of help.
 
-
 ## Features
 
 - Different crawlers for retrieving data about repositories and calculating our metrics
 - Web UI for presenting calculated metrics for projects
 - Resource definitions for running components in a Kubernetes cluster
-- Setup script for MicroK8s 
+- Setup script for MicroK8s
 
 ## Quick Start Guide
 
@@ -34,22 +34,25 @@ projects in need of help.
 ## Installation
 
 ### Requirements
+
 Our project needs following requirements:
 
 - Buildah
-    - Build Docker images and push them to local registry
+  - Build Docker images and push them to local registry
 - MicroK8s
-    - orchestrate the cluster
+  - orchestrate the cluster
 
 On Ubuntu you can install requirements as follows:
+
 ```bash
 apt install buildah
 snap install microk8s --classic
 ```
 
 Microk8s needs the following plugins (enabled inside the setup script):
+
 - registry
-- dns 
+- dns
 - hostpath-storage
 - ingress
 - cert-manager
@@ -59,9 +62,10 @@ Microk8s needs the following plugins (enabled inside the setup script):
 The project needs several secrets (passwords and users) in order to enable the services to interact securely.
 
 The folder `secret_templates` contains all necessary templates.
-Copy it with `cp -r secret_templates secrets` and replace all placeholders (`<username>`, `<password>`, `<github token>`) with the base64 encoded corresponding values. 
+Copy it with `cp -r secret_templates secrets` and replace all placeholders (`<username>`, `<password>`, `<github token>`) with the base64 encoded corresponding values.
 
 You can encode your values with e.g.:
+
 ```bash
 echo -n "replace-me" | base64 -w0
 ```
@@ -73,6 +77,7 @@ The project needs following secrets:
 This user is utilised by the frontend web application and has only read permissions.
 
 Properties:
+
 - username
 - password
 
@@ -81,6 +86,7 @@ Properties:
 The super user for the Arango database used to create other users and collections.
 
 Properties:
+
 - username
 - password
 
@@ -89,6 +95,7 @@ Properties:
 This user is utilised by the crawlers and has only read/write permissions.
 
 Properties:
+
 - username
 - password
 
@@ -97,8 +104,8 @@ Properties:
 This secret contains the user and password (HTTP Basic Authentication) in the format `user:password` for the flower web interface for the task queue.
 
 Properties:
-- AUTH
 
+- AUTH
 
 #### ghtoken
 
@@ -107,11 +114,13 @@ The GitHub token used by the workers to crawl the data about the repositories.
 > The token can be generated github.com via `Settings` - `Developer settings` - `Personal access tokens` - `Tokens (classic)` - `Generate new token` - `Generate new token (classic)`.
 
 The token needs the scopes:
+
 - read:org
 - read:user
 - repo
 
 Properties:
+
 - GH_TOKEN
 
 #### redis-auth
@@ -119,11 +128,13 @@ Properties:
 Used by containers that need to interact with the task queue broker (Redis).
 
 Properties:
+
 - RAUTH
 
 **All** secrets inside the yaml files need to be **base64** encoded.  
-**Ensure the file permissions are set accordingly** (although they are also set in the setup script.)   
+**Ensure the file permissions are set accordingly** (although they are also set in the setup script.)  
 `setup.sh` sets following permissions:
+
 ```bash
 chown root:root secrets -R
 chmod o-r-w-x secrets -R
@@ -135,7 +146,7 @@ After being applied (either by `setup.sh` or manually), the secret files can be 
 
 You need to modify the `ORIGIN` env variable inside `frontend.yaml`, since otherwise the [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) will prevent the web interface from functioning.
 
-For instance replace 
+For instance replace
 
 ```yaml
 - name: ORIGIN
@@ -161,21 +172,21 @@ This project contains the setup script `setup.sh`, which performs the necessary 
 - Build necessary container images
 - Apply secrets
 - Create all other Pods, Deployments, Services, etc.
-    - Arango database
-    - Redis
-    - Workers
-    - Frontend
-    - Flower
+  - Arango database
+  - Redis
+  - Workers
+  - Frontend
+  - Flower
 
 ### Ingress
 
-Per default all Kubernetes services are can only be used inside the cluster. In order to be able to access the web interfaces from the Internet, we have to make them available via Ingress. 
+Per default all Kubernetes services are can only be used inside the cluster. In order to be able to access the web interfaces from the Internet, we have to make them available via Ingress.
 Our Ingress resources redirect incoming HTTPS traffic to the corresponding pods (determined by domain main) and automatically retrieve the [Let's Encrypt](https://letsencrypt.org/de/) certificates for the TLS connection.
 
 The folder `ingress_templates` contains all necessary templates.
 Copy it with `cp -r ingress_templates ingress` and replace all placeholders (`<domain>`, `<email>`) with the according values.
 
-> The configuration of the templates uses different domain names for each service. Therefore, you should register different subdomains. 
+> The configuration of the templates uses different domain names for each service. Therefore, you should register different subdomains.
 
 ### Adding tasks
 
@@ -203,9 +214,10 @@ options:
 ```
 
 ## Components
+
 ![cluster](https://github.com/FH-CrOSSD/crossd/assets/20456596/3b1e8458-9dc6-465e-a7bb-8be67de3dfcd)
 
-Our project uses [MicroK8s](https://microk8s.io/) and in turn various components which are realised as Kubernetes Pods, Deployments, etc. 
+Our project uses [MicroK8s](https://microk8s.io/) and in turn various components which are realised as Kubernetes Pods, Deployments, etc.
 
 Pod can interact with each other only via defined interfaces (so-called Services) and use TLS to encrypt the traffic. Specifically, connections to ArangoDB and Redis are encrypted via TLS using self-signed certificates created with [cert-manager](https://cert-manager.io/).
 
@@ -213,12 +225,14 @@ Pod can interact with each other only via defined interfaces (so-called Services
 
 The containers establishing a connection to ArangoDB or Redis are provided with the CA certificate using trust bundles of [trust-manager](https://cert-manager.io/docs/trust/trust-manager/).
 
-
 ### ArangoDB
+
 [ArangoDB](https://arangodb.com/) is used as a persistent storage for data such as repository information and calculated metrics. We utilise the [ArangoDB Kubernetes Operator](https://arangodb.github.io/kube-arangodb/docs/using-the-operator) for deploying a database cluster.
 
 Collections inside the `crossd` database:
+
 - task_results
+
   - Stores Celery task results, statuses, errors, ...
 
 - scans
@@ -235,18 +249,22 @@ Collections inside the `crossd` database:
   - Stores results of calculated metrics provided by bak-rest-drone
 
 Secrets:
+
 - arango-frontend-pwd
 - arango-worker-pwd
 - arango-root-pwd
 
 Services:
+
 - arango-cluster-internal:8529 (internal)
 - arango-cluster-exposed:30529 (optional, external, dev)
 
 Ingress:
+
 - arangodb-ingress:443 (optional, external)
 
 Interacting Components:
+
 - Frontend
 - Add Task Job
 - m-drone
@@ -255,15 +273,19 @@ Interacting Components:
 - Arango Init Job
 
 ### Redis (Celery Task Queue)
+
 [Redis](https://redis.io/) acts as the broker for our [Celery Task Queue](https://docs.celeryq.dev/en/stable/#). It stores and distributes the tasks for our workers.
 
 Secrets:
+
 - redis-auth
 
 Services:
+
 - redis-service:6379 (internal)
 
 Interacting Components:
+
 - Flower
 - Add Task Job
 - m-drone
@@ -271,6 +293,7 @@ Interacting Components:
 - bak-rest-drone
 
 > We did not provide a (development) external service for Redis, as we deemed it not necessary. If you need to inspect the Redis database, get into the pod, establish a TLS connection and authenticate to Redis.
+
 ```bash
 # connect into pod
 microk8s kubectl exec -it <pod name> -- sh
@@ -281,31 +304,38 @@ redis-cli --tls --cacert /tls/ca.crt
 ```
 
 ### Flower
+
 [Flower](https://flower.readthedocs.io/en/latest/) is used to monitor our Celery workers and tasks. It uses HTTP basic authentication.
 
 Secrets:
+
 - flower-basic-auth
 
 Services:
+
 - flower-service:5555 (internal)
 - flower-service-exposed:30555 (optional, external, dev)
 
 Ingress:
+
 - flower-ingress:443 (optional, external)
 
 Interacting Components:
+
 - Redis
 
 ### Crawlers & Metrics
 
-These pods retrieve the necessary information about repositories and calculate our [defined metrics](https://health.crossd.tech/doc) for assessing the health of OSS projects. 
+These pods retrieve the necessary information about repositories and calculate our [defined metrics](https://health.crossd.tech/doc) for assessing the health of OSS projects.
 
 Secrets:
+
 - arango-worker-pwd
 - redis-auth
 - ghtoken
 
 Interacting Components:
+
 - Redis
 - ArangoDB
 
@@ -327,7 +357,7 @@ A Python [Celery](https://docs.celeryq.dev/en/stable/#) worker that queries GitH
 
 Stores the data about the repositories in the `bak_repos` and the calculated metrics in the `bak_metrics` collection in ArangoDB.
 
-We mostly use the [source code](https://github.com/JacquelineSchmatz/MDI_Thesis) developed by Jacqueline Schmatz for her master thesis (with some modifications). The metrics Jacqueline Schmatz chose are listed [here](https://health.crossd.tech/doc). 
+We mostly use the [source code](https://github.com/JacquelineSchmatz/MDI_Thesis) developed by Jacqueline Schmatz for her master thesis (with some modifications). The metrics Jacqueline Schmatz chose are listed [here](https://health.crossd.tech/doc).
 
 ### Frontend
 
@@ -336,23 +366,124 @@ Our web interface uses [Svelte](https://svelte.dev/) and [Svelte Kit](https://ki
 Our public instance is available [here](https://health.crossd.tech).
 
 Secrets:
+
 - arango-frontend-pwd
 
 Services:
+
 - frontend-service:3000 (internal)
 - frontend-service-exposed:30380 (optional, external, dev)
 
 Ingress:
+
 - frontend-ingress:443 (optional, external)
 
 Interacting Components:
+
 - ArangoDB
+
+#### API
+
+Our web interface contains API endpoints to query the collected projects and metrics.
+You can use them either on your own instance of our project or you can query the data of our public instance.
+
+**`/api/projects`**
+
+Returns all queried projects from the database.
+
+Properties:
+
+|                      |                  |
+| -------------------- | ---------------- |
+| Allowed HTTP Methods | POST             |
+| Content-Type         | application/json |
+
+Parameters: None
+
+Responses:
+
+| Code | Description |
+| ---- | ----------- |
+| 200  | Success     |
+
+Example:
+
+```bash
+curl https://health.crossd.tech/api/projects -X POST
+```
+
+---
+
+**`/api/snapshots`**
+
+Returns the timestamps of the snapshots of a given project.
+
+Properties:
+
+|                      |                  |
+| -------------------- | ---------------- |
+| Allowed HTTP Methods | POST             |
+| Content-Type         | application/json |
+
+Parameters:
+
+| Name | Description                          | Type   | Format                              | Required |
+| ---- | ------------------------------------ | ------ | ----------------------------------- | -------- |
+| term | project identifier (e.g. owner/name) | string | alphanumeric characters and `-\_./` | Yes      |
+
+Responses:
+
+| Code | Description                           |
+| ---- | ------------------------------------- |
+| 200  | Success                               |
+| 400  | malformed JSON body                   |
+| 422  | Parameters missing or in wrong format |
+
+Example:
+
+```bash
+curl https://health.crossd.tech/api/snapshots -X POST -d "{\"term\":\"Peacexo/PAJAApp\"}" -H "Content-Type: application/json"
+```
+
+---
+
+**`/api/metrics`**
+
+Returns the metrics of a snapshots of a given project.
+
+Properties:
+
+|                      |                  |
+| -------------------- | ---------------- |
+| Allowed HTTP Methods | POST             |
+| Content-Type         | application/json |
+
+Parameters:
+
+| Name      | Description                          | Type   | Format                              | Required |
+| --------- | ------------------------------------ | ------ | ----------------------------------- | -------- |
+| term      | project identifier (e.g. owner/name) | string | alphanumeric characters and `-\_./` | Yes      |
+| timestamp | timestamp of a snapshot              | number | epoch timestamp in seconds          | Yes      |
+
+Responses:
+
+| Code | Description                           |
+| ---- | ------------------------------------- |
+| 200  | Success                               |
+| 400  | malformed JSON body                   |
+| 422  | Parameters missing or in wrong format |
+
+Example:
+
+```bash
+curl https://health.crossd.tech/api/metrics -X POST -d "{\"term\":\"Peacexo/PAJAApp\",\"timestamp\":1712087894.7108583}" -H "Content-Type: application/json"
+```
 
 ### Add Task Job
 
 [Kubernetes Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) for adding tasks to our Celery task queue as well as creating `scans` and `projects` entries in ArangoDB.
 
-> We decided to use jobs and therefore separate pods and container images for adding tasks, because we need the certificates for the TLS connections to Redis and ArangoDB (stored inside Kubernetes secrets) and also users and passwords (also stored in Kubernetes secrets). 
+> We decided to use jobs and therefore separate pods and container images for adding tasks, because we need the certificates for the TLS connections to Redis and ArangoDB (stored inside Kubernetes secrets) and also users and passwords (also stored in Kubernetes secrets).
 
 > Additionally, we did not want to require NodePort services (opening the ports on the node) as this cannot be limited to localhost.
 
@@ -361,24 +492,29 @@ Interacting Components:
 Our example `add_task_job.yaml` uses repositories owner/name arguments provided inside the yaml file, but they could also be provided e.g. via a Kubernetes [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/).
 
 Secrets:
+
 - arango-worker-pwd
 - redis-auth
 
 Interacting Components:
+
 - ArangoDB
 - Redis
 
 ### Arango Init Job
+
 This [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) waits for ArangoDB to be up and running and runs the script `arango-init/arango_init.js`, which creates the `crossd` database, all necessary collections and additional users for the frontend (readonly) and the workers (read/write).
 
 The script `arango-init/arango_init.js` is mounted as a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/).
 
 Secrets:
+
 - arango-root-pwd
 - arango-worker-pwd
 - arango-frontend-pwd
 
 Interacting Components:
+
 - ArangoDB
 
 ### External Services
@@ -386,6 +522,7 @@ Interacting Components:
 All external services (Kubernetes type [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport)) are optional and should only be used in development environment. They open up ports on the node, which can be used to connect to the service from outside the cluster.
 
 We defined external service for:
+
 - ArangoDB
   - arangodb-cluster-exposed:30529
 - Frontend
@@ -400,6 +537,7 @@ We defined external service for:
 The ClusterIssuer `lets-encrypt` retrieves the Let's Encrypt certificates for our cluster. It is optional and the template is located at `ingress_templates/cluster-issuer.yaml`.
 
 We defined templates for ingress endpoints for:
+
 - ArangoDB
   - `ingress_templates/arangodb-ingress.yaml`
 - Frontend
@@ -419,7 +557,3 @@ We defined templates for ingress endpoints for:
 ## Acknowledgements
 
 The financial support from Internetstiftung/Netidee is gratefully acknowledged. The mission of Netidee is to support development of open-source tools for more accessible and versatile use of the Internet in Austria.
-
-
-
-
