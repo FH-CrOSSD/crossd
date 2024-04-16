@@ -9,10 +9,21 @@ const scansColl = db.collection("scans");
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {
-    const { timestamp } = await request.json();
-    if (!Number.isFinite(timestamp)) {
-        error(422, { message: "Only numerical timestamp is allowed" });
+    let timestamp;
+    try {
+        timestamp = (await request.json()).timestamp;
+    } catch (err: any) {
+        console.log(err);
+        if (err instanceof SyntaxError) {
+            error(400, { message: "Body could not be parsed as json" });
+        }
     }
+
+    // const { timestamp } = await request.json();
+    if (!timestamp || !Number.isFinite(timestamp)) {
+        error(422, { message: "Body needs to contain timestamp with numerical value" });
+    }
+    
     try {
         const res = await db.query(aql`
         FOR doc IN ${scansColl}

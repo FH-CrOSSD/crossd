@@ -9,10 +9,20 @@ const scansColl = db.collection("scans");
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {
-    const { term } = await request.json();
-    if (!term.match(repoRegex)) {
-        error(422, { message: "Only alphanumeric characters and -_./ allowed" });
+    let term;
+    try {
+        term = (await request.json()).term;
+    } catch (err: any) {
+        console.log(err);
+        if (err instanceof SyntaxError) {
+            error(400, { message: "Body could not be parsed as json" });
+        }
     }
+
+    if (!term || !term.match(repoRegex)) {
+        error(422, { message: "Body needs to containe term of alphanumeric characters and -_./" });
+    }
+
     try {
         const res = await db.query(aql`
         FOR doc IN ${projectsColl}
