@@ -20,7 +20,7 @@ export async function POST({ request }) {
     }
 
     if (!term || !term.match(repoRegex)) {
-        error(422, { message: "Body needs to containe term of alphanumeric characters and -_./" });
+        error(422, { message: "Body needs to contain term of alphanumeric characters and -_./" });
     }
 
     try {
