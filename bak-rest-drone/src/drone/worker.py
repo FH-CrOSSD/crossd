@@ -22,6 +22,7 @@ err_console = Console(stderr=True, style="bold red")
 
 OUT_PATH = "/home/collector-drone/thesis_metrics-main/outputs"
 DATA_PATH = os.path.join(OUT_PATH, "data")
+LOGS_PATH = os.path.join(OUT_PATH, "logs")
 RESULT_FILE_PATH = os.path.join(OUT_PATH, "results/csv_metrics.json")
 # from arango import ArangoClient
 
@@ -162,6 +163,9 @@ def bak_tasks(self, owner: str, name: str, scan: str, sub: bool = False):
     for filename in os.listdir(DATA_PATH):
         if filename.endswith(".json"):
             os.remove(os.path.join(DATA_PATH, filename))
+    for filename in os.listdir(LOGS_PATH):
+        if filename.endswith(".log"):
+            os.remove(os.path.join(LOGS_PATH, filename))
     os.remove(RESULT_FILE_PATH)
 
     # pipeline.run_metrics_to_json()
