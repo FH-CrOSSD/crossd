@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/part-of: crossd
   name: weekly-random-sample-job
 spec:
-  schedule: "16 13 * * 4"
+  schedule: "00 10 * * 5"
   jobTemplate:
     spec:
       template:
@@ -22,7 +22,7 @@ spec:
             command: ["sh" , "-c"]
             args:
             - >
-              python3 add_task.py --user $USER --password $PASSWORD -t random-sample-09-04-2024
+              python3 add_task.py --user $USER --password $PASSWORD -t random-sample-09-04-2024 -t $(date -uI)
               $(cat /random-sample-repos.txt)
             env:
             - name: REQUESTS_CA_BUNDLE
