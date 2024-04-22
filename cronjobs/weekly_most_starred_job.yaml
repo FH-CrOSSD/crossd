@@ -11,7 +11,8 @@ metadata:
     app.kubernetes.io/part-of: crossd
   name: weekly-most-starred-job
 spec:
-  schedule: "45 19 * * 1"
+  timeZone: "Etc/UTC"
+  schedule: "10 20 * * 1"
   jobTemplate:
     spec:
       template:

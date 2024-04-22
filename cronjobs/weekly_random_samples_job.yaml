@@ -11,6 +11,7 @@ metadata:
     app.kubernetes.io/part-of: crossd
   name: weekly-random-sample-job
 spec:
+  timeZone: "Etc/UTC"
   schedule: "00 10 * * 5"
   jobTemplate:
     spec:
