@@ -17,6 +17,7 @@ import { unified } from 'unified';
 const headingClasses = ' font-extrabold text-gray-900 dark:text-white w-full mt-5';
 
 export const repoRegex = /^[a-zA-Z0-9-_./]+$/;
+export const PER_PAGE = 10;
 
 export function toFixed2(value: any) {
     if (typeof value === 'number') {
