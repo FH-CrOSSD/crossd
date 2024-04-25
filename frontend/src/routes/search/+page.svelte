@@ -11,6 +11,8 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
+	const searchAnchor = '#search-results';
+
 	function get_readme(item: { [key: string]: any }): string {
 		let res: string = '';
 		const prepare = (x: { [key: string]: any }, index: string) => {
@@ -54,7 +56,7 @@
 	$: {
 		pages = [];
 		// first page - always
-		pages.push({ name: 1, href: base_url + '&page=1' });
+		pages.push({ name: 1, href: base_url + '&page=1' + searchAnchor });
 
 		// ... placeholder on the left side
 		if (activePage > 4 && lastPage > 7) {
@@ -66,19 +68,19 @@
 			// get first pages
 			// insert 5 pages unless total pages is less
 			for (let i = 2; i <= 6 && i <= lastPage - 1; i++) {
-				pages.push({ name: i, href: base_url + '&page=' + i });
+				pages.push({ name: i, href: base_url + '&page=' + i + searchAnchor });
 			}
 		} else if (activePage > lastPage - 3) {
 			// get last pages
 			// insert 5 pages unless total pages is less
 			for (let i = lastPage - 5 < 1 ? 2 : lastPage - 5; i <= lastPage - 1; i++) {
-				pages.push({ name: i, href: base_url + '&page=' + i });
+				pages.push({ name: i, href: base_url + '&page=' + i + searchAnchor });
 			}
 		} else {
 			// in between (-2 current +2)
 			// insert 5 pages
 			for (let i = activePage - 2; i <= activePage + 2 && i <= lastPage - 1; i++) {
-				pages.push({ name: i, href: base_url + '&page=' + i });
+				pages.push({ name: i, href: base_url + '&page=' + i + searchAnchor });
 			}
 		}
 
@@ -90,7 +92,7 @@
 		// last page - always
 		pages.push({
 			name: lastPage,
-			href: base_url + '&page=' + lastPage
+			href: base_url + '&page=' + lastPage + searchAnchor
 		});
 	}
 
@@ -116,13 +118,13 @@
 
 	const previous = () => {
 		if (activePage > 1) {
-			goto(base_url + '&page=' + (activePage - 1));
+			goto(base_url + '&page=' + (activePage - 1) + searchAnchor); //, { noScroll: true }
 		}
 		checkButtons(activePage - 1);
 	};
 	const next = () => {
 		if (activePage < lastPage) {
-			goto(base_url + '&page=' + (activePage + 1));
+			goto(base_url + '&page=' + (activePage + 1) + searchAnchor); //, { noScroll: true }
 		}
 		checkButtons(activePage + 1);
 	};
@@ -176,7 +178,34 @@
 		}
 		checkButtons(activePage);
 	});
+
+	function onKeyDown(e) {
+		if (document.activeElement !== document.getElementById('project')) {
+			switch (e.key) {
+				case 'ArrowLeft':
+				case 'a':
+					if (activePage > 1) {
+						previous();
+					}
+					break;
+				case 'ArrowRight':
+				case 'd':
+					if (activePage < lastPage) {
+						next();
+					}
+					break;
+				case 'w':
+					scrollBy({ top: -50, behavior: 'smooth' });
+					break;
+				case 's':
+					scrollBy({ top: 50, behavior: 'smooth' });
+					break;
+			}
+		}
+	}
 </script>
+
+<svelte:window on:keydown={onKeyDown} />
 
 <div class="justify-center mb-10" style="object-position:bottom">
 	<Card padding="xl" class="mx-auto max-w-screen mt-10">
@@ -190,7 +219,7 @@
 	</Card>
 </div>
 <Hr />
-<Heading tag="h1" class="mb-10">Search results:</Heading>
+<Heading tag="h1" class="mb-10" id="search-results">Search results:</Heading>
 <Card size="xl" class="break-words max-w-full">
 	<Listgroup>
 		{#each data.results as item}
