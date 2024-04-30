@@ -222,6 +222,23 @@ options:
   -t TAG, --tag TAG    Set a tag for the scan
 ```
 
+### Backing up database
+> The `ArangoBackup` and `ArangoBackupPolicy` custom resources for Kubernetes are considered as [Hot Backup](https://docs.arangodb.com/3.11/operations/backup-and-restore/#hot-backups) (see [here](https://github.com/arangodb/kube-arangodb/issues/507)), which is only available for Enterprise Edition.
+
+The recommended way for creating a backup using the Community Edition of ArangoDB is to use [`arangodump`](https://docs.arangodb.com/3.11/components/tools/arangodump/) and to restore the backup with [`arangorestore`](https://docs.arangodb.com/3.11/components/tools/arangorestore/). You can download the ArangoDB client tools directly from their [website](https://arangodb.com/download-major/).
+
+> You will either need a NodePort Service or an Ingress for the ArangoDB in order to connect to it or you could also create a Kubernetes Job for it.
+
+The following is an example for a backup command:
+
+```bash
+arangodump --server.endpoint http+ssl://<ingress.domain>:443 --server.username <username> --server.database crossd --output-directory <path>/$(date -uI)-$(dd if=/dev/urandom bs=16 count=1 status=none | base32 | head -c 5)
+```
+
+It connects to the ArangoDB and backs up the entire crossd database and stores the compressed files in a directory in a path you specify. The subdirectory consists of the date in UTC ISO 8601 format and a 5 character long random string.
+
+> You should also note the [arangodump limitations](https://docs.arangodb.com/3.11/components/tools/arangodump/limitations/).
+
 ## Components
 
 ![cluster](https://github.com/FH-CrOSSD/crossd/assets/20456596/3b1e8458-9dc6-465e-a7bb-8be67de3dfcd)
