@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { chartOptions } from '$lib/chartOptions';
 	import { processMD, toFixed2 } from '$lib/util';
-	import { Chart, CloseButton, Drawer, Heading, Hr, Modal, Select } from 'flowbite-svelte';
+	import { Chart, CloseButton, Drawer, Heading, Hr, Modal, Select, P } from 'flowbite-svelte';
 	import { onDestroy } from 'svelte';
 	import { sineIn } from 'svelte/easing';
 	import CommunityHealthCard from './CommunityHealthCard.svelte';
@@ -35,7 +35,9 @@
 	let drawerHidden = true;
 	// open and close modal along with drawer, if chart should be shown
 	// let modalOpen = false;
-	$:{drawerHidden=showDefinition===true?!showChart:true;}
+	$: {
+		drawerHidden = showDefinition === true ? !showChart : true;
+	}
 	const transitionParamsRight = {
 		x: 320,
 		duration: 200,
@@ -49,7 +51,7 @@
 			showDefinition = value.definition;
 			console.log(value);
 			if (value.definition === true) {
-				console.log("show def");
+				console.log('show def');
 				overlayID = value.current_id;
 				goToDefinition(value.current_md);
 				// scroll(value.current_id);
@@ -78,18 +80,22 @@
 		const elem = document.querySelector('[data-id="' + id + '"]');
 		chartOptions.series[0].name = elem ? elem.innerText : 'Data:';
 		console.log(snapshots);
-		chartOptions.series[0].data = snapshots.map((x) => {
-			console.log(x);
-			let val = $clickedSelector(x.value);
-			return val % 1 === 0 ? val : toFixed2(val);
-		}).filter(item => !(item === undefined || item === null));
+		chartOptions.series[0].data = snapshots
+			.map((x) => {
+				console.log(x);
+				let val = $clickedSelector(x.value);
+				return val % 1 === 0 ? val : toFixed2(val);
+			})
+			.filter((item) => !(item === undefined || item === null));
 		console.log(chartOptions.series[0].data);
-		chartOptions.xaxis.categories = snapshots.filter(item => {
-			let val = $clickedSelector(item.value);
-			return !(val === undefined || val === null)
-		}).map((x) => {
-			return new Date(Date.parse(x.name)).toLocaleString('eo');
-		});
+		chartOptions.xaxis.categories = snapshots
+			.filter((item) => {
+				let val = $clickedSelector(item.value);
+				return !(val === undefined || val === null);
+			})
+			.map((x) => {
+				return new Date(Date.parse(x.name)).toLocaleString('eo');
+			});
 		// modalOpen = true;
 	}
 
@@ -193,12 +199,14 @@
 			<LifecycleBranchesCard data={data.bak} {selected} {project_id} />
 			<SecurityAdvisoriesCard data={data.bak} {selected} {project_id} />
 		{/if}
+		{#if Object.keys(data.data?.[selected] ?? {}).length <= 0 && !data.bak[selected]}
+			<P size="lg">There is currently no data available for this snapshot.</P>
+		{/if}
 	</div>
 </div>
 
-
 <!-- outsideclose only if drawer not shown, otherwise you need to double close -->
-	<!-- outsideclose={drawerHidden ? true : false} -->
+<!-- outsideclose={drawerHidden ? true : false} -->
 
 <Modal
 	title={chartOptions.series[0].name}
@@ -216,8 +224,8 @@
 	transitionType="fly"
 	transitionParams={transitionParamsRight}
 	bind:hidden={drawerHidden}
-	backdrop={!showChart?true:false}
-	activateClickOutside={!showChart?true:false}
+	backdrop={!showChart ? true : false}
+	activateClickOutside={!showChart ? true : false}
 	id="sidebar6"
 >
 	<div class="flex items-center" use:onShown>
@@ -225,6 +233,7 @@
 	</div>
 	{@html overlayMD}
 </Drawer>
+
 <style>
 	:global(.apexcharts-svg) {
 		overflow: visible;
