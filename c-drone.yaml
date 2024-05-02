@@ -8,7 +8,6 @@ metadata:
     app.kubernetes.io/name: crossd
     app.kubernetes.io/instance: crossd-alpha
     app.kubernetes.io/version: "0.1"
-    # app.kubernetes.io/managed-by: helm
     app.kubernetes.io/component: c-drone
     app.kubernetes.io/part-of: crossd
   name: c-drone
@@ -17,7 +16,7 @@ spec:
   selector:
     matchLabels:
       app: c-drone
-  strategy: {type: RollingUpdate}
+  strategy: { type: RollingUpdate }
   template:
     metadata:
       creationTimestamp: null
@@ -30,63 +29,57 @@ spec:
         runAsUser: 1337
         runAsGroup: 1337
       containers:
-      - image: localhost:32000/worker-drone
-        # args:
-        #     - sh
-        #     - -c
-        #     - ' docker-entrypoint.sh --appendonly "yes" '
-        # ports:
-        # - containerPort: 6379
-        imagePullPolicy: Always
-        name: c-drone
-        args: ["-Q", "collect", "-c", "1"]
-        resources: {}
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-        env:
-        - name: REQUESTS_CA_BUNDLE
-          value: /etc/ssl/certs/ca-certificates.crt
-        - name: PDM_LOG_DIR
-          value: /tmp
-        - name: RAUTH
-          valueFrom:
-            secretKeyRef:
-              name: redis-auth
-              key: RAUTH
-        - name: GH_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: ghtoken
-              key: GH_TOKEN
-        - name: WORKER_USER
-          valueFrom:
-            secretKeyRef:
-              name: arango-worker-pwd
-              key: username
-        - name: WORKER_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: arango-worker-pwd
-              key: password
-        - name: PYTHONUNBUFFERED
-          value: "1"
-        volumeMounts:
-        - name: tmp
-          mountPath: /tmp
-        - name: ca-certificates
-          mountPath: /etc/ssl/certs/
-          readOnly: true
+        - image: localhost:32000/worker-drone
+          imagePullPolicy: Always
+          name: c-drone
+          args: ["-Q", "collect", "-c", "1"]
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          env:
+            - name: REQUESTS_CA_BUNDLE
+              value: /etc/ssl/certs/ca-certificates.crt
+            - name: PDM_LOG_DIR
+              value: /tmp
+            - name: RAUTH
+              valueFrom:
+                secretKeyRef:
+                  name: redis-auth
+                  key: RAUTH
+            - name: GH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ghtoken
+                  key: GH_TOKEN
+            - name: WORKER_USER
+              valueFrom:
+                secretKeyRef:
+                  name: arango-worker-pwd
+                  key: username
+            - name: WORKER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: arango-worker-pwd
+                  key: password
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: ca-certificates
+              mountPath: /etc/ssl/certs/
+              readOnly: true
       volumes:
-      - name: tmp
-        emptyDir:
-          sizeLimit: 500Mi
-      - name: ca-certificates
-        configMap:
-          name: cert-bundle
-          defaultMode: 0644
-          optional: false
-          items:
-          - key: ca-certificates.crt
-            path: ca-certificates.crt
+        - name: tmp
+          emptyDir:
+            sizeLimit: 500Mi
+        - name: ca-certificates
+          configMap:
+            name: cert-bundle
+            defaultMode: 0644
+            optional: false
+            items:
+              - key: ca-certificates.crt
+                path: ca-certificates.crt
 status: {}

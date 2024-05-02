@@ -1,6 +1,9 @@
 #!/bin/bash
 
-if [ "$(id -u)" -ne 0 ]; then echo "Please run as root." >&2; exit 1; fi
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Please run as root." >&2
+    exit 1
+fi
 
 SCRIPTPATH=$(dirname "$(realpath "$0")")
 
@@ -38,10 +41,6 @@ cd $SCRIPTPATH/frontend
 sudo ./buildah.sh
 cd $SCRIPTPATH
 
-# microk8s kubectl apply -f secrets/ghtoken.yaml
-# microk8s kubectl apply -f secrets/arango-root-pwd.yaml
-# microk8s kubectl apply -f secrets/arango-frontend-pwd.yaml
-# microk8s kubectl apply -f secrets/arango-worker-pwd.yaml
 microk8s kubectl apply -f secrets
 microk8s kubectl create configmap arango-init --from-file arango-init/arango_init.js
 

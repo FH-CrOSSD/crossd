@@ -9,10 +9,7 @@ spec:
     - server auth
     - client auth
   dnsNames:
-  - "redis-service"
+    - "redis-service"
   issuerRef:
     name: my-ca-issuer
     kind: ClusterIssuer
-  # additionalOutputFormats:
-  # - type: CombinedPEM
-  # - type: DER

@@ -8,7 +8,6 @@ metadata:
     app.kubernetes.io/name: crossd
     app.kubernetes.io/instance: crossd-alpha
     app.kubernetes.io/version: "0.1"
-    # app.kubernetes.io/managed-by: helm
     app.kubernetes.io/component: bak-rest-drone
     app.kubernetes.io/part-of: crossd
   name: bak-rest-drone
@@ -17,7 +16,7 @@ spec:
   selector:
     matchLabels:
       app: bak-rest-drone
-  strategy: {type: RollingUpdate}
+  strategy: { type: RollingUpdate }
   template:
     metadata:
       creationTimestamp: null
@@ -30,109 +29,87 @@ spec:
         runAsUser: 1337
         runAsGroup: 1337
       containers:
-      - image: localhost:32000/bak-rest-drone
-        # args:
-        #     - sh
-        #     - -c
-        #     - ' docker-entrypoint.sh --appendonly "yes" '
-        # ports:
-        # - containerPort: 6379
-        imagePullPolicy: Always
-        name: bak-rest-drone
-        args: ["-Q", "bak", "-c", "1"]
-        resources: {}
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-        env:
-        - name: REQUESTS_CA_BUNDLE
-          value: /etc/ssl/certs/ca-certificates.crt
-        - name: PDM_LOG_DIR
-          value: /tmp
-        - name: XDG_CONFIG_HOME
-          value: /tmp/.chromium
-        - name: XDG_CACHE_HOME
-          value: /tmp/.chromium
-        - name: GH_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: ghtoken
-              key: GH_TOKEN
-        - name: WORKER_USER
-          valueFrom:
-            secretKeyRef:
-              name: arango-worker-pwd
-              key: username
-        - name: WORKER_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: arango-worker-pwd
-              key: password
-        - name: RAUTH
-          valueFrom:
-            secretKeyRef:
-              name: redis-auth
-              key: RAUTH
-        - name: PYTHONUNBUFFERED
-          value: "1"
-        volumeMounts:
-        # name must match the volume name below
-        # - name: secret-volume
-        #   mountPath: /home/bak-rest-drone/.env
-        #   readOnly: true
-        - name: data
-          mountPath: /home/collector-drone/thesis_metrics-main/outputs/data
-        - name: results
-          mountPath: /home/collector-drone/thesis_metrics-main/outputs/results
-        - name: tmp
-          mountPath: /tmp
-        - name: logs
-          mountPath: /home/collector-drone/thesis_metrics-main/outputs/logs
-        - name: selenium
-          mountPath: /.cache/selenium
-        - mountPath: /dev/shm
-          name: dshm
-        - name: ca-certificates
-          mountPath: /etc/ssl/certs/
-          readOnly: true
-        # volumeMounts:
-        #     - mountPath: /data
-        #       name: redis-pvc
-              # readOnly: true
-      # volumes:
-      #   - name: redis-pvc
-      #     persistentVolumeClaim:
-      #       claimName: redis-pvc
-            # readOnly: true
+        - image: localhost:32000/bak-rest-drone
+          imagePullPolicy: Always
+          name: bak-rest-drone
+          args: ["-Q", "bak", "-c", "1"]
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          env:
+            - name: REQUESTS_CA_BUNDLE
+              value: /etc/ssl/certs/ca-certificates.crt
+            - name: PDM_LOG_DIR
+              value: /tmp
+            - name: XDG_CONFIG_HOME
+              value: /tmp/.chromium
+            - name: XDG_CACHE_HOME
+              value: /tmp/.chromium
+            - name: GH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ghtoken
+                  key: GH_TOKEN
+            - name: WORKER_USER
+              valueFrom:
+                secretKeyRef:
+                  name: arango-worker-pwd
+                  key: username
+            - name: WORKER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: arango-worker-pwd
+                  key: password
+            - name: RAUTH
+              valueFrom:
+                secretKeyRef:
+                  name: redis-auth
+                  key: RAUTH
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          volumeMounts:
+            - name: data
+              mountPath: /home/collector-drone/thesis_metrics-main/outputs/data
+            - name: results
+              mountPath: /home/collector-drone/thesis_metrics-main/outputs/results
+            - name: tmp
+              mountPath: /tmp
+            - name: logs
+              mountPath: /home/collector-drone/thesis_metrics-main/outputs/logs
+            - name: selenium
+              mountPath: /.cache/selenium
+            - mountPath: /dev/shm
+              name: dshm
+            - name: ca-certificates
+              mountPath: /etc/ssl/certs/
+              readOnly: true
       volumes:
-      # - name: secret-volume
-      #   secret:
-      #     secretName: ghtoken
-      - name: data
-        emptyDir:
-          sizeLimit: 1Gi
-      - name: results
-        emptyDir:
-          sizeLimit: 500Mi
-      - name: tmp
-        emptyDir:
-          sizeLimit: 500Mi
-      - name: logs
-        emptyDir:
-          sizeLimit: 500Mi
-      - name: selenium
-        emptyDir:
-          sizeLimit: 500Mi
-      - name: dshm
-        emptyDir:
-          medium: Memory
-          sizeLimit: 1Gi
-      - name: ca-certificates
-        configMap:
-          name: cert-bundle
-          defaultMode: 0644
-          optional: false
-          items:
-          - key: ca-certificates.crt
-            path: ca-certificates.crt
+        - name: data
+          emptyDir:
+            sizeLimit: 1Gi
+        - name: results
+          emptyDir:
+            sizeLimit: 500Mi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 500Mi
+        - name: logs
+          emptyDir:
+            sizeLimit: 500Mi
+        - name: selenium
+          emptyDir:
+            sizeLimit: 500Mi
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
+        - name: ca-certificates
+          configMap:
+            name: cert-bundle
+            defaultMode: 0644
+            optional: false
+            items:
+              - key: ca-certificates.crt
+                path: ca-certificates.crt
 status: {}

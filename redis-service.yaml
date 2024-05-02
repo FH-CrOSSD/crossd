@@ -3,15 +3,10 @@ kind: Service
 metadata:
   name: redis-service
 spec:
-  # externalIPs:
-  # - 10.0.2.15
-  # type: NodePort
   type: ClusterIP
   selector:
-    # app.kubernetes.io/component: redis
     pod: redis
   ports:
     - protocol: TCP
       port: 6379
       targetPort: 6379
-      # nodePort: 30000

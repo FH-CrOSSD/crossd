@@ -8,7 +8,6 @@ metadata:
     app.kubernetes.io/name: crossd
     app.kubernetes.io/instance: crossd-alpha
     app.kubernetes.io/version: "0.1"
-    # app.kubernetes.io/managed-by: helm
     app.kubernetes.io/component: redis
     app.kubernetes.io/part-of: crossd
   name: redis
@@ -17,7 +16,7 @@ spec:
   selector:
     matchLabels:
       app: redis
-  strategy: {type: RollingUpdate}
+  strategy: { type: RollingUpdate }
   template:
     metadata:
       creationTimestamp: null
@@ -30,28 +29,27 @@ spec:
         runAsUser: 1337
         runAsGroup: 1337
       containers:
-      - image: redis:7
-        args:
+        - image: redis:7
+          args:
             - sh
             - -c
-            - " docker-entrypoint.sh --appendonly \"yes\" --requirepass $RAUTH --tls-port 6379 --port 0 --tls-cert-file /tls/tls.crt --tls-key-file /tls/tls.key --tls-ca-cert-file /tls/ca.crt --tls-auth-clients no"
-        ports:
-        - containerPort: 6379
-        imagePullPolicy: Always
-        name: redis
-        resources: {}
-        securityContext:
-          allowPrivilegeEscalation: false
-        env:
-        - name: RAUTH
-          valueFrom:
-            secretKeyRef:
-              name: redis-auth
-              key: RAUTH
-        volumeMounts:
+            - ' docker-entrypoint.sh --appendonly "yes" --requirepass $RAUTH --tls-port 6379 --port 0 --tls-cert-file /tls/tls.crt --tls-key-file /tls/tls.key --tls-ca-cert-file /tls/ca.crt --tls-auth-clients no'
+          ports:
+            - containerPort: 6379
+          imagePullPolicy: Always
+          name: redis
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+          env:
+            - name: RAUTH
+              valueFrom:
+                secretKeyRef:
+                  name: redis-auth
+                  key: RAUTH
+          volumeMounts:
             - mountPath: /data
               name: redis-pvc
-              # readOnly: true
             - name: certs
               mountPath: "/tls"
               readOnly: true
@@ -62,5 +60,4 @@ spec:
         - name: certs
           secret:
             secretName: redis-cert-secret
-            # readOnly: true
 status: {}

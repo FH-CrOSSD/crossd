@@ -5,7 +5,6 @@ import argparse
 import datetime
 import getpass
 from urllib.parse import urlparse
-from pprint import pprint
 
 import pyArango.connection
 

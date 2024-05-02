@@ -1,13 +1,15 @@
+# generates a single CA certificates file for use with Alpine linux os
+# includes default CAs and our own CA
 apiVersion: trust.cert-manager.io/v1alpha1
 kind: Bundle
 metadata:
   name: cert-bundle
 spec:
   sources:
-  - useDefaultCAs: true
-  - secret:
-      name: "root-secret"
-      key: "ca.crt"
+    - useDefaultCAs: true
+    - secret:
+        name: "root-secret"
+        key: "ca.crt"
   target:
     configMap:
       key: "ca-certificates.crt"
