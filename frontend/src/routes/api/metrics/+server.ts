@@ -1,8 +1,7 @@
-import { aql } from "arangojs";
-import { json } from '@sveltejs/kit';
-import { error } from '@sveltejs/kit';
 import { db } from "$hook.server";
 import { repoRegex } from "$lib/util";
+import { error, json } from '@sveltejs/kit';
+import { aql } from "arangojs";
 
 const metricsColl = db.collection("metrics");
 const bakColl = db.collection("bak_metrics");
@@ -10,6 +9,13 @@ const scansColl = db.collection("scans");
 const projectsColl = db.collection("projects");
 
 /** @type {import('./$types').RequestHandler} */
+/**
+ * Handles POST requests to /api/metrics and returns the metrics for a specific project at a specific time (snapshot).
+ * 
+ * @param request - needs to contains term (part of a valid github owner/name) and timestamp (epoch) in the json body. 
+ * @returns metrics of the project from the specified timestamp
+ * @throws HTTPError
+ */
 export async function POST({ request }) {
     let resp;
 
@@ -32,6 +38,11 @@ export async function POST({ request }) {
     }
 
     try {
+        /**
+         * 1. Get scans for the project
+         * 2. Get the scan with the requested timestamp
+         * 3. Get the metric and bak metrics for this snapshot
+         */
         const res = await db.query(aql`
         FOR project in ${projectsColl}
         FILTER project.identifier == ${term}

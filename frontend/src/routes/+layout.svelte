@@ -1,26 +1,32 @@
 <script lang="ts">
+	import {
+		DarkMode,
+		Footer,
+		FooterCopyright,
+		FooterLink,
+		FooterLinkGroup,
+		NavBrand,
+		NavLi,
+		NavUl,
+		Navbar
+	} from 'flowbite-svelte';
 	import '../app.pcss';
-	import { Navbar, NavBrand, DarkMode, VideoPlaceholder, Video, NavUl,NavLi } from 'flowbite-svelte';
-	import { Footer, FooterCopyright, FooterLinkGroup, FooterLink } from 'flowbite-svelte';
-	// import logo from '$lib/assets/logo.webp';
-	import { page } from '$app/stores';
-	// const btnClass = 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-lg p-2.5 fixed right-2 top-12  md:top-3 md:right-2 z-50';
+
 	const btnClass =
 		'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-lg p-2.5 z-50';
 </script>
+
 <Navbar>
 	<NavBrand href="/">
-		<!-- <img src={logo} class="mr-3 h-6 sm:h-9" alt="Lorabridge Logo" /> -->
-		<!-- <VideoPlaceholders size="sm" divClass="mr-3 h-6 sm:h-9" /> -->
 		<span class="heading self-center whitespace-nowrap text-6xl font-semibold dark:text-white">
 			CrOSSD
 		</span>
 	</NavBrand>
 	<NavUl class="ml-auto">
-    <NavLi href="/">Search</NavLi>
-    <NavLi href="/doc">Metrics</NavLi>
-    <NavLi href="https://crossd.tech">Project & Blog</NavLi>
-  </NavUl>
+		<NavLi href="/">Search</NavLi>
+		<NavLi href="/doc">Metrics</NavLi>
+		<NavLi href="https://crossd.tech">Project & Blog</NavLi>
+	</NavUl>
 	<DarkMode {btnClass} />
 </Navbar>
 <div class="container mx-auto my-10">
@@ -35,8 +41,6 @@
 		<FooterLink href="/about">About Project</FooterLink>
 		<FooterLink href="/privacy">Privacy Policy</FooterLink>
 		<FooterLink href="/legal-information">Legal Information</FooterLink>
-		<!-- <FooterLink href="/">Licensing</FooterLink>
-    <FooterLink href="/">Contact</FooterLink> -->
 	</FooterLinkGroup>
 </Footer>
 

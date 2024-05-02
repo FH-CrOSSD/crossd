@@ -1,25 +1,26 @@
-import rehypeSanitize from 'rehype-sanitize';
+import remarkGridTable from '@adobe/remark-gridtables';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-import rehypeSlug from 'rehype-slug';
 import addClasses from 'rehype-class-names';
+import rehypeKatex from 'rehype-katex';
+import rehypeSanitize from 'rehype-sanitize';
 import rehypeShiftHeading from 'rehype-shift-heading';
+import rehypeSlug from 'rehype-slug';
 import rehypeStringify from 'rehype-stringify';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import remarkGridTable from '@adobe/remark-gridtables';
-
-
-// const remarkGridTables = require('remark-grid-tables')
 import { unified } from 'unified';
-const headingClasses = ' font-extrabold text-gray-900 dark:text-white w-full mt-5';
 
+// tailwindcss classes for the metric headings
+const headingClasses = ' font-extrabold text-gray-900 dark:text-white w-full mt-5';
+// regex used to validate Github owner/name combinations
 export const repoRegex = /^[a-zA-Z0-9-_./]+$/;
+// results per page for the search pagination
 export const PER_PAGE = 10;
 
 export function toFixed2(value: any) {
+    // limit to 2 decimals or 0 if integer
     if (typeof value === 'number') {
         return value % 1 === 0 ? value : value.toFixed(2);
     } else {
@@ -28,6 +29,7 @@ export function toFixed2(value: any) {
 }
 
 export async function processMD(text: string) {
+    // convert markdown to html via remark/rehype
     const file = await unified()
         .use(remarkParse)
         .use(remarkMath)

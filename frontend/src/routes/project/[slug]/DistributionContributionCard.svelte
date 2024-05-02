@@ -1,7 +1,7 @@
 <script lang="ts">
+	import FloatMetricRow from './FloatMetricRow.svelte';
 	import MetricCard from './MetricCard.svelte';
 	import MetricRow from './MetricRow.svelte';
-	import FloatMetricRow from './FloatMetricRow.svelte';
 	export let selected: number;
 	export let project_id: string;
 	export let data: [{ [key: string]: any }];

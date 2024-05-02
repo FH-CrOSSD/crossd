@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Heading, P, A, Mark, Secondary } from 'flowbite-svelte';
+	import { A, Heading, P } from 'flowbite-svelte';
 </script>
 
 <Heading tag="h1">Legal Information</Heading>

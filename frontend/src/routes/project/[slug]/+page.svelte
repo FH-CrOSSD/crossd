@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { chartOptions } from '$lib/chartOptions';
 	import { processMD, toFixed2 } from '$lib/util';
-	import { Chart, CloseButton, Drawer, Heading, Hr, Modal, Select, P } from 'flowbite-svelte';
+	import { Chart, CloseButton, Drawer, Heading, Hr, Modal, P, Select } from 'flowbite-svelte';
 	import { onDestroy } from 'svelte';
 	import { sineIn } from 'svelte/easing';
 	import CommunityHealthCard from './CommunityHealthCard.svelte';
@@ -23,7 +23,6 @@
 		md: [{ [key: string]: any }];
 	};
 
-	let workflow_statuses: { [key: string]: any } = {};
 	let project_id: string;
 	let snapshots: Array<{ value: number; name: string }>;
 	let selected: string;
@@ -33,40 +32,42 @@
 	let overlayMD: string;
 	let scrollFinished = false;
 	let drawerHidden = true;
-	// open and close modal along with drawer, if chart should be shown
-	// let modalOpen = false;
+
+	// hide drawer if there is no definition to show or if the chart should not be shown
 	$: {
 		drawerHidden = showDefinition === true ? !showChart : true;
 	}
+	// transition for the drawer (sidebar)
 	const transitionParamsRight = {
 		x: 320,
 		duration: 200,
 		easing: sineIn
 	};
 
+	// components can trigger the drawer by setting a value in the store
 	let unsubscribe = overlayStore.subscribe((value) => {
-		console.log('store sub');
 		if (value) {
 			showChart = value.chart;
 			showDefinition = value.definition;
-			console.log(value);
 			if (value.definition === true) {
-				console.log('show def');
+				// prepare for the metric definition, render markdown
 				overlayID = value.current_id;
 				goToDefinition(value.current_md);
-				// scroll(value.current_id);
 			}
 			if (value.chart === true) {
 				prepareChart(value.current_id);
 			}
+			// reset the store
 			$overlayStore = null;
 		}
 	});
 
+	// set the selected snapshot when data is modified
 	function updateSelected() {
 		selected = snapshots && snapshots.length > 0 ? snapshots[snapshots.length - 1]['value'] : 0;
 	}
 
+	// render markdown, show sidebar
 	async function goToDefinition(md: string) {
 		overlayMD = (
 			await processMD(
@@ -77,17 +78,18 @@
 	}
 
 	function prepareChart(id: string) {
+		// Get HTML element of selected metric
 		const elem = document.querySelector('[data-id="' + id + '"]');
+		// use name as title for the chart
 		chartOptions.series[0].name = elem ? elem.innerText : 'Data:';
-		console.log(snapshots);
+		// prepare the data for the chart - get the value of the metric for the snapshot, format them and filter empty values
 		chartOptions.series[0].data = snapshots
 			.map((x) => {
-				console.log(x);
 				let val = $clickedSelector(x.value);
 				return val % 1 === 0 ? val : toFixed2(val);
 			})
 			.filter((item) => !(item === undefined || item === null));
-		console.log(chartOptions.series[0].data);
+		// prepare the ticks for the x axis - filter empty values and format the dates into a nice format in UTC time
 		chartOptions.xaxis.categories = snapshots
 			.filter((item) => {
 				let val = $clickedSelector(item.value);
@@ -96,15 +98,15 @@
 			.map((x) => {
 				return new Date(Date.parse(x.name)).toLocaleString('eo');
 			});
-		// modalOpen = true;
 	}
 
+	// scroll to a specific metric documentation element
 	async function scroll() {
-		console.log('scroll');
 		document.getElementById(overlayID).scrollIntoView();
 		scrollFinished = true;
 	}
 
+	// scroll to a specific element when the drawer is shown
 	/** @type {import('svelte/action').Action}  */
 	function onShown(node) {
 		// the node has been mounted in the DOM
@@ -128,46 +130,22 @@
 		};
 	}
 
-	// $: modalOpen = showChart;
+	// whenever data changes
 	$: {
 		snapshots = data.snapshots;
 		updateSelected();
 	}
-	// $: {
-	// 	snapshots = [];
-	// 	for (let i = 0; i < data.data.length; i++) {
-	// 		snapshots.push({ value: i, name: new Date(data.data[i].timestamp * 1000).toUTCString() });
-	// 	}
-	// 	console.log('creating snapshots');
-	// 	//change selected variable inside a function, because Svelte reactivity is triggered when changing var directly
-	// 	//(always changed to last value)
-	// 	updateSelected();
-	// }
 
+	// whener data.bak changes
+	// retrieve the project id, which is used in all bak metrics
+	// elephant_factor is always there, so we chose it to retrieve the project id
 	$: {
 		if (data.bak) {
 			project_id = Object.keys(data.bak[selected]?.elephant_factor ?? [])[0];
 		}
 	}
-	$: {
-		workflow_statuses = {};
-		if (data.data && Object.keys(data.data).length > 0) {
-			// console.log(snapshots);
-			// console.log(data.data[selected]);
-			// console.log(selected);
-			console.log(data.data);
-			for (const [key, value] of Object.entries(
-				data.data[selected]?.current_state_workflows ?? {}
-			) as [[string, { [key: string]: any }]]) {
-				if (!(value['conclusion'] in workflow_statuses)) {
-					workflow_statuses[value['conclusion']] = 1;
-				} else {
-					workflow_statuses[value['conclusion']]++;
-				}
-			}
-		}
-	}
 
+	// unsubscribe from the overlayStore when user leaves the page
 	onDestroy(() => {
 		console.log('the component is being destroyed');
 		unsubscribe();
@@ -182,6 +160,7 @@
 	</div>
 	<Hr />
 	<div class="flex flex-wrap gap-4">
+		<!-- show cards if there is data for them -->
 		{#if Object.keys(data.data?.[selected] ?? {}).length > 0}
 			<GenericMetricCard data={data.data} {selected} />
 		{/if}
@@ -199,15 +178,14 @@
 			<LifecycleBranchesCard data={data.bak} {selected} {project_id} />
 			<SecurityAdvisoriesCard data={data.bak} {selected} {project_id} />
 		{/if}
+		<!-- show when no data is available -->
 		{#if Object.keys(data.data?.[selected] ?? {}).length <= 0 && !data.bak[selected]}
 			<P size="lg">There is currently no data available for this snapshot.</P>
 		{/if}
 	</div>
 </div>
 
-<!-- outsideclose only if drawer not shown, otherwise you need to double close -->
-<!-- outsideclose={drawerHidden ? true : false} -->
-
+<!-- modal for displaying the charts -->
 <Modal
 	title={chartOptions.series[0].name}
 	bind:open={showChart}
@@ -219,6 +197,8 @@
 		<Chart options={chartOptions} size="lg" />
 	</div>
 </Modal>
+
+<!-- a sidebar for showing the metric documentation -->
 <Drawer
 	placement="right"
 	transitionType="fly"

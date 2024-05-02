@@ -1,7 +1,8 @@
 <script lang="ts">
+	import BoolMetricRow from './BoolMetricRow.svelte';
 	import MetricCard from './MetricCard.svelte';
 	import MetricRow from './MetricRow.svelte';
-	import BoolMetricRow from './BoolMetricRow.svelte';
+
 	export let selected: number;
 	export let project_id: string;
 	export let data: [{ [key: string]: any }];

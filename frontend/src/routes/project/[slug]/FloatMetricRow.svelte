@@ -1,8 +1,7 @@
 <script lang="ts">
-	import Row from './Row.svelte';
-	import { P } from 'flowbite-svelte';
 	import { toFixed2 } from '$lib/util';
 	import MetricValue from './MetricValue.svelte';
+	import Row from './Row.svelte';
 
 	export let data_id: string | null;
 	export let data_md: string | null;

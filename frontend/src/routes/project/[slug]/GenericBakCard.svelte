@@ -1,9 +1,9 @@
 <script lang="ts">
+	import { QuestionCircleSolid, ThumbsDownSolid, ThumbsUpSolid } from 'flowbite-svelte-icons';
+	import FloatMetricRow from './FloatMetricRow.svelte';
+	import IconMetricRow from './IconMetricRow.svelte';
 	import MetricCard from './MetricCard.svelte';
 	import MetricRow from './MetricRow.svelte';
-	import FloatMetricRow from './FloatMetricRow.svelte';
-	import { ThumbsUpSolid, ThumbsDownSolid, QuestionCircleSolid } from 'flowbite-svelte-icons';
-	import IconMetricRow from './IconMetricRow.svelte';
 	export let selected: number;
 	export let project_id: string;
 	export let data: [{ [key: string]: any }];

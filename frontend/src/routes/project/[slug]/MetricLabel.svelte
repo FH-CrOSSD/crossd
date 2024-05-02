@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { P, A } from 'flowbite-svelte';
+	import { A, P } from 'flowbite-svelte';
 	export let click: any = null;
 	export let data_md: string | null = null;
 	export let data_id: string | null = null;

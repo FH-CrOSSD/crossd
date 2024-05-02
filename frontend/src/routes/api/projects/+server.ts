@@ -1,10 +1,16 @@
-import { aql } from "arangojs";
-import { json } from '@sveltejs/kit';
 import { db } from "$hook.server";
+import { json } from '@sveltejs/kit';
+import { aql } from "arangojs";
 
 const projectsColl = db.collection("projects");
 
 /** @type {import('./$types').RequestHandler} */
+/**
+ * Handles POST requests to /api/projects and returns a list of all projects stored in the ArangoDB database.
+ * 
+ * @returns list of all projects
+ * @throws HTTPError
+ */
 export async function POST({ request }) {
     try {
         const res = await db.query(aql`

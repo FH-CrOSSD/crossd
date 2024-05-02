@@ -1,21 +1,30 @@
 <script lang="ts">
-	import type { PageData } from './$types';
-	import { Heading, P } from 'flowbite-svelte';
-	import { Listgroup, ListgroupItem } from 'flowbite-svelte';
-	export let data: PageData;
-	import { Button, Search, Card, Hr } from 'flowbite-svelte';
-	import { SearchOutline } from 'flowbite-svelte-icons';
-	import { PER_PAGE } from '$lib/util';
-	import { page } from '$app/stores';
-	import { Pagination } from 'flowbite-svelte';
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { PER_PAGE } from '$lib/util';
+	import {
+		Button,
+		Card,
+		Heading,
+		Hr,
+		Listgroup,
+		ListgroupItem,
+		P,
+		Pagination,
+		Search
+	} from 'flowbite-svelte';
+	import { SearchOutline } from 'flowbite-svelte-icons';
+	import { onMount } from 'svelte';
+	import type { PageData } from './$types';
+
+	export let data: PageData;
 
 	const searchAnchor = '#search-results';
 
 	function get_readme(item: { [key: string]: any }): string {
 		let res: string = '';
 		const prepare = (x: { [key: string]: any }, index: string) => {
+			// return first part of readme and remove html or undefined
 			return x.repository.readmes[index]
 				? x.repository.readmes[index]?.['text']
 						.split(' ')
@@ -25,14 +34,17 @@
 				: undefined;
 		};
 
+		// return empty string if no readmes available
 		if (!item.repository.readmes) {
 			return res;
 		}
 
+		// prefer markdown readme
 		if ('README_md' in item.repository.readmes && item.repository.readmes['README_md']) {
 			res = prepare(item, 'README_md');
 		} else {
 			for (let rm in item.repository.readmes) {
+				// use first readme that exists
 				if (item.repository.readmes[rm]) {
 					res = prepare(item, rm);
 				}
@@ -42,15 +54,20 @@
 		return res;
 	}
 
+	// calculate the number of the last page of the pagination
 	$: lastPage = Math.ceil(data.length / PER_PAGE);
+	// get current page from query parameter and set to 1 if not a number
 	$: activePage = Number($page.url.searchParams.get('page')) || 1;
+	// if page not in allowed range set to 1
 	$: {
 		if (activePage < 1 || activePage > lastPage) {
 			activePage = 1;
 		}
 	}
 
+	// base for pagination links
 	$: base_url = $page.url.pathname + '?project=' + $page.url.searchParams.get('project');
+	// stores pages for the pagination
 	let pages;
 	// prepare pages for pagination
 	$: {
@@ -100,11 +117,8 @@
 		pages.forEach((page) => {
 			//set active (or not) status for each page
 			if (page.href) {
-				let splitUrl = page.href.split('?');
-				let queryString = splitUrl.slice(1).join('?');
-				const hrefParams = new URLSearchParams(queryString);
-				let hrefValue = hrefParams.get('page');
-				if (Number(hrefValue) === activePage) {
+				let pageNr = new URLSearchParams(page.href.split('#')[0]).get('page');
+				if (Number(pageNr) === activePage) {
 					page.active = true;
 				} else {
 					page.active = false;
@@ -113,29 +127,36 @@
 				page.active = false;
 			}
 		});
-		pages = pages;
 	}
 
 	const previous = () => {
+		// clicked on pagination previous button
+		// go to previous page if there is one
 		if (activePage > 1) {
 			goto(base_url + '&page=' + (activePage - 1) + searchAnchor); //, { noScroll: true }
 		}
+		// check if buttons need to be disabled/enabled
 		checkButtons(activePage - 1);
 	};
 	const next = () => {
+		// clicked on pagination next button
+		// go to next page if there is one
 		if (activePage < lastPage) {
 			goto(base_url + '&page=' + (activePage + 1) + searchAnchor); //, { noScroll: true }
 		}
+		// check if buttons need to be disabled/enabled
 		checkButtons(activePage + 1);
 	};
 
 	function removeHoverClasses(elem) {
+		//remove the tailwind classes for mouseover from the next/previous button
 		for (let i = 0; i < hoverClasses.length; i++) {
 			elem.classList.remove(hoverClasses[i]);
 		}
 	}
 
 	function addHoverClasses(elem) {
+		//add the tailwind classes for mouseover from the next/previous button
 		for (let i = 0; i < hoverClasses.length; i++) {
 			elem.classList.add(hoverClasses[i]);
 		}
@@ -144,16 +165,19 @@
 	function checkButtons(page) {
 		// handle disabling pagination buttons as flowbite-svelte does not provide this for their component
 		if (page === 1) {
+			// disable previous btn - enable next btn
 			document.querySelector('button:has(span#previous)').disabled = true;
 			removeHoverClasses(document.querySelector('button:has(span#previous)'));
 			document.querySelector('button:has(span#next)').disabled = false;
 			addHoverClasses(document.querySelector('button:has(span#next)'));
 		} else if (page === lastPage) {
+			// disable previous next - enable next previous
 			document.querySelector('button:has(span#next)').disabled = true;
 			removeHoverClasses(document.querySelector('button:has(span#next)'));
 			document.querySelector('button:has(span#previous)').disabled = false;
 			addHoverClasses(document.querySelector('button:has(span#previous)'));
 		} else {
+			// enable both pagination btn
 			document.querySelector('button:has(span#next)').disabled = false;
 			addHoverClasses(document.querySelector('button:has(span#next)'));
 			document.querySelector('button:has(span#previous)').disabled = false;
@@ -161,7 +185,9 @@
 		}
 	}
 
+	// stores the mouseover tailwind classes
 	let hoverClasses = [];
+
 	const click = (event) => {
 		// when clicking on a pagination number
 		checkButtons(Number(new URL(event.target.href).searchParams.get('page')));
@@ -180,6 +206,7 @@
 	});
 
 	function onKeyDown(e) {
+		// add wasd navigation for search pages
 		if (document.activeElement !== document.getElementById('project')) {
 			switch (e.key) {
 				case 'ArrowLeft':

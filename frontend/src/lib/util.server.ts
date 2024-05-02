@@ -1,16 +1,5 @@
-// import { readFileSync, readdirSync } from 'fs';
-// import path from 'path';
-
-// const mdpath = path.join("src", "lib", "md");
-// const mpath = path.join(mdpath, "metric");
-// export const getMetricsMD = async () => {
-//     const metrics = readdirSync(mpath);
-//     const res: { [key: string]: any } = {};
-//     for (let i = 0; i < metrics.length; i++) {
-//         res[metrics[i]] = { text: readFileSync(path.join(mpath, metrics[i]), { encoding: "utf-8" }) };
-//     }
-//     return { metrics: res, footnotes: { text: readFileSync(path.join(mdpath, "footnotes.md"), { encoding: "utf-8" }) } };
-// };
+// import content of metric markdown files as string
+import footnotes from '$lib/md/footnotes.md?raw';
 import branches from '$lib/md/metric/branches.md?raw';
 import change_pull_request from '$lib/md/metric/change_pull_request.md?raw';
 import churn from '$lib/md/metric/churn.md?raw';
@@ -28,7 +17,6 @@ import security_advisories from '$lib/md/metric/security_advisories.md?raw';
 import size_of_community from '$lib/md/metric/size_of_community.md?raw';
 import support_rate from '$lib/md/metric/support_rate.md?raw';
 import technical_fork from '$lib/md/metric/technical_fork.md?raw';
-import footnotes from '$lib/md/footnotes.md?raw';
 
 export const getMetricsMD = async () => {
     const res: { [key: string]: any } = {

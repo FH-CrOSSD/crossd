@@ -1,11 +1,18 @@
-import { Database, aql } from "arangojs";
-import { json } from '@sveltejs/kit';
-import { error } from '@sveltejs/kit';
 import { db } from "$hook.server";
-import { PER_PAGE,repoRegex } from '$lib/util';
+import { PER_PAGE, repoRegex } from '$lib/util';
+import { error, json } from '@sveltejs/kit';
+import { aql } from "arangojs";
 
 const collection = db.collection("projects");
+
 /** @type {import('./$types').RequestHandler} */
+/**
+ * Handles POST requests to /search and returns search results from the database.
+ * 
+ * @param request - contains term (part of a valid github owner/name) and page (page of results) inside the json body.
+ * @returns search results for the requested page
+ * @throws HTTPError
+ */
 export async function POST({ request }) {
     let body;
     try {
@@ -30,6 +37,12 @@ export async function POST({ request }) {
     }
 
     try {
+        /**
+         * 1. find projects that contain term
+         * 2. get the timestamp of the last scan of the project
+         * 3. get owner/name, description and readmes of the project
+         * 4. sort results and limit to requested page
+         */
         const res = await db.query(aql`
         FOR doc IN ${collection}
         FILTER LOWER(doc.identifier) LIKE LOWER(${sterm})

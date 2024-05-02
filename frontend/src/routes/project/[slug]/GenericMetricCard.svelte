@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { P } from 'flowbite-svelte';
-	import MetricLabel from './MetricLabel.svelte';
-	import MetricCard from './MetricCard.svelte';
-	import MetricRow from './MetricRow.svelte';
-	import BoolMetricRow from './BoolMetricRow.svelte';
 	import { Duration } from 'luxon';
+	import BoolMetricRow from './BoolMetricRow.svelte';
+	import MetricCard from './MetricCard.svelte';
+	import MetricLabel from './MetricLabel.svelte';
+	import MetricRow from './MetricRow.svelte';
 
 	export let selected: number;
 	export let data: [{ [key: string]: any }];
@@ -40,8 +40,6 @@
 			}
 		};
 	};
-	// Duration.fromMillis(1000343000).rescale().toHuman()
-	// return Duration.fromMillis(genericDataFn('mean_pull_requests')(selected)).rescale().toHuman({ unitDisplay: "short" })}
 </script>
 
 <MetricCard>

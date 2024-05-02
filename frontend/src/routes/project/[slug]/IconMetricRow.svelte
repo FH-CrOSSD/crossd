@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Row from './Row.svelte';
 	import { P } from 'flowbite-svelte';
+	import Row from './Row.svelte';
 
 	export let data_id: string | null = null;
 	export let data_md: string | null = null;
