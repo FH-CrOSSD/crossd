@@ -1,23 +1,18 @@
 <script lang="ts">
+	import { bakGenericDataFn as bgdFn } from '$lib/util';
 	import { QuestionCircleSolid, ThumbsDownSolid, ThumbsUpSolid } from 'flowbite-svelte-icons';
 	import FloatMetricRow from './FloatMetricRow.svelte';
 	import IconMetricRow from './IconMetricRow.svelte';
 	import MetricCard from './MetricCard.svelte';
 	import MetricRow from './MetricRow.svelte';
+
 	export let selected: number;
 	export let project_id: string;
 	export let data: [{ [key: string]: any }];
 	const chart = true;
 
 	let bakGenericDataFn = (category: string, project_id: string, entry: string | null = null) => {
-		return (selected: number) => {
-			console.log(selected);
-			if (entry) {
-				return data[selected]?.[category][project_id][entry]??null;
-			} else {
-				return data[selected]?.[category][project_id]??null;
-			}
-		};
+		return bgdFn(category, project_id, entry, data);
 	};
 
 	function osiIcon(type: string) {

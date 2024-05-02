@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { bakGenericDataFn as bgdFn } from '$lib/util';
 	import BoolMetricRow from './BoolMetricRow.svelte';
 	import MetricCard from './MetricCard.svelte';
 	import MetricRow from './MetricRow.svelte';
@@ -9,14 +10,9 @@
 	const chart = true;
 
 	let bakGenericDataFn = (category: string, project_id: string, entry: string | null = null) => {
-		return (selected: number) => {
-			if (entry) {
-				return data[selected]?.[category][project_id][entry] ?? null;
-			} else {
-				return data[selected]?.[category][project_id] ?? null;
-			}
-		};
+		return bgdFn(category, project_id, entry, data);
 	};
+
 </script>
 
 <MetricCard>
