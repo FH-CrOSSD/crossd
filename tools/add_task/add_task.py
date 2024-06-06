@@ -37,8 +37,8 @@ def main(args):
 
     if not conn["crossd"].hasCollection("projects"):
         conn["crossd"].createCollection(name="projects")
-        conn["crossd"]["projects"].ensurePersistentIndex(["identifier"], unique=True)
-
+    
+    conn["crossd"]["projects"].ensurePersistentIndex(["identifier"], unique=True)
     coll = conn["crossd"]["scans"]
 
     for entry in args.owner_with_name:
