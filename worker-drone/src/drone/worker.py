@@ -139,6 +139,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         del res["repository"][get_readme_index(readme)]
     console.print("storing repository data in database")
     doc = self.repos.createDocument(initDict=res)
+    self.repos.ensurePersistentIndex(["scan_id"], unique=False)
     doc.save()
     res = {"repository_key": doc._key, "scan_id": scan}
     return res
@@ -185,4 +186,5 @@ def do_metrics(self, retval: str):
     res["scan_id"] = retval["scan_id"]
     console.print("storing metric data in database")
     self.metrics.createDocument(initDict=res).save()
+    self.metrics.ensurePersistentIndex(["scan_id"], unique=False)
     return res
