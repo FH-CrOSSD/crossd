@@ -141,6 +141,7 @@ def bak_tasks(self, owner: str, name: str, scan: str):
         "name_with_owner": f"{owner}/{name}",
     }
     self._get_collection("bak_repos").createDocument(initDict=data).save()
+    self._get_collection("bak_repos").ensurePersistentIndex(["scan_id"], unique=False)
 
     # calculate metrics based on repository data and store them in db
     MetricsPipeline(filter_date=date.today() - timedelta(days=1)).run_metrics_to_json()
@@ -154,6 +155,7 @@ def bak_tasks(self, owner: str, name: str, scan: str):
         "name_with_owner": f"{owner}/{name}",
     }
     doc = self.collection.createDocument(initDict=res).save()
+    self.collection.ensurePersistentIndex(["scan_id"], unique=False)
 
     # clean up files created by the task
     for filename in os.listdir(DATA_PATH):
