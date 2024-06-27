@@ -16,9 +16,9 @@
 	let bakSecurityDataFn = (category: string, project_id: string, entry: string | null = null) => {
 		return (selected: number) => {
 			if (entry) {
-				return data[selected][category][0][project_id][entry];
+				return data[selected]?.[category][0][project_id][entry] ?? null;
 			} else {
-				return data[selected][category][0][project_id];
+				return data[selected]?.[category][0][project_id] ?? null;
 			}
 		};
 	};
