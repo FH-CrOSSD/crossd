@@ -3,6 +3,7 @@
 		DarkMode,
 		Footer,
 		FooterCopyright,
+		FooterIcon,
 		FooterLink,
 		FooterLinkGroup,
 		NavBrand,
@@ -41,6 +42,11 @@
 		<FooterLink href="/about">About Project</FooterLink>
 		<FooterLink href="/privacy">Privacy Policy</FooterLink>
 		<FooterLink href="/legal-information">Legal Information</FooterLink>
+		<div class="ml-auto w-[10%]">
+			<FooterIcon href="/">
+				<img src="/netidee.jpg" alt="netidee logo" />
+			</FooterIcon>
+		</div>
 	</FooterLinkGroup>
 </Footer>
 
