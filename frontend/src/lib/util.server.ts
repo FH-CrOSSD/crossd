@@ -33,7 +33,7 @@ export const getMetricsMD = async () => {
         "number_of_support_contributors.md": { text: number_of_support_contributors },
         "osi_approved_licenses.md": { text: osi_approved_licenses },
         "project_velocity.md": { text: project_velocity },
-        "security_advisories.m": { text: security_advisories },
+        "security_advisories.md": { text: security_advisories },
         "size_of_community.md": { text: size_of_community },
         "support_rate.md": { text: support_rate },
         "technical_fork.md": { text: technical_fork }
