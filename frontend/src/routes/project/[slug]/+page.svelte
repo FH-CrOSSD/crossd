@@ -111,7 +111,7 @@
 	function onShown(node) {
 		// the node has been mounted in the DOM
 		const observer = new IntersectionObserver((entries) => {
-			if (entries[0].isIntersecting) {
+			if (entries.some((x) => x.isIntersecting)) {
 				// element in viewport
 				if (!scrollFinished) {
 					scroll();
