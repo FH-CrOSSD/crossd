@@ -9,6 +9,8 @@ metadata:
     app.kubernetes.io/version: "0.1"
     app.kubernetes.io/component: flower
     app.kubernetes.io/part-of: crossd
+  annotations:
+    reloader.stakater.com/auto: "true"
   name: flower
 spec:
   minReadySeconds: 10

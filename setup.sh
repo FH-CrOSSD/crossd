@@ -18,6 +18,10 @@ chown root:root secrets -R
 chmod o-r-w-x secrets -R
 
 microk8s helm repo add cert-manager https://charts.jetstack.io
+microk8s helm repo add stakater https://stakater.github.io/stakater-charts
+microk8s helm repo update
+
+microk8s helm install stakater/reloader --generate-name
 microk8s helm install trust-manager cert-manager/trust-manager
 
 microk8s kubectl apply -f certificates/clusterIssuer.yaml -f certificates/CAIssuer.yaml -f certificates/CACertificate.yaml

@@ -10,6 +10,8 @@ metadata:
     app.kubernetes.io/version: "0.1"
     app.kubernetes.io/component: bak-rest-drone
     app.kubernetes.io/part-of: crossd
+  annotations:
+    reloader.stakater.com/auto: "true"
   name: bak-rest-drone
 spec:
   replicas: 1
