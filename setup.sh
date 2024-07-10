@@ -7,7 +7,7 @@ fi
 
 SCRIPTPATH=$(dirname "$(realpath "$0")")
 
-addons="registry dns hostpath-storage ingress cert-manager"
+addons="registry dns hostpath-storage ingress cert-manager rbac"
 
 for item in $addons; do
     microk8s enable $item

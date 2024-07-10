@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app: update-arango-ca-job
+    environment: prod
+    app.kubernetes.io/name: crossd
+    app.kubernetes.io/instance: crossd-alpha
+    app.kubernetes.io/version: "0.1"
+    app.kubernetes.io/component: update-arango-ca-job
+    app.kubernetes.io/part-of: crossd
+  name: update-arango-ca-job
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  timeZone: "Etc/UTC"
+  schedule: "@yearly"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccount: update-arango-ca-sa
+          containers:
+            - name: update-arango-ca-job
+              image: bitnami/kubectl
+              command: ["/bin/bash", "-c", "kubectl patch secret arango-ca --patch \"$(kubectl create secret generic arango-ca --from-literal=ca.crt=\"$(kubectl get secret root-secret --namespace=cert-manager -o jsonpath=\"{.data['ca\\.crt']}\" | base64 -d)\" --from-literal=ca.key=\"$(kubectl get secret root-secret --namespace=cert-manager -o jsonpath=\"{.data['tls\\.key']}\" | base64 -d)\" --dry-run=client -o yaml)\""]
+              volumeMounts:
+                - name: ca-certificates
+                  mountPath: /etc/ssl/certs/
+                  readOnly: true
+          restartPolicy: Never
+          volumes:
+            - name: ca-certificates
+              configMap:
+                name: cert-bundle
+                defaultMode: 0644
+                optional: false
+                items:
+                  - key: ca-certificates.crt
+                    path: ca-certificates.crt
