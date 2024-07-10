@@ -26,6 +26,7 @@ microk8s helm install trust-manager cert-manager/trust-manager
 
 microk8s kubectl apply -f certificates/clusterIssuer.yaml -f certificates/CAIssuer.yaml -f certificates/CACertificate.yaml
 microk8s kubectl apply -f certificates/trustBundle.yaml -f certificates/redisCertificate
+microk8s kubectl apply -f certificates/serviceAccount.yaml -f certificates/arangoCARole.yaml -f certificates/roleBinding.yaml -f certificates/updateArangoCA.yaml
 sleep 2
 microk8s kubectl create secret generic arango-ca --from-literal=ca.crt="$(microk8s kubectl get secret root-secret --namespace=cert-manager -o jsonpath="{.data['ca\.crt']}" | base64 -d)" --from-literal=ca.key="$(microk8s kubectl get secret root-secret --namespace=cert-manager -o jsonpath="{.data['tls\.key']}" | base64 -d)"
 
