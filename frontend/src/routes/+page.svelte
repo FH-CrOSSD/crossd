@@ -4,8 +4,15 @@
 	import { toFixed2 } from '$lib/util';
 	import { filesize } from 'filesize';
 	import { Button, Card, Heading, Hr, P, Search } from 'flowbite-svelte';
+	import { onMount } from 'svelte';
 	import { SearchOutline } from 'flowbite-svelte-icons';
 	$: stats = data['results']['stats'];
+
+	onMount(async () => {
+		// autofocus input field
+		document.getElementById("project")?.focus();
+	});
+
 </script>
 
 <div class="justify-center" style="object-position:bottom">
