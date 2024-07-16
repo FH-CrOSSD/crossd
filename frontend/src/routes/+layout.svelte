@@ -26,6 +26,7 @@
 	<NavUl class="ml-auto">
 		<NavLi href="/">Search</NavLi>
 		<NavLi href="/doc">Metrics</NavLi>
+		<NavLi href="https://fh-crossd.github.io/">Docs</NavLi>
 		<NavLi href="https://crossd.tech">Project & Blog</NavLi>
 	</NavUl>
 	<DarkMode {btnClass} />
