@@ -33,6 +33,8 @@ microk8s kubectl create secret generic arango-ca --from-literal=ca.crt="$(microk
 microk8s kubectl apply -f arango-setup/arango-crd.yaml
 microk8s kubectl apply -f arango-setup/arango-deployment.yaml
 microk8s kubectl apply -f arango-setup/arango-storage.yaml
+microk8s kubectl apply -f arango-setup/arango-storage-role.yaml
+microk8s kubectl apply -f arango-setup/arango-storage-rb.yaml
 
 microk8s kubectl apply -f arango
 
