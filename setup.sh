@@ -38,15 +38,15 @@ microk8s kubectl apply -f arango-setup/arango-storage-rb.yaml
 
 microk8s kubectl apply -f arango
 
-cd $SCRIPTPATH/tools/add_task
-sudo ./buildah.sh
-cd $SCRIPTPATH/worker-drone
-sudo ./buildah.sh
-cd $SCRIPTPATH/bak-rest-drone
-sudo ./buildah.sh
-cd $SCRIPTPATH/frontend
-sudo ./buildah.sh
-cd $SCRIPTPATH
+#cd $SCRIPTPATH/tools/add_task
+#sudo ./buildah.sh
+#cd $SCRIPTPATH/worker-drone
+#sudo ./buildah.sh
+#cd $SCRIPTPATH/bak-rest-drone
+#sudo ./buildah.sh
+#cd $SCRIPTPATH/frontend
+#sudo ./buildah.sh
+#cd $SCRIPTPATH
 
 microk8s kubectl apply -f secrets
 microk8s kubectl create configmap arango-init --from-file arango-init/arango_init.js
