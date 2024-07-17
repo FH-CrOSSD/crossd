@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: arango-storage-rb
+subjects:
+  - kind: ServiceAccount
+    name: arango-storage-operator
+    namespace: default
+roleRef:
+  kind: Role
+  name: arango-storage-configmaps-role
+  apiGroup: rbac.authorization.k8s.io
