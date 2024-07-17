@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: most-starred-job
-          image: localhost:32000/add-task
+          image: ghcr.io/fh-crossd/add-task:latest
           command: ["sh", "-c"]
           args:
             - >

@@ -31,7 +31,7 @@ spec:
         runAsUser: 1337
         runAsGroup: 1337
       containers:
-        - image: localhost:32000/frontend
+        - image: ghcr.io/fh-crossd/frontend:latest
           imagePullPolicy: Always
           name: frontend
           resources: {}

@@ -31,7 +31,7 @@ spec:
         runAsUser: 1337
         runAsGroup: 1337
       containers:
-        - image: localhost:32000/worker-drone
+        - image: ghcr.io/fh-crossd/worker-drone:latest
           imagePullPolicy: Always
           name: m-drone
           args: ["-Q", "metric", "-c", "1"]
