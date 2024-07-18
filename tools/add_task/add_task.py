@@ -9,7 +9,7 @@ from celery import Celery
 
 app = Celery(
     "collect",
-    broker="redis://:{}@redis-service:6379/0?ssl_cert_reqs=required".format(
+    broker="rediss://:{}@redis-service:6379/0?ssl_cert_reqs=required".format(
         os.environ.get("RAUTH", "")
     ),
     broker_connection_retry_on_startup=True,

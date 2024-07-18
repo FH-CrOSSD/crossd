@@ -78,7 +78,7 @@ class CollectTask(BaseTask):
 
 app = Celery(
     "collect",
-    broker="redis://:{}@redis-service:6379/0?ssl_cert_reqs=required".format(
+    broker="rediss://:{}@redis-service:6379/0?ssl_cert_reqs=required".format(
         os.environ.get("RAUTH", "")
     ),
     backend="arangodb://{}:@arangodb-cluster-internal:8529/crossd/task_results".format(

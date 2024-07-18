@@ -36,7 +36,7 @@ spec:
             - containerPort: 5555
           command: ["sh", "-c"]
           args:
-            - "celery --broker=redis://:$RAUTH@redis-service:6379/0?ssl_cert_reqs=required flower"
+            - "celery --broker=rediss://:$RAUTH@redis-service:6379/0?ssl_cert_reqs=required flower"
           imagePullPolicy: Always
           env:
             - name: REQUESTS_CA_BUNDLE
