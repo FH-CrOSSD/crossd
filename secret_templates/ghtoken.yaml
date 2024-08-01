@@ -3,4 +3,4 @@ kind: Secret
 metadata:
   name: ghtoken
 data:
-  GH_TOKEN: <github roken>
+  GH_TOKEN: <github token>
