@@ -44,8 +44,9 @@
 		<FooterLink href="/privacy">Privacy Policy</FooterLink>
 		<FooterLink href="/legal-information">Legal Information</FooterLink>
 		<div class="ml-auto w-[10%]">
-			<FooterIcon href="/">
-				<img src="/netidee.jpg" alt="netidee logo" />
+			<FooterIcon href="">
+				<img class="visible dark:invisible dark:w-0 dark:h-0" src="/netidee-logo-light.svg" alt="netidee logo" />
+				<img class="invisible w-0 h-0 dark:visible dark:w-auto dark:h-auto" src="/netidee-logo-dark.svg" alt="netidee logo" />
 			</FooterIcon>
 		</div>
 	</FooterLinkGroup>
