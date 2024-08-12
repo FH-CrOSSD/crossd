@@ -6,7 +6,7 @@ authors = [
     {name = "tdam", email = "20456596+tobiasdam@users.noreply.github.com"},
 ]
 dependencies = [
-    "celery[arangodb,auth,brotli,msgpack,redis]==5.5.0b1",
+    "celery[arangodb,auth,brotli,msgpack,redis]==5.5.0b2",
     "requests-toolbelt>=1.0.0",
     "rich>=13.5.2",
 ]

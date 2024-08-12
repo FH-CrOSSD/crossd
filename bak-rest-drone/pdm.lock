@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:9a9635393ff48b8660b8119ba1261c586937f6ffc9fd48776eeccadfa11f012a"
+content_hash = "sha256:2db1f35b7691242bd0cc849e12c388a760c34b480f664d409320ae9b1fbf8789"
 
 [[package]]
 name = "amqp"
@@ -116,7 +116,7 @@ files = [
 
 [[package]]
 name = "celery"
-version = "5.5.0b1"
+version = "5.5.0b2"
 requires_python = ">=3.8"
 summary = "Distributed Task Queue."
 groups = ["default"]
@@ -126,19 +126,19 @@ dependencies = [
     "click-plugins>=1.1.1",
     "click-repl>=0.2.0",
     "click<9.0,>=8.1.2",
-    "kombu<6.0,>=5.4.0rc3",
+    "kombu<6.0,>=5.4.0",
     "python-dateutil>=2.8.2",
     "tzdata>=2022.7",
     "vine<6.0,>=5.1.0",
 ]
 files = [
-    {file = "celery-5.5.0b1-py3-none-any.whl", hash = "sha256:b672d868f85a463b048f4bacfb0af40acdd8be462682e1e55a590e22d5ff34bb"},
-    {file = "celery-5.5.0b1.tar.gz", hash = "sha256:8132d8858af4f151286007917a0730f5011b60583dcbe96763a0a55dd782d3a0"},
+    {file = "celery-5.5.0b2-py3-none-any.whl", hash = "sha256:d725ac406ec042eb468a4d6469f66b06dc55bc9e96bd36aa18fffd8f3b152030"},
+    {file = "celery-5.5.0b2.tar.gz", hash = "sha256:224e491928c59b3f8486ca4cb744f18a2361d1aa517b347bcec7d96654a1af15"},
 ]
 
 [[package]]
 name = "celery"
-version = "5.5.0b1"
+version = "5.5.0b2"
 extras = ["arangodb", "auth", "brotli", "msgpack", "redis"]
 requires_python = ">=3.8"
 summary = "Distributed Task Queue."
@@ -146,15 +146,15 @@ groups = ["default"]
 dependencies = [
     "brotli>=1.0.0; platform_python_implementation == \"CPython\"",
     "brotlipy>=0.7.0; platform_python_implementation == \"PyPy\"",
-    "celery==5.5.0b1",
+    "celery==5.5.0b2",
     "cryptography==43.0.0",
     "msgpack==1.0.8",
     "pyArango>=2.0.2",
     "redis!=4.5.5,<6.0.0,>=4.5.2",
 ]
 files = [
-    {file = "celery-5.5.0b1-py3-none-any.whl", hash = "sha256:b672d868f85a463b048f4bacfb0af40acdd8be462682e1e55a590e22d5ff34bb"},
-    {file = "celery-5.5.0b1.tar.gz", hash = "sha256:8132d8858af4f151286007917a0730f5011b60583dcbe96763a0a55dd782d3a0"},
+    {file = "celery-5.5.0b2-py3-none-any.whl", hash = "sha256:d725ac406ec042eb468a4d6469f66b06dc55bc9e96bd36aa18fffd8f3b152030"},
+    {file = "celery-5.5.0b2.tar.gz", hash = "sha256:224e491928c59b3f8486ca4cb744f18a2361d1aa517b347bcec7d96654a1af15"},
 ]
 
 [[package]]
@@ -414,17 +414,17 @@ files = [
 
 [[package]]
 name = "kombu"
-version = "5.4.0rc3"
+version = "5.4.0"
 requires_python = ">=3.8"
 summary = "Messaging library for Python."
 groups = ["default"]
 dependencies = [
     "amqp<6.0.0,>=5.1.1",
-    "vine",
+    "vine==5.1.0",
 ]
 files = [
-    {file = "kombu-5.4.0rc3-py3-none-any.whl", hash = "sha256:74a75e170f941a20fd24e90826b3464d41264a12ec60df0c2ca84887cfd732b3"},
-    {file = "kombu-5.4.0rc3.tar.gz", hash = "sha256:f5d5f6bcaea539ff58619eea4c3b05c9b54e7578846eaa280696730e162846d1"},
+    {file = "kombu-5.4.0-py3-none-any.whl", hash = "sha256:c8dd99820467610b4febbc7a9e8a0d3d7da2d35116b67184418b51cc520ea6b6"},
+    {file = "kombu-5.4.0.tar.gz", hash = "sha256:ad200a8dbdaaa2bbc5f26d2ee7d707d9a1fded353a0f4bd751ce8c7d9f449c60"},
 ]
 
 [[package]]
