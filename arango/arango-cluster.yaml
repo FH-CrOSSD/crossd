@@ -4,6 +4,7 @@ metadata:
   name: "cluster"
 spec:
   mode: Cluster
+  image: 'arangodb/arangodb:3.11'
   tls:
     caSecretName: arango-ca
     altNames: ["arangodb-cluster-internal"]
