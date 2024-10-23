@@ -1,4 +1,4 @@
-FROM python:3.10-alpine as build
+FROM python:3.10-alpine3.19 as build
 
 # chromium stuff for selenium, tini as init for reaping zombies
 RUN apk add --no-cache build-base chromium chromium-chromedriver tini
