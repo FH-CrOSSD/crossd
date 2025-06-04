@@ -142,7 +142,9 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         if "[bot]" not in user["login"]:
             users.append(user["login"])
         if len(users) % 200 == 0:
-            tmp = merge_dicts(tmp, MultiUser(login=users).ask_organizations().execute(rate_limit=True))
+            tmp = merge_dicts(
+                tmp, MultiUser(login=users).ask_organizations().execute(rate_limit=True)
+            )
             users = []
     else:
         tmp = merge_dicts(tmp, MultiUser(login=users).ask_organizations().execute(rate_limit=True))
@@ -202,7 +204,7 @@ def do_metrics(self, retval: str):
     console.print("calculating metrics")
     # retrieve repo data from db and calculate metrics
     res = get_metrics(
-        app.backend.db["repositories"].fetchDocument(retval["repository_key"])
+        app.backend.db["repositories"].fetchDocument(retval["repository_key"], rawResults=True)
     )
     res["task_id"] = self.request.id
     res["timestamp"] = time.time()
