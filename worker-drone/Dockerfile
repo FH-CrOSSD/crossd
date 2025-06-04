@@ -27,6 +27,7 @@ COPY . .
 #RUN pdm config python.use_venv False
 RUN pdm install
 RUN pdm cache clear
+RUN apk add git --no-cache
 
 USER 1337:1337
 ENTRYPOINT [ "pdm", "run", "worker"]
