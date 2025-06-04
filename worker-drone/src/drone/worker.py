@@ -8,8 +8,11 @@ from celery import Celery, Task
 from crossd_metrics.constants import readmes
 from crossd_metrics.metrics import get_metrics
 from crossd_metrics.Repository import Repository
+from crossd_metrics.MultiUser import MultiUser
+from crossd_metrics.utils import merge_dicts
 from crossd_metrics.utils import get_readme_index
 from rich.console import Console
+import importlib.metadata
 
 # for logging
 
@@ -128,9 +131,29 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     console.print("collecting repository data from github")
     # retrieve github data
     res = Repository(owner, name).ask_all().execute()
+
+    users = []
+    tmp = {}
+
+    # ~ 400 users failed quite often
+    # therefore split to requests of 200 users
+
+    for user in res["contributors"]["users"]:
+        if "[bot]" not in user["login"]:
+            users.append(user["login"])
+        if len(users) % 200 == 0:
+            tmp = merge_dicts(tmp, MultiUser(login=users).ask_organizations().execute(rate_limit=True))
+            users = []
+    else:
+        tmp = merge_dicts(tmp, MultiUser(login=users).ask_organizations().execute(rate_limit=True))
+
+    console.log(res)
+    res["organizations"] = tmp
+
     res["task_id"] = self.request.id
     res["timestamp"] = time.time()
     res["scan_id"] = scan
+    res["version"] = importlib.metadata.version("crossd_metrics")
     res["repository"]["readmes"] = {}
     for readme in readmes:
         res["repository"]["readmes"][get_readme_index(readme)] = res["repository"][
@@ -184,6 +207,7 @@ def do_metrics(self, retval: str):
     res["task_id"] = self.request.id
     res["timestamp"] = time.time()
     res["scan_id"] = retval["scan_id"]
+    res["version"] = importlib.metadata.version("crossd_metrics")
     console.print("storing metric data in database")
     self.metrics.createDocument(initDict=res).save()
     self.metrics.ensurePersistentIndex(["scan_id"], unique=False)
