@@ -157,11 +157,11 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     res["scan_id"] = scan
     res["version"] = importlib.metadata.version("crossd_metrics")
     res["repository"]["readmes"] = {}
-    for readme in readmes:
-        res["repository"]["readmes"][get_readme_index(readme)] = res["repository"][
-            get_readme_index(readme)
-        ]
-        del res["repository"][get_readme_index(readme)]
+    # for readme in readmes:
+    #     res["repository"]["readmes"][get_readme_index(readme)] = res["repository"][
+    #         get_readme_index(readme)
+    #     ]
+    #     del res["repository"][get_readme_index(readme)]
     console.print("storing repository data in database")
     doc = self.repos.createDocument(initDict=res)
     self.repos.ensurePersistentIndex(["scan_id"], unique=False)
