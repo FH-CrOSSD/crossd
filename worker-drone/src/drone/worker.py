@@ -1,4 +1,6 @@
 # -*- coding=utf-8 -*-
+import datetime
+import importlib.metadata
 import os
 import re
 import time
@@ -7,12 +9,11 @@ import pyArango
 from celery import Celery, Task
 from crossd_metrics.constants import readmes
 from crossd_metrics.metrics import get_metrics
-from crossd_metrics.Repository import Repository
 from crossd_metrics.MultiUser import MultiUser
-from crossd_metrics.utils import merge_dicts
-from crossd_metrics.utils import get_readme_index
+from crossd_metrics.Repository import Repository
+from crossd_metrics.utils import get_readme_index, merge_dicts, get_past
+from dateutil.relativedelta import relativedelta
 from rich.console import Console
-import importlib.metadata
 
 # for logging
 
@@ -62,6 +63,12 @@ class BaseTask(Task):
         if self._metrics is None:
             self._metrics = self._get_collection("metrics")
         return self._metrics
+
+    @property
+    def commits(self):
+        if self._commits is None:
+            self._commits = self._get_collection("commits")
+        return self._commits
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         err_console.print(f"failed to execute task {task_id}")
@@ -129,8 +136,119 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     if not sub:
         console.print("starting task [dodger_blue1]retrieve_github[/]")
     console.print("collecting repository data from github")
+
+    commits_since = None
+    commits_since_clone = None
+    commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
+    if commits:
+        try:
+            commits_since = commits["gql"]["repository"]["defaultBranchRef"]["last_commit"][
+                "history"
+            ]["edges"][0]["node"]["committedDate"]
+            commits_since = (
+                datetime.datetime.fromisoformat(commits_since) + datetime.timedelta(seconds=1)
+            ).isoformat()
+        except KeyError:
+            pass
+        try:
+            commits_since_clone = datetime.datetime.fromisoformat(
+                commits["clone"]["commits"][0]["committed_iso"]
+            ) + datetime.timedelta(seconds=1)
+
+        except KeyError:
+            pass
+
+    repo = Repository(owner, name)
+    count_res = repo.ask_commits_count(
+        commits_since_clone
+        if commits_since_clone
+        else get_past(relativedelta(months=12)).isoformat()
+    ).execute()
+
+    clone_opts = {
+        "bare": True,
+        "depth": count_res["repository"]["defaultBranchRef"]["last_commit"]["history"][
+            "totalCount"
+        ],
+        # "filter": "blob:none",
+    }
+    repo = Repository(owner=owner, name=name)
+
+    repo.ask_identifiers()
+    # c_available = repo.contributors_available()
+    c_available = False
+
+    if c_available:
+        repo.clone_opts = clone_opts
+        repo.ask_contributors()
+        repo.ask_commits_clone()  # defaults to last 12 month
+    else:
+        repo.clone_opts = clone_opts
+
+        repo.ask_commits(details=False, diff=False, since=commits_since)
+        repo.ask_commits_clone(since=commits_since_clone)
+
+    (
+        repo.ask_dependencies_sbom()
+        # .ask_dependencies_crawl()
+        # .ask_dependencies()
+        .ask_funding_links()
+        .ask_security_policy()
+        .ask_contributing()
+        .ask_feature_requests()
+        .ask_closed_feature_requests()
+        .ask_dependents()
+        .ask_pull_requests()
+        .ask_readme()
+        .ask_workflows()
+        .ask_identifiers()
+        .ask_description()
+        .ask_license()
+        .ask_dates()
+        .ask_subscribers()
+        .ask_community_profile()
+        .ask_contributors()
+        .ask_releases()
+        # .ask_releases_crawl()
+        .ask_security_advisories()
+        .ask_issues()
+        .ask_forks()
+        # .ask_workflow_runs()
+        # .ask_dependabot_alerts()
+        # .ask_commits_clone()
+        # .ask_commits()
+        # .ask_commit_files()
+        # .ask_commit_details()
+        .ask_branches()
+    )
+
     # retrieve github data
-    res = Repository(owner, name).ask_all().execute()
+    res = repo.execute(rate_limit=True, verbose=True)
+    if not c_available:
+        res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = ["repository"][
+            "defaultBranchRef"
+        ]["last_commit"]["history"]["edges"] + commits["gql"]["repository"]["defaultBranchRef"][
+            "last_commit"
+        ][
+            "history"
+        ][
+            "edges"
+        ]
+
+        users = {}
+
+        for commit in res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]:
+            user = commit["node"]["author"]["user"]
+            if not user:
+                user = commit["node"]["committer"]["user"]
+                if not user:
+                    continue
+            if user["login"] not in users:
+                users[user["login"]] = 0
+            users[user["login"]] += 1
+        res["contributors"] = {"users": [{"login": x, "contributions": users[x]} for x in users]}
+
+    # res = Repository(owner, name).ask_all().execute()
 
     users = []
     tmp = {}
@@ -162,6 +280,19 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     #         get_readme_index(readme)
     #     ]
     #     del res["repository"][get_readme_index(readme)]
+    cm = {
+        "_key": f"{owner}/{name}",
+        "identifier": f"{owner}/{name}",
+        "clone": res["commits"] + commits["clone"],
+        "gql": res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"], # already contains the new items
+    }
+    cdoc = self.commits.createDocument(initDict=cm).save()
+    cdoc.save()
+    # _key should already have an index
+    # self.repos.ensurePersistentIndex(["scan_id"], unique=False)
+
+    res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = []
+
     console.print("storing repository data in database")
     doc = self.repos.createDocument(initDict=res)
     self.repos.ensurePersistentIndex(["scan_id"], unique=False)
@@ -203,9 +334,14 @@ def do_metrics(self, retval: str):
     console.print("starting task [dodger_blue1]do_metrics[/]")
     console.print("calculating metrics")
     # retrieve repo data from db and calculate metrics
-    res = get_metrics(
-        app.backend.db["repositories"].fetchDocument(retval["repository_key"], rawResults=True)
-    )
+
+    res = app.backend.db["repositories"].fetchDocument(retval["repository_key"], rawResults=True)
+    commits = self.commits.fetchDocument(res["repository"]["nameWithOwner"], rawResults=True)
+    res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = commits["gql"]
+    res["commits"] = commits["clone"]
+
+    res = get_metrics(res)
+
     res["task_id"] = self.request.id
     res["timestamp"] = time.time()
     res["scan_id"] = retval["scan_id"]
