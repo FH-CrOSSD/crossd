@@ -14,6 +14,7 @@ from crossd_metrics.Repository import Repository
 from crossd_metrics.utils import get_readme_index, merge_dicts, get_past
 from dateutil.relativedelta import relativedelta
 from rich.console import Console
+from pyArango.theExceptions import DocumentNotFoundError
 
 # for logging
 
@@ -140,7 +141,12 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
 
     commits_since = None
     commits_since_clone = None
-    commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
+    commits=None
+    try:
+        commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
+    except DocumentNotFoundError:
+        pass
+
     if commits:
         try:
             commits_since = commits["gql"]["repository"]["defaultBranchRef"]["last_commit"][
@@ -336,10 +342,15 @@ def do_metrics(self, retval: str):
     console.print("calculating metrics")
     # retrieve repo data from db and calculate metrics
 
+    # this doc is mandatory
     res = app.backend.db["repositories"].fetchDocument(retval["repository_key"], rawResults=True)
-    commits = self.commits.fetchDocument(res["repository"]["nameWithOwner"], rawResults=True)
-    res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = commits["gql"]
-    res["commits"] = commits["clone"]
+    # commits are not mandatory (to be stored separatedly)
+    try:
+        commits = self.commits.fetchDocument(res["repository"]["nameWithOwner"], rawResults=True)
+        res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = commits["gql"]
+        res["commits"] = commits["clone"]
+    except DocumentNotFoundError:
+        pass
 
     res = get_metrics(res)
 
