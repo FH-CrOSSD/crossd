@@ -28,6 +28,7 @@ class BaseTask(Task):
 
     _repos = None
     _metrics = None
+    _commits = None
 
     @staticmethod
     def _get_collection(name: str):
