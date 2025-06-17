@@ -161,7 +161,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             commits_since_clone = datetime.datetime.fromisoformat(
                 commits["clone"]["commits"][0]["committed_iso"]
             ) + datetime.timedelta(seconds=1)
-            
+
         except KeyError:
             pass
 
@@ -196,8 +196,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         repo.clone_opts = clone_opts
         print("store commits")
         repo.ask_commits(details=False, diff=False, since=commits_since)
-        repo.ask_commits_clone(since=commits_since_clone)
-
+        repo.ask_commits_clone(since=commits_since_clone or relativedelta(months=12))
     (
         repo.ask_dependencies_sbom()
         # .ask_dependencies_crawl()
