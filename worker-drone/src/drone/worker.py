@@ -141,7 +141,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
 
     commits_since = None
     commits_since_clone = None
-    commits=None
+    commits = None
     try:
         commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
     except DocumentNotFoundError:
@@ -234,15 +234,13 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     # retrieve github data
     res = repo.execute(rate_limit=True, verbose=True)
     if not c_available:
-        res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = res["repository"][
-            "defaultBranchRef"
-        ]["last_commit"]["history"]["edges"] + commits["gql"]["repository"]["defaultBranchRef"][
-            "last_commit"
-        ][
-            "history"
-        ][
-            "edges"
-        ]
+        if commits:
+            res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = (
+                res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
+                + commits["gql"]["repository"]["defaultBranchRef"]["last_commit"]["history"][
+                    "edges"
+                ]
+            )
 
         users = {}
 
@@ -293,7 +291,9 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         "_key": f"{owner}/{name}",
         "identifier": f"{owner}/{name}",
         "clone": res["commits"] + commits["clone"],
-        "gql": res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"], # already contains the new items
+        "gql": res["repository"]["defaultBranchRef"]["last_commit"]["history"][
+            "edges"
+        ],  # already contains the new items
     }
     cdoc = self.commits.createDocument(initDict=cm).save()
     cdoc.save()
