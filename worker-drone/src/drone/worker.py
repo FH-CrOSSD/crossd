@@ -287,10 +287,13 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     #         get_readme_index(readme)
     #     ]
     #     del res["repository"][get_readme_index(readme)]
+    comms = res["commits"]
+    if commits:
+        comms += commits["clone"]
     cm = {
         "_key": f"{owner}/{name}",
         "identifier": f"{owner}/{name}",
-        "clone": res["commits"] + commits["clone"],
+        "clone": comms,
         "gql": res["repository"]["defaultBranchRef"]["last_commit"]["history"][
             "edges"
         ],  # already contains the new items
