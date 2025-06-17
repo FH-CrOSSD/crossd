@@ -161,16 +161,19 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             commits_since_clone = datetime.datetime.fromisoformat(
                 commits["clone"]["commits"][0]["committed_iso"]
             ) + datetime.timedelta(seconds=1)
-
+            
         except KeyError:
             pass
 
+    print("commits_since_clone")
+    print(commits_since_clone)
     repo = Repository(owner, name)
     count_res = repo.ask_commits_count(
         commits_since_clone
         if commits_since_clone
         else get_past(relativedelta(months=12)).isoformat()
     ).execute()
+    print(f"count_res {count_res}")
 
     clone_opts = {
         "bare": True,
@@ -191,7 +194,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         repo.ask_commits_clone()  # defaults to last 12 month
     else:
         repo.clone_opts = clone_opts
-
+        print("store commits")
         repo.ask_commits(details=False, diff=False, since=commits_since)
         repo.ask_commits_clone(since=commits_since_clone)
 
