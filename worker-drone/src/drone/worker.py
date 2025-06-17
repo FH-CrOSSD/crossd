@@ -234,7 +234,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     # retrieve github data
     res = repo.execute(rate_limit=True, verbose=True)
     if not c_available:
-        res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = ["repository"][
+        res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = res["repository"][
             "defaultBranchRef"
         ]["last_commit"]["history"]["edges"] + commits["gql"]["repository"]["defaultBranchRef"][
             "last_commit"
