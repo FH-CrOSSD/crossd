@@ -307,7 +307,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     cm["clone"] = comms
     cdoc = self.commits.createDocument(initDict=cm)
     self.commits.ensurePersistentIndex(["identifier"], unique=True)
-    cdoc.patch()
+    cdoc.save()
 
     res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = []
 
