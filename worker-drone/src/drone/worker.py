@@ -298,9 +298,9 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             "edges"
         ],  # already contains the new items
     }
-    cdoc = self.commits.createDocument(initDict=cm).save()
-    cdoc.save()
+    cdoc = self.commits.createDocument(initDict=cm)
     self.commits.ensurePersistentIndex(["identifier"], unique=False)
+    cdoc.save()
 
     res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = []
 
