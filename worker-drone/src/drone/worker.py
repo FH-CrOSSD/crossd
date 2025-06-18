@@ -150,7 +150,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         pass
 
     if commits:
-        commits=commits[0]
+        commits = commits[0]
         try:
             # commits_since = commits["gql"]["repository"]["defaultBranchRef"]["last_commit"][
             #     "history"
@@ -200,7 +200,8 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         repo.clone_opts = clone_opts
         print("store commits")
         repo.ask_commits(details=False, diff=False, since=commits_since)
-        repo.ask_commits_clone(since=commits_since_clone or relativedelta(months=12))
+        if count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"] > 0:
+            repo.ask_commits_clone(since=commits_since_clone or relativedelta(months=12))
     (
         repo.ask_dependencies_sbom()
         # .ask_dependencies_crawl()
