@@ -293,6 +293,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     if "commits" not in res:
         res["commits"] = []
     comms = res["commits"]
+    print(dir(commits))
     if commits:
         comms += commits["clone"]
     cm = {
@@ -360,9 +361,8 @@ def do_metrics(self, retval: str):
         commits = self.commits.fetchFirstExample(
             {"identifier": res["repository"]["nameWithOwner"]}, rawResults=True
         )
-
-        res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = commits["gql"]
-        res["commits"] = commits["clone"]
+        res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = commits[0]["gql"]
+        res["commits"] = commits[0]["clone"]
     except DocumentNotFoundError:
         pass
 
