@@ -290,6 +290,8 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     #         get_readme_index(readme)
     #     ]
     #     del res["repository"][get_readme_index(readme)]
+    if "commits" not in res:
+        res["commits"]=[]
     comms = res["commits"]
     if commits:
         comms += commits["clone"]
