@@ -294,18 +294,24 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         res["commits"] = []
     comms = res["commits"]
     # print(dir(commits))
-    cm = {
-        # "_key": f"{owner}/{name}", # key has a limit of 255 characters and slashes are not allowed
-        "identifier": f"{owner}/{name}",
-        "gql": res["repository"]["defaultBranchRef"]["last_commit"]["history"][
-            "edges"
-        ],  # already contains the new items
-    }
+    # cm = {
+    #     # "_key": f"{owner}/{name}", # key has a limit of 255 characters and slashes are not allowed
+    #     "identifier": f"{owner}/{name}",
+    #     "gql": res["repository"]["defaultBranchRef"]["last_commit"]["history"][
+    #         "edges"
+    #     ],  # already contains the new items
+    # }
     if commits:
         comms += commits["clone"]
+    else:
+        commits = self.commits.createDocument()
+        commits["identifier"] = f"{owner}/{name}"
         # cm["_key"] = commits["_key"]
-    cm["clone"] = comms
-    cdoc = self.commits.createDocument(initDict=cm)
+    commits["clone"] = comms
+    commits["gql"]=res["repository"]["defaultBranchRef"]["last_commit"]["history"][
+            "edges"
+
+    # cdoc = self.commits.createDocument(initDict=cm)
     self.commits.ensurePersistentIndex(["identifier"], unique=True)
     cdoc.save()
 
