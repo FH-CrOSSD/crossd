@@ -291,12 +291,13 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     #     ]
     #     del res["repository"][get_readme_index(readme)]
     if "commits" not in res:
-        res["commits"]=[]
+        res["commits"] = []
     comms = res["commits"]
     if commits:
         comms += commits["clone"]
     cm = {
         # "_key": f"{owner}/{name}", # key has a limit of 255 characters and slashes are not allowed
+        "_key": commits["_key"],
         "identifier": f"{owner}/{name}",
         "clone": comms,
         "gql": res["repository"]["defaultBranchRef"]["last_commit"]["history"][
@@ -304,7 +305,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         ],  # already contains the new items
     }
     cdoc = self.commits.createDocument(initDict=cm)
-    self.commits.ensurePersistentIndex(["identifier"], unique=False)
+    self.commits.ensurePersistentIndex(["identifier"], unique=True)
     cdoc.save()
 
     res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = []
@@ -359,6 +360,7 @@ def do_metrics(self, retval: str):
         commits = self.commits.fetchFirstExample(
             {"identifier": res["repository"]["nameWithOwner"]}, rawResults=True
         )
+
         res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = commits["gql"]
         res["commits"] = commits["clone"]
     except DocumentNotFoundError:
