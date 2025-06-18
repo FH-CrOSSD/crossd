@@ -308,12 +308,11 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         commits["identifier"] = f"{owner}/{name}"
         # cm["_key"] = commits["_key"]
     commits["clone"] = comms
-    commits["gql"]=res["repository"]["defaultBranchRef"]["last_commit"]["history"][
-            "edges"
+    commits["gql"] = res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
 
     # cdoc = self.commits.createDocument(initDict=cm)
     self.commits.ensurePersistentIndex(["identifier"], unique=True)
-    cdoc.save()
+    commits.save()
 
     res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = []
 
