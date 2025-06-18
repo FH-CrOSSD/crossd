@@ -303,7 +303,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     }
     if commits:
         comms += commits["clone"]
-        cm["_key"] = (commits["_key"],)
+        cm["_key"] = commits["_key"]
     cm["clone"] = comms
     cdoc = self.commits.createDocument(initDict=cm)
     self.commits.ensurePersistentIndex(["identifier"], unique=True)
