@@ -163,7 +163,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             pass
         try:
             commits_since_clone = datetime.datetime.fromisoformat(
-                commits["clone"]["commits"][0]["committed_iso"]
+                commits["clone"][0]["committed_iso"]
             ) + datetime.timedelta(seconds=1)
 
         except KeyError:
