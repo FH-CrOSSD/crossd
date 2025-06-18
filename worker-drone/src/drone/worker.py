@@ -150,9 +150,10 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
 
     if commits:
         try:
-            commits_since = commits["gql"]["repository"]["defaultBranchRef"]["last_commit"][
-                "history"
-            ]["edges"][0]["node"]["committedDate"]
+            # commits_since = commits["gql"]["repository"]["defaultBranchRef"]["last_commit"][
+            #     "history"
+            # ]["edges"][0]["node"]["committedDate"]
+            commits_since = commits["gql"][0]["node"]["committedDate"]
             commits_since = (
                 datetime.datetime.fromisoformat(commits_since) + datetime.timedelta(seconds=1)
             ).isoformat()
@@ -238,9 +239,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         if commits:
             res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = (
                 res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
-                + commits["gql"]["repository"]["defaultBranchRef"]["last_commit"]["history"][
-                    "edges"
-                ]
+                + commits["gql"]
             )
 
         users = {}
