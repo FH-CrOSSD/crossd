@@ -145,6 +145,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     try:
         # commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
         commits = self.commits.fetchFirstExample({"identifier": f"{owner}/{name}"}, rawResults=True)
+        print(commits)
     except DocumentNotFoundError:
         pass
 
