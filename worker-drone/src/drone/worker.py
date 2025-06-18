@@ -173,7 +173,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     print(commits_since_clone)
     repo = Repository(owner, name)
     count_res = repo.ask_commits_count(
-        commits_since_clone
+        commits_since_clone.isoformat()
         if commits_since_clone
         else get_past(relativedelta(months=12)).isoformat()
     ).execute()
