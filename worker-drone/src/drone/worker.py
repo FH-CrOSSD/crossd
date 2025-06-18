@@ -143,7 +143,8 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     commits_since_clone = None
     commits = None
     try:
-        commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
+        # commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
+        commits = self.commits.fetchFirstExample({"identifier": f"{owner}/{name}"}, rawResults=True)
     except DocumentNotFoundError:
         pass
 
@@ -291,7 +292,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     if commits:
         comms += commits["clone"]
     cm = {
-        "_key": f"{owner}/{name}",
+        # "_key": f"{owner}/{name}", # key has a limit of 255 characters and slashes are not allowed
         "identifier": f"{owner}/{name}",
         "clone": comms,
         "gql": res["repository"]["defaultBranchRef"]["last_commit"]["history"][
@@ -300,8 +301,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     }
     cdoc = self.commits.createDocument(initDict=cm).save()
     cdoc.save()
-    # _key should already have an index
-    # self.repos.ensurePersistentIndex(["scan_id"], unique=False)
+    self.commits.ensurePersistentIndex(["identifier"], unique=False)
 
     res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = []
 
@@ -351,7 +351,10 @@ def do_metrics(self, retval: str):
     res = app.backend.db["repositories"].fetchDocument(retval["repository_key"], rawResults=True)
     # commits are not mandatory (to be stored separatedly)
     try:
-        commits = self.commits.fetchDocument(res["repository"]["nameWithOwner"], rawResults=True)
+        # commits = self.commits.fetchDocument(res["repository"]["nameWithOwner"], rawResults=True)
+        commits = self.commits.fetchFirstExample(
+            {"identifier": res["repository"]["nameWithOwner"]}, rawResults=True
+        )
         res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = commits["gql"]
         res["commits"] = commits["clone"]
     except DocumentNotFoundError:
