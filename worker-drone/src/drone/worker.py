@@ -315,6 +315,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     commits.save()
 
     res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = []
+    res["commits"] = []
 
     console.print("storing repository data in database")
     doc = self.repos.createDocument(initDict=res)
