@@ -144,13 +144,13 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     commits = None
     try:
         # commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
-        commits = self.commits.fetchFirstExample({"identifier": f"{owner}/{name}"}, rawResults=True)
+        commit_query = self.commits.fetchFirstExample({"identifier": f"{owner}/{name}"}, rawResults=False)
         # print(commits)
     except DocumentNotFoundError:
         pass
 
-    if commits:
-        commits = commits[0]
+    if commit_query:
+        commits = commit_query[0]
         try:
             # commits_since = commits["gql"]["repository"]["defaultBranchRef"]["last_commit"][
             #     "history"
