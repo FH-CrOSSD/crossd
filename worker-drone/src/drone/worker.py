@@ -169,15 +169,15 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         except KeyError:
             pass
 
-    print("commits_since_clone")
-    print(commits_since_clone)
+    # print("commits_since_clone")
+    # print(commits_since_clone)
     repo = Repository(owner, name)
     count_res = repo.ask_commits_count(
         commits_since_clone.isoformat()
         if commits_since_clone
         else get_past(relativedelta(months=12)).isoformat()
     ).execute()
-    print(f"count_res {count_res}")
+    # print(f"count_res {count_res}")
 
     clone_opts = {
         "bare": True,
@@ -198,7 +198,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         repo.ask_commits_clone()  # defaults to last 12 month
     else:
         repo.clone_opts = clone_opts
-        print("store commits")
+        console.log("store commits")
         repo.ask_commits(details=False, diff=False, since=commits_since)
         if count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"] > 0:
             repo.ask_commits_clone(since=commits_since_clone or relativedelta(months=12))
@@ -277,7 +277,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     else:
         tmp = merge_dicts(tmp, MultiUser(login=users).ask_organizations().execute(rate_limit=True))
 
-    console.log(res)
+    # console.log(res)
     res["organizations"] = tmp
 
     res["task_id"] = self.request.id
@@ -372,8 +372,8 @@ def do_metrics(self, retval: str):
     except DocumentNotFoundError:
         pass
 
-    console.print(len(res["commits"]))
-    console.print(len(res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]))
+    # console.print(len(res["commits"]))
+    # console.print(len(res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]))
     res = get_metrics(res)
 
     res["task_id"] = self.request.id
