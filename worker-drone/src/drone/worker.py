@@ -372,6 +372,8 @@ def do_metrics(self, retval: str):
     except DocumentNotFoundError:
         pass
 
+    console.print(len(res["commits"]))
+    console.print(len(res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]))
     res = get_metrics(res)
 
     res["task_id"] = self.request.id
