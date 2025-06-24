@@ -161,8 +161,10 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             # ]["edges"][0]["node"]["committedDate"]
             commits_since = commits["gql"][0]["node"]["committedDate"]
             commits_since = (
-                datetime.datetime.fromisoformat(commits_since) + datetime.timedelta(seconds=1)
-            ).replace(hour=0,minute=0,microsecond=0).isoformat()
+                (datetime.datetime.fromisoformat(commits_since) + datetime.timedelta(seconds=1))
+                .replace(hour=0, minute=0, second=0, microsecond=0)
+                .isoformat()
+            )
         except KeyError:
             pass
 
@@ -170,7 +172,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             commits_since_clone = (
                 datetime.datetime.fromisoformat(commits["clone"][0]["committed_iso"])
                 + datetime.timedelta(seconds=1)
-            ).replace(hour=0, minute=0, microsecond=0)
+            ).replace(hour=0, minute=0, second=0, microsecond=0)
 
         except KeyError:
             pass
@@ -181,7 +183,9 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     count_res = repo.ask_commits_count(
         commits_since_clone.isoformat()
         if commits_since_clone
-        else get_past(relativedelta(months=12)).replace(hour=0, minute=0, microsecond=0).isoformat()
+        else get_past(relativedelta(months=12))
+        .replace(hour=0, minute=0, second=0, microsecond=0)
+        .isoformat()
     ).execute()
     # print(f"count_res {count_res}")
 
@@ -192,6 +196,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         ],
         # "filter": "blob:none",
     }
+    print(count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"])
     repo = Repository(owner=owner, name=name)
 
     repo.ask_identifiers()
@@ -209,11 +214,15 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         if count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"] > 0:
             print(
                 commits_since_clone
-                or get_past(relativedelta(months=12)).replace(hour=0, minute=0, microsecond=0)
+                or get_past(relativedelta(months=12)).replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                )
             )
             repo.ask_commits_clone(
                 since=commits_since_clone
-                or get_past(relativedelta(months=12)).replace(hour=0, minute=0, microsecond=0)
+                or get_past(relativedelta(months=12)).replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                )
             )
     (
         repo.ask_dependencies_sbom()
