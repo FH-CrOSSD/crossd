@@ -191,9 +191,8 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
 
     clone_opts = {
         "bare": True,
-        "depth": count_res["repository"]["defaultBranchRef"]["last_commit"]["history"][
-            "totalCount"
-        ],
+        "depth": count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"]
+        + 1,  # might need the previous commit to calc the diff even if it is not in the time range
         # "filter": "blob:none",
     }
     print(count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"])
