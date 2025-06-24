@@ -207,7 +207,14 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         console.log("store commits")
         repo.ask_commits(details=False, diff=False, since=commits_since)
         if count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"] > 0:
-            repo.ask_commits_clone(since=commits_since_clone or get_past(relativedelta(months=12)).replace(hour=0, minute=0, microsecond=0))
+            print(
+                commits_since_clone
+                or get_past(relativedelta(months=12)).replace(hour=0, minute=0, microsecond=0)
+            )
+            repo.ask_commits_clone(
+                since=commits_since_clone
+                or get_past(relativedelta(months=12)).replace(hour=0, minute=0, microsecond=0)
+            )
     (
         repo.ask_dependencies_sbom()
         # .ask_dependencies_crawl()
