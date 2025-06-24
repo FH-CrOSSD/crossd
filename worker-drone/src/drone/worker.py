@@ -142,9 +142,13 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     commits_since = None
     commits_since_clone = None
     commits = None
+    commit_query = None
+
     try:
         # commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
-        commit_query = self.commits.fetchFirstExample({"identifier": f"{owner}/{name}"}, rawResults=False)
+        commit_query = self.commits.fetchFirstExample(
+            {"identifier": f"{owner}/{name}"}, rawResults=False
+        )
         # print(commits)
     except DocumentNotFoundError:
         pass
@@ -158,13 +162,15 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             commits_since = commits["gql"][0]["node"]["committedDate"]
             commits_since = (
                 datetime.datetime.fromisoformat(commits_since) + datetime.timedelta(seconds=1)
-            ).isoformat()
+            ).replace(hour=0,minute=0,microsecond=0).isoformat()
         except KeyError:
             pass
+
         try:
-            commits_since_clone = datetime.datetime.fromisoformat(
-                commits["clone"][0]["committed_iso"]
-            ) + datetime.timedelta(seconds=1)
+            commits_since_clone = (
+                datetime.datetime.fromisoformat(commits["clone"][0]["committed_iso"])
+                + datetime.timedelta(seconds=1)
+            ).replace(hour=0, minute=0, microsecond=0)
 
         except KeyError:
             pass
@@ -175,7 +181,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     count_res = repo.ask_commits_count(
         commits_since_clone.isoformat()
         if commits_since_clone
-        else get_past(relativedelta(months=12)).isoformat()
+        else get_past(relativedelta(months=12)).replace(hour=0, minute=0, microsecond=0).isoformat()
     ).execute()
     # print(f"count_res {count_res}")
 
@@ -201,7 +207,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         console.log("store commits")
         repo.ask_commits(details=False, diff=False, since=commits_since)
         if count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"] > 0:
-            repo.ask_commits_clone(since=commits_since_clone or relativedelta(months=12))
+            repo.ask_commits_clone(since=commits_since_clone or get_past(relativedelta(months=12)).replace(hour=0, minute=0, microsecond=0))
     (
         repo.ask_dependencies_sbom()
         # .ask_dependencies_crawl()
