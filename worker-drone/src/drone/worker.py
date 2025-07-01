@@ -15,6 +15,7 @@ from crossd_metrics.utils import get_readme_index, merge_dicts, get_past
 from dateutil.relativedelta import relativedelta
 from rich.console import Console
 from pyArango.theExceptions import DocumentNotFoundError
+import gql.transport.exceptions  # type: ignore[import]
 
 # for logging
 
@@ -208,7 +209,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         repo.ask_commits_clone()  # defaults to last 12 month
     else:
         repo.clone_opts = clone_opts
-        console.log("store commits")
+        console.log("get commits")
         repo.ask_commits(details=False, diff=False, since=commits_since)
         if count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"] > 0:
             print(
@@ -255,6 +256,12 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         # .ask_commit_files()
         # .ask_commit_details()
         .ask_branches()
+        .ask_homepage_url()
+        .ask_pull_request_templates()
+        .ask_issue_templates()
+        .ask_code_of_conduct()
+        .ask_contributing_guidelines()
+        .ask_issue_template_folder()
     )
 
     # retrieve github data
@@ -288,15 +295,26 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     # therefore split to requests of 200 users
 
     for user in res["contributors"]["users"]:
-        if "[bot]" not in user["login"]:
+        # if "[bot]" not in user["login"]:
+        if all(x not in user["login"] for x in ("[bot]",)) and all(
+            x != user["login"] for x in ("Copilot",)
+        ):
             users.append(user["login"])
         if len(users) % 200 == 0:
-            tmp = merge_dicts(
-                tmp, MultiUser(login=users).ask_organizations().execute(rate_limit=True)
-            )
+            gql_users = {}
+            try:
+                gql_users = MultiUser(login=users).ask_organizations().execute(rate_limit=True)
+            except gql.transport.exceptions.TransportQueryError as tqe:
+                gql_users = {key: value for key, value in tqe.data.items() if value is not None}
+            tmp = merge_dicts(tmp, gql_users)
             users = []
     else:
-        tmp = merge_dicts(tmp, MultiUser(login=users).ask_organizations().execute(rate_limit=True))
+        # tmp = merge_dicts(tmp, MultiUser(login=users).ask_organizations().execute(rate_limit=True))
+        try:
+            gql_users = MultiUser(login=users).ask_organizations().execute(rate_limit=True)
+        except gql.transport.exceptions.TransportQueryError as tqe:
+            gql_users = {key: value for key, value in tqe.data.items() if value is not None}
+        tmp = merge_dicts(tmp, gql_users)
 
     # console.log(res)
     res["organizations"] = tmp
@@ -326,7 +344,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         comms += commits["clone"]
     else:
         commits = self.commits.createDocument()
-        commits["identifier"] = f"{owner}/{name}"
+        commits["identifier"] = res["repository"]["nameWithOwner"]
         # cm["_key"] = commits["_key"]
     commits["clone"] = comms
     commits["gql"] = res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
