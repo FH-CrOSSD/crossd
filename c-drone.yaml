@@ -75,7 +75,8 @@ spec:
       volumes:
         - name: tmp
           emptyDir:
-            sizeLimit: 500Mi
+            sizeLimit: 10Gi
+            # medium: Memory
         - name: ca-certificates
           configMap:
             name: cert-bundle
