@@ -57,9 +57,11 @@ export async function POST({ request }) {
             FILTER LAST(doc.scans) == repo.scan_id
             RETURN {"nameWithOwner":repo.repository.nameWithOwner,"description":repo.repository.description, "readmes":repo.repository.readmes}
         )
-            SORT doc.identifier
-            LIMIT ${(page - 1) * PER_PAGE}, ${PER_PAGE}
-            RETURN {"name":doc.identifier,"timestamp":timestamp[0],"repository":info[0]}
+        FOR metric IN metrics
+        FILTER LOWER(doc.identifier) LIKE LOWER(metric.identity.name_with_owner)
+        SORT doc.identifier
+        LIMIT ${(page - 1) * PER_PAGE}, ${PER_PAGE}
+        RETURN {"name":doc.identifier,"timestamp":timestamp[0],"repository":info[0]}
         `);
 
         let all = await res.all();

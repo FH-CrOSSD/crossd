@@ -18,7 +18,7 @@
 <MetricCard>
 	<svelte:fragment slot="heading">Github community health</svelte:fragment>
 
-	<MetricRow
+	<!-- <MetricRow
 		{chart}
 		{selected}
 		selector={bakGenericDataFn(
@@ -28,7 +28,7 @@
 		)}
 		data_md="github_community_health_percentage"
 		data_id="a--github-community-health-percentage-score-adopted">Community Health score:</MetricRow
-	>
+	> -->
 	<MetricRow
 		{chart}
 		{selected}
@@ -48,13 +48,13 @@
 		data_id="c--existence-of-single-documents-and-information-created"
 		>Has description:</BoolMetricRow
 	>
-	<BoolMetricRow
+	<!-- <BoolMetricRow
 		{selected}
 		selector={bakGenericDataFn('github_community_health_percentage', project_id, 'documentation')}
 		data_md="github_community_health_percentage"
 		data_id="c--existence-of-single-documents-and-information-created"
 		>Has documentation:</BoolMetricRow
-	>
+	> -->
 	<BoolMetricRow
 		{selected}
 		selector={bakGenericDataFn('github_community_health_percentage', project_id, 'code_of_conduct')}
@@ -99,4 +99,12 @@
 		data_md="github_community_health_percentage"
 		data_id="c--existence-of-single-documents-and-information-created">Has README:</BoolMetricRow
 	>
+	{#if data[selected]["version"].split(".")[0]==="2"}
+	<BoolMetricRow
+	{selected}
+	selector={bakGenericDataFn('github_community_health_percentage', project_id, 'security_policy')}
+	data_md="github_community_health_percentage"
+	data_id="c--existence-of-single-documents-and-information-created">Has security policy:</BoolMetricRow
+>
+	{/if}
 </MetricCard>

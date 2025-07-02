@@ -56,12 +56,24 @@ export async function processMD(text: string) {
     return file;
 }
 
-export let bakGenericDataFn = (category: string, project_id: string, entry: string | null = null, data: any) => {
+export let bakGenericDataFn = (category: string, project_id: string | null = null, entry: string | null = null, data: any) => {
     return (selected: number) => {
-        if (entry) {
-            return data[selected]?.[category][project_id][entry] ?? null;
-        } else {
-            return data[selected]?.[category][project_id] ?? null;
+        let res = data[selected]?.[category] ?? null;
+        if (!res) {
+            return null;
         }
+        if (project_id){
+            res = res[project_id];
+        }
+        if (entry){
+            res = res[entry];
+        }
+        return res;
+
+    //     if (entry) {
+    //         return data[selected]?.[category][project_id][entry] ?? null;
+    //     } else {
+    //         return data[selected]?.[category][project_id] ?? null;
+    //     }
     };
 };

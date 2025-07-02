@@ -36,6 +36,8 @@ export async function POST({ request }) {
         const res = await db.query(aql`
         FOR doc IN ${collection}
         FILTER LOWER(doc.identifier) LIKE LOWER(${sterm})
+        FOR metric IN metrics
+        FILTER LOWER(doc.identifier) LIKE LOWER(metric.identity.name_with_owner)
         COLLECT WITH COUNT INTO len
         RETURN {length: len}
         `);

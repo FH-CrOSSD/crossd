@@ -7,14 +7,13 @@
 	import MetricRow from './MetricRow.svelte';
 
 	export let selected: number;
-	export let project_id: string;
+	export let project_id: string | null = null;
 	export let data: [{ [key: string]: any }];
 	const chart = true;
 
-	let bakGenericDataFn = (category: string, project_id: string, entry: string | null = null) => {
+	let bakGenericDataFn = (category: string, project_id: string | null, entry: string | null = null) => {
 		return bgdFn(category, project_id, entry, data);
 	};
-
 	function osiIcon(type: string) {
 		switch (type) {
 			case 'osi_approved':

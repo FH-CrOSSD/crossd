@@ -15,13 +15,19 @@
 
 	let bakSecurityDataFn = (category: string, project_id: string, entry: string | null = null) => {
 		return (selected: number) => {
-			if (entry) {
-				return data[selected]?.[category][0][project_id][entry] ?? null;
-			} else {
-				return data[selected]?.[category][0][project_id] ?? null;
-			}
-		};
+        let res = data[selected]?.[category][0] ?? null;
+        if (!res) {
+            return null;
+        }
+        if (project_id){
+            res = res[project_id];
+        }
+        if (entry){
+            res = res[entry];
+        }
+        return res;}
 	};
+
 </script>
 
 <MetricCard>
@@ -33,7 +39,7 @@
 		data_md="security_advisories"
 		data_id="b--existing-advisories-created">Advisories available:</MetricRow
 	>
-	{#if Object.keys(data[selected]['security_advisories'][0][project_id]).length !== 0}
+	{#if Object.keys(project_id ? data[selected]['security_advisories'][0][project_id] :data[selected]['security_advisories'][0]) .length !== 0}
 		<MetricRow
 			{chart}
 			{selected}

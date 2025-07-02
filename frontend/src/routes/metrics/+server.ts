@@ -25,20 +25,21 @@ export async function POST({ request }) {
          * 2. Get metric document for each scan id
          * 3. Get bak_metrics document for each scan id
          */
+        console.log(term);
         const res = await db.query(aql`
         FOR doc IN ${projectsColl}
-        FILTER doc.identifier == ${term}
+        FILTER LOWER(doc.identifier) == LOWER(${term})
         LET scans = (
             FOR elem IN doc.scans
             LET metric = (
                 FOR metric IN metrics
-                FILTER elem == metric.scan_id && metric.identity.name_with_owner == doc.identifier
+                FILTER elem == metric.scan_id && LOWER(metric.identity.name_with_owner) == LOWER(doc.identifier)
                 LIMIT 1
                 RETURN UNSET(metric, "_key", "_id", "_rev")
             )
             LET bak = (
                 FOR bak IN bak_metrics
-                FILTER elem == bak.scan_id && bak.identity.name_with_owner == doc.identifier
+                FILTER elem == bak.scan_id && LOWER(bak.identity.name_with_owner) == LOWER(doc.identifier)
                 LIMIT 1
                 RETURN UNSET(bak, "_key", "_id", "_rev")
             )
@@ -48,7 +49,13 @@ export async function POST({ request }) {
         )
         RETURN MERGE(UNSET(doc, "_key", "_id", "_rev"), {scans: scans})
     `);
+        // const res = await db.query(aql`
+        // FOR doc IN ${projectsColl}
+        // FILTER LOWER(doc.identifier) == LOWER(${term})
+        // return doc
+        // `);
         let all = await res.all();
+        console.log(all[0]["scans"]);
         return json(all);
     } catch (err: any) {
         console.error(err.message);

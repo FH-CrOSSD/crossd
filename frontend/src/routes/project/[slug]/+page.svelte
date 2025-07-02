@@ -164,24 +164,42 @@
 		{#if Object.keys(data.data?.[selected] ?? {}).length > 0}
 			<GenericMetricCard data={data.data} {selected} />
 		{/if}
-		{#if data.bak[selected]}
-			<GenericBakCard data={data.bak} bind:selected {project_id} />
-			<PullRequestCard data={data.bak} {selected} {project_id} />
-			<ProjectVelocityCard data={data.bak} {selected} {project_id} />
-			<CommunityHealthCard data={data.bak} {selected} {project_id} />
-			{#if Object.keys(data.bak[selected]['issues']).length > 0}
-				<IssueCard data={data.bak} {selected} {project_id} />
+		{#if !('version' in (data.data?.[selected]??{}))}
+			{#if data.bak[selected]}
+				<GenericBakCard data={data.bak} bind:selected {project_id} />
+				<PullRequestCard data={data.bak} {selected} {project_id} />
+				<ProjectVelocityCard data={data.bak} {selected} {project_id} />
+				<CommunityHealthCard data={data.bak} {selected} {project_id} />
+				{#if Object.keys(data.bak[selected]['issues']).length > 0}
+					<IssueCard data={data.bak} {selected} {project_id} />
+				{/if}
+				{#if Object.keys(data.bak[selected]['contributions_distributions']).length > 0}
+					<DistributionContributionCard data={data.bak} {selected} {project_id} />
+				{/if}
+				<LifecycleBranchesCard data={data.bak} {selected} {project_id} />
+				<SecurityAdvisoriesCard data={data.bak} {selected} {project_id} />
 			{/if}
-			{#if Object.keys(data.bak[selected]['contributions_distributions']).length > 0}
-				<DistributionContributionCard data={data.bak} {selected} {project_id} />
+			<!-- show when no data is available -->
+			{#if Object.keys(data.data?.[selected] ?? {}).length <= 0 && !data.bak[selected]}
+				<P size="lg">There is currently no data available for this snapshot.</P>
 			{/if}
-			<LifecycleBranchesCard data={data.bak} {selected} {project_id} />
-			<SecurityAdvisoriesCard data={data.bak} {selected} {project_id} />
+		{:else}
+		{#if data.data[selected]["version"].split(".")[0]==="2"}
+			<GenericBakCard data={data.data} bind:selected />
+			<PullRequestCard data={data.data} {selected}  />
+			<ProjectVelocityCard data={data.data} {selected}/>
+			<CommunityHealthCard data={data.data} {selected} /> 
+			{#if Object.keys(data.data[selected]['issues']).length > 0}
+				<IssueCard data={data.data} {selected}  />
+			{/if}
+			{#if Object.keys(data.data[selected]['contributions_distributions']).length > 0}
+				<DistributionContributionCard data={data.data} {selected}  />
+			{/if}
+			<LifecycleBranchesCard data={data.data} {selected} />
+			<SecurityAdvisoriesCard data={data.data} {selected} />
 		{/if}
-		<!-- show when no data is available -->
-		{#if Object.keys(data.data?.[selected] ?? {}).length <= 0 && !data.bak[selected]}
-			<P size="lg">There is currently no data available for this snapshot.</P>
 		{/if}
+
 	</div>
 </div>
 
