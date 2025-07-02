@@ -1,0 +1,66 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app: weekly-netidee-job
+    environment: prod
+    app.kubernetes.io/name: crossd
+    app.kubernetes.io/instance: crossd-alpha
+    app.kubernetes.io/version: "0.1"
+    app.kubernetes.io/component: weekly-netidee-job
+    app.kubernetes.io/part-of: crossd
+  name: weekly-netidee-job
+spec:
+  timeZone: "Etc/UTC"
+  schedule: "10 20 * * 3"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: weekly-netidee-job
+              image: ghcr.io/fh-crossd/add-task:latest
+              command: ["sh", "-c"]
+              args:
+                - >
+                  python3 add_task.py --user $USER --password $PASSWORD -t most-starred-09-04-2024 -t $(date -uI)
+                  $(cat /netidee.txt)
+              env:
+                - name: REQUESTS_CA_BUNDLE
+                  value: /etc/ssl/certs/ca-certificates.crt
+                - name: USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: arango-worker-pwd
+                      key: username
+                - name: PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: arango-worker-pwd
+                      key: password
+                - name: RAUTH
+                  valueFrom:
+                    secretKeyRef:
+                      name: redis-auth
+                      key: RAUTH
+              volumeMounts:
+                - name: ca-certificates
+                  mountPath: /etc/ssl/certs/
+                  readOnly: true
+                - name: "netidee"
+                  mountPath: "/netidee.txt"
+                  subPath: "netidee.txt"
+          restartPolicy: Never
+          volumes:
+            - name: ca-certificates
+              configMap:
+                name: cert-bundle
+                defaultMode: 0644
+                optional: false
+                items:
+                  - key: ca-certificates.crt
+                    path: ca-certificates.crt
+            - name: "netidee"
+              configMap:
+                name: "netidee-configmaps"
+      backoffLimit: 4
