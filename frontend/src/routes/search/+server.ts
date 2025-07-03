@@ -52,13 +52,18 @@ export async function POST({ request }) {
             LIMIT 1
             RETURN scan.issuedAt
         )
-        LET info = 
-        (FOR repo IN repositories
+        LET info = (
+            FOR repo IN repositories
             FILTER LAST(doc.scans) == repo.scan_id
             RETURN {"nameWithOwner":repo.repository.nameWithOwner,"description":repo.repository.description, "readmes":repo.repository.readmes}
         )
-        FOR metric IN metrics
-        FILTER LOWER(doc.identifier) LIKE LOWER(metric.identity.name_with_owner)
+        LET result_available = (
+            FOR metric IN metrics
+            FILTER LOWER(doc.identifier) LIKE LOWER(metric.identity.name_with_owner)
+            LIMIT 1
+            RETURN metric
+        )
+        FILTER LENGTH(result_available)>0
         SORT doc.identifier
         LIMIT ${(page - 1) * PER_PAGE}, ${PER_PAGE}
         RETURN {"name":doc.identifier,"timestamp":timestamp[0],"repository":info[0]}
