@@ -19,8 +19,8 @@ spec:
           command: ["sh", "-c"]
           args:
             - >
-              python3 add_task.py --user $USER --password $PASSWORD
-              thorswap/SwapKit
+              python3 add_task.py --user $USER --password $PASSWORD -t manual
+              sveltejs/svelte
           env:
             - name: REQUESTS_CA_BUNDLE
               value: /etc/ssl/certs/ca-certificates.crt

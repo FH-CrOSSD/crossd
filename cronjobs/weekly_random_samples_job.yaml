@@ -23,7 +23,7 @@ spec:
               command: ["sh", "-c"]
               args:
                 - >
-                  python3 add_task.py --user $USER --password $PASSWORD -t random-sample-09-04-2024 -t $(date -uI)
+                  python3 add_task.py --user $USER --password $PASSWORD -t random-sample-09-04-2024 -t $(date -uI) --only metric
                   $(cat /random-sample-repos.txt)
               env:
                 - name: REQUESTS_CA_BUNDLE
