@@ -23,7 +23,7 @@ spec:
               command: ["sh", "-c"]
               args:
                 - >
-                  python3 add_task.py --user $USER --password $PASSWORD -t most-starred-09-04-2024 -t $(date -uI)
+                  python3 add_task.py --user $USER --password $PASSWORD -t netidee-03-06-2025 -t $(date -uI) -t netidee
                   $(cat /netidee.txt)
               env:
                 - name: REQUESTS_CA_BUNDLE
