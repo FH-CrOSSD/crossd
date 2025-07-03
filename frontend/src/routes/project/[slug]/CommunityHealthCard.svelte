@@ -12,7 +12,6 @@
 	let bakGenericDataFn = (category: string, project_id: string, entry: string | null = null) => {
 		return bgdFn(category, project_id, entry, data);
 	};
-
 </script>
 
 <MetricCard>
@@ -99,12 +98,17 @@
 		data_md="github_community_health_percentage"
 		data_id="c--existence-of-single-documents-and-information-created">Has README:</BoolMetricRow
 	>
-	{#if data[selected]["version"].split(".")[0]==="2"}
-	<BoolMetricRow
-	{selected}
-	selector={bakGenericDataFn('github_community_health_percentage', project_id, 'security_policy')}
-	data_md="github_community_health_percentage"
-	data_id="c--existence-of-single-documents-and-information-created">Has security policy:</BoolMetricRow
->
+	{#if data[selected]?.['version']?.split('.')[0] === '2'}
+		<BoolMetricRow
+			{selected}
+			selector={bakGenericDataFn(
+				'github_community_health_percentage',
+				project_id,
+				'security_policy'
+			)}
+			data_md="github_community_health_percentage"
+			data_id="c--existence-of-single-documents-and-information-created"
+			>Has security policy:</BoolMetricRow
+		>
 	{/if}
 </MetricCard>
