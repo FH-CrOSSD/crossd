@@ -21,5 +21,6 @@ try {
     db._createDocumentCollection("bak_repos");
     db._createDocumentCollection("metrics");
     db._createDocumentCollection("repositories");
+    db._createDocumentCollection("commits");
 }
 catch (ArangoError) { };
