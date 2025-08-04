@@ -9,6 +9,8 @@ RUN pipenv install --system --clear
 FROM python:3.10-alpine
 COPY --from=build /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 
+RUN pip install --no-cache-dir redis
+
 WORKDIR /home/tasks
 
 COPY . .

@@ -4,10 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-celery = {version = "*", extras = ["arangodb", "auth", "brotli", "msgpack", "redis"]}
 pyarango = "*"
 requests-toolbelt = "*"
-redis = "*"
+celery = {extras = ["auth", "msgpack", "brotli", "arangodb", "redis"], version = "*"}
 
 [dev-packages]
 
