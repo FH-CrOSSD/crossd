@@ -7,6 +7,7 @@ name = "pypi"
 celery = {version = "*", extras = ["arangodb", "auth", "brotli", "msgpack", "redis"]}
 pyarango = "*"
 requests-toolbelt = "*"
+redis = "*"
 
 [dev-packages]
 
