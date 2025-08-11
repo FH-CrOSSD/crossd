@@ -145,10 +145,14 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     commits = None
     commit_query = None
 
+    # get current identifier (e.g. username might have changed and redirects now, e.g. google/jax to jax-ml/jax)
+    repo = Repository(owner, name)
+    res = repo.ask_identifiers().execute()
+
     try:
         # commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
         commit_query = self.commits.fetchFirstExample(
-            {"identifier": f"{owner}/{name}"}, rawResults=False
+            {"identifier": res["repository"]["nameWithOwner"]}, rawResults=False
         )
         # print(commits)
     except DocumentNotFoundError:
@@ -166,7 +170,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
                 .replace(hour=0, minute=0, second=0, microsecond=0)
                 .isoformat()
             )
-        except KeyError:
+        except (KeyError, IndexError):
             pass
 
         try:
@@ -175,28 +179,39 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
                 + datetime.timedelta(seconds=1)
             ).replace(hour=0, minute=0, second=0, microsecond=0)
 
-        except KeyError:
+        except (KeyError, IndexError):
             pass
 
     # print("commits_since_clone")
     # print(commits_since_clone)
     repo = Repository(owner, name)
-    count_res = repo.ask_commits_count(
-        commits_since_clone.isoformat()
-        if commits_since_clone
-        else get_past(relativedelta(months=12))
-        .replace(hour=0, minute=0, second=0, microsecond=0)
-        .isoformat()
-    ).execute()
+    count_res = (
+        repo.ask_repo_empty()
+        .ask_commits_count(
+            commits_since_clone.isoformat()
+            if commits_since_clone
+            else get_past(relativedelta(months=12))
+            .replace(hour=0, minute=0, second=0, microsecond=0)
+            .isoformat()
+        )
+        .execute()
+    )
     # print(f"count_res {count_res}")
+
+    try:
+        count = count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"]
+    except TypeError:
+        # in case of an empty repository
+        count = 0
 
     clone_opts = {
         "bare": True,
-        "depth": count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"]
+        "depth": count
         + 1,  # might need the previous commit to calc the diff even if it is not in the time range
         # "filter": "blob:none",
     }
-    print(count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"])
+
+    print(count)
     repo = Repository(owner=owner, name=name)
 
     repo.ask_identifiers()
@@ -211,23 +226,20 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         repo.clone_opts = clone_opts
         console.log("get commits")
         repo.ask_commits(details=False, diff=False, since=commits_since)
-        if count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"] > 0:
-            print(
-                commits_since_clone
-                or get_past(relativedelta(months=12)).replace(
-                    hour=0, minute=0, second=0, microsecond=0
-                )
-            )
-            repo.ask_commits_clone(
-                since=commits_since_clone
-                or get_past(relativedelta(months=12)).replace(
-                    hour=0, minute=0, second=0, microsecond=0
-                )
-            )
+        # if count > 0:
+        print(
+            commits_since_clone
+            or get_past(relativedelta(months=12)).replace(hour=0, minute=0, second=0, microsecond=0)
+        )
+        repo.ask_commits_clone(
+            since=commits_since_clone
+            or get_past(relativedelta(months=12)).replace(hour=0, minute=0, second=0, microsecond=0)
+        )
     (
         repo.ask_dependencies_sbom()
         # .ask_dependencies_crawl()
         # .ask_dependencies()
+        .ask_repo_empty()
         .ask_funding_links()
         .ask_security_policy()
         .ask_contributing()
@@ -275,15 +287,18 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
 
         users = {}
 
-        for commit in res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]:
-            user = commit["node"]["author"]["user"]
-            if not user:
-                user = commit["node"]["committer"]["user"]
+        # if "defaultBranchRef" in res["repository"]:
+        # did ask for commits
+        if not count_res["repository"]["isEmpty"]:
+            for commit in res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]:
+                user = commit["node"]["author"]["user"]
                 if not user:
-                    continue
-            if user["login"] not in users:
-                users[user["login"]] = 0
-            users[user["login"]] += 1
+                    user = commit["node"]["committer"]["user"]
+                    if not user:
+                        continue
+                if user["login"] not in users:
+                    users[user["login"]] = 0
+                users[user["login"]] += 1
         res["contributors"] = {"users": [{"login": x, "contributions": users[x]} for x in users]}
 
     # res = Repository(owner, name).ask_all().execute()
@@ -324,36 +339,27 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     res["scan_id"] = scan
     res["version"] = importlib.metadata.version("crossd_metrics")
     res["repository"]["readmes"] = {}
-    # for readme in readmes:
-    #     res["repository"]["readmes"][get_readme_index(readme)] = res["repository"][
-    #         get_readme_index(readme)
-    #     ]
-    #     del res["repository"][get_readme_index(readme)]
-    if "commits" not in res:
-        res["commits"] = []
-    comms = res["commits"]
-    # print(dir(commits))
-    # cm = {
-    #     # "_key": f"{owner}/{name}", # key has a limit of 255 characters and slashes are not allowed
-    #     "identifier": f"{owner}/{name}",
-    #     "gql": res["repository"]["defaultBranchRef"]["last_commit"]["history"][
-    #         "edges"
-    #     ],  # already contains the new items
-    # }
-    if commits:
-        comms += commits["clone"]
-    else:
-        commits = self.commits.createDocument()
-        commits["identifier"] = res["repository"]["nameWithOwner"]
-        # cm["_key"] = commits["_key"]
-    commits["clone"] = comms
-    commits["gql"] = res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
 
-    # cdoc = self.commits.createDocument(initDict=cm)
-    self.commits.ensurePersistentIndex(["identifier"], unique=True)
-    commits.save()
+    if not count_res["repository"]["isEmpty"]:
+        if "commits" not in res:
+            res["commits"] = []
+        comms = res["commits"]
 
-    res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = []
+        if commits:
+            comms += commits["clone"]
+        else:
+            commits = self.commits.createDocument()
+            commits["identifier"] = res["repository"]["nameWithOwner"]
+            # cm["_key"] = commits["_key"]
+        commits["clone"] = comms
+        commits["gql"] = res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
+
+        self.commits.ensurePersistentIndex(["identifier"], unique=True)
+        commits.save()
+    try:
+        res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = []
+    except TypeError:
+        res["repository"]["defaultBranchRef"] = {"last_commit": {"history": {"edges": []}}}
     res["commits"] = []
 
     console.print("storing repository data in database")
@@ -406,8 +412,11 @@ def do_metrics(self, retval: str):
         commits = self.commits.fetchFirstExample(
             {"identifier": res["repository"]["nameWithOwner"]}, rawResults=True
         )
-        res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = commits[0]["gql"]
-        res["commits"] = commits[0]["clone"]
+        if len(commits) > 0:
+            res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = commits[0][
+                "gql"
+            ]
+            res["commits"] = commits[0]["clone"]
     except DocumentNotFoundError:
         pass
 
