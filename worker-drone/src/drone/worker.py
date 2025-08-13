@@ -220,6 +220,10 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
 
     if c_available:
         repo.clone_opts = clone_opts
+        # github contributors rest api seems to be unreliable
+        # e.g. Ebazhanov/linkedin-skill-assessments-quizzes
+        # website shows 1606 contributors
+        # rest api call results in 459 contributors
         repo.ask_contributors()
         repo.ask_commits_clone()  # defaults to last 12 month
     else:
@@ -255,7 +259,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         .ask_dates()
         .ask_subscribers()
         .ask_community_profile()
-        .ask_contributors()
+        # .ask_contributors()
         .ask_releases()
         # .ask_releases_crawl()
         .ask_security_advisories()
