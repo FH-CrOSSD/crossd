@@ -1,6 +1,8 @@
-import { Database, aql } from "arangojs";
-import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
+import { env } from '$env/dynamic/private';
+if(dev){
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";}
+import { Database, aql } from "arangojs";
 
 export const db = new Database({
     url: env.ARANGO_URL,
@@ -10,4 +12,5 @@ export const db = new Database({
         // disable https hostname verification in development environment
         rejectUnauthorized: dev ? false : true
     },
+    rejectUnauthorized: dev ? false : true
 });
