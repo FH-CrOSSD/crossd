@@ -115,6 +115,13 @@ app.conf.task_routes = {
 # include eg. task arguments in results
 app.conf.result_extended = True
 
+app.backend.connection.timeout=200
+app.backend.connection.resetSession(
+    username=os.environ.get("WORKER_USER", "root"),
+    password=os.environ.get("WORKER_PASSWORD", ""),
+    verify=True,
+)
+
 
 @app.task(
     name="retrieve_github",
