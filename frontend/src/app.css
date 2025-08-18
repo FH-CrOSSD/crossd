@@ -1,0 +1,4 @@
+@import 'tailwindcss';
+
+@config '../tailwind.config.cjs';
+@source "../node_modules/@flowbite-svelte-plugins/chart/dist";

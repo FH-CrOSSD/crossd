@@ -235,9 +235,9 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <div class="justify-center mb-10" style="object-position:bottom">
-	<Card padding="xl" class="mx-auto max-w-screen mt-10">
+	<Card class="mx-auto max-w-screen mt-10 p-4 sm:p-8">
 		<form method="GET" class="flex gap-0" action="/search">
-			<Search class="rounded-r-none py-2.5" id="project" name="project" value={data['term']} />
+			<Search classes={{ input: "rounded-r-none py-2.5" }} id="project" name="project" value={data['term']} />
 			<Button class="pb-2 rounded-s-none" type="submit">
 				<SearchOutline class="w-5 h-5" />
 				<Heading tag="h6" class="text-white ml-2">Search</Heading>
@@ -247,7 +247,7 @@
 </div>
 <Hr />
 <Heading tag="h1" class="mb-10" id="search-results">Search results:</Heading>
-<Card size="xl" class="break-words max-w-full">
+<Card size="xl" class="break-words max-w-full p-4 sm:p-6">
 	<Listgroup>
 		{#each data.results as item}
 			<ListgroupItem>

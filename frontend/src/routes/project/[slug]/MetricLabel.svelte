@@ -10,7 +10,7 @@
 	{#if click && (data_md || chart)}
 		<A
 			class="text-gray-900 dark:text-white underline hover:no-underline"
-			on:click={click}
+			onclick={click}
 			data-md={data_md}
 			data-id={data_id || ''}><strong><slot /></strong></A
 		>

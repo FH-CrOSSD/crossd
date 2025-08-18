@@ -16,9 +16,9 @@
 </script>
 
 <div class="justify-center" style="object-position:bottom">
-	<Card padding="xl" class="mx-auto max-w-screen mt-10">
+	<Card class="mx-auto max-w-screen mt-10 p-4 sm:p-8">
 		<form method="GET" class="flex gap-0" action="/search">
-			<Search class="rounded-r-none py-2.5" id="project" name="project" />
+			<Search classes={{ input: "rounded-r-none py-2.5" }} id="project" name="project" />
 			<Button class="pb-2 rounded-s-none" type="submit">
 				<SearchOutline class="w-5 h-5" />
 				<Heading tag="h6" class="text-white ml-2">Search</Heading>
