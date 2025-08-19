@@ -29,9 +29,9 @@
 		{#await tick() then}
 			<!-- top-[118px] -->
 			<div
-				class="w-1/4 fixed right-0 top-[12.5%] flex justify-end overflow-y-scroll h-3/4 hidden md:flex"
+				class="w-1/4 fixed right-0 top-[12.5%] flex justify-end overflow-y-auto h-3/4 md:flex"
 			>
-				<Sidebar {activeUrl} class="w-full">
+				<Sidebar {activeUrl} position="static" class="w-full">
 					<SidebarWrapper>
 						<SidebarGroup>
 							{#each document.getElementsByClassName('metric_heading') as heading}
