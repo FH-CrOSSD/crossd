@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { chartOptions } from '$lib/chartOptions';
 	import { processMD, toFixed2 } from '$lib/util';
-	import { CloseButton, Drawer, Heading, Hr, Modal, P, Select } from 'flowbite-svelte';
+	import { CloseButton, Drawer, Drawerhead, Heading, Hr, Modal, P, Select } from 'flowbite-svelte';
 	import { Chart } from '@flowbite-svelte-plugins/chart';
 	import { onDestroy } from 'svelte';
 	import { sineIn } from 'svelte/easing';
@@ -208,31 +208,38 @@
 <!-- modal for displaying the charts -->
 <Modal
 	title={chartOptions.series[0].name}
-	bind:open={showChart}
+	bind:open={drawerHidden}
 	size="lg"
 	autoclose
 	outsideclose={true}
+	classes={{ header: !showChart?'hidden':'', body: !showChart?'p-0 md:p-0 border-0':'' }}
 >
-	<div class="chart-container">
+	<div class="chart-container {!showChart?'hidden':''}">
 		<Chart options={chartOptions} size="lg" />
 	</div>
-</Modal>
 
-<!-- a sidebar for showing the metric documentation -->
-<!-- backdrop={!showChart ? true : false} -->
-<Drawer
+	<Drawer
 	placement="right"
 	transitionParams={transitionParamsRight}
 	bind:open={drawerHidden}
 	outsideclose={showChart ? true : false}
 	id="sidebar6"
-	class={!showChart ? 'backdrop:bg-black/50' :''}
+	modal={false}
+	dismissable={false}
+	class="{!showChart ? 'backdrop:bg-black/50' :''} fixed top-0 left-0 !z-50 h-auto p-0"
 >
-	<div class="flex items-center" use:onShown>
-		<CloseButton onclick={() => (drawerHidden = true)} class="mb-4 dark:text-white" />
+
+	<div class="flex items-center border-b-1 border-gray-300 dark:border-gray-700 py-2" use:onShown>
+		<CloseButton onclick={() => (showChart = false)} class="mr-auto " />
 	</div>
+	<div class="overflow-auto w-full h-full p-2">
 	{@html overlayMD}
+	</div>
 </Drawer>
+</Modal>
+
+<!-- a sidebar for showing the metric documentation -->
+<!-- backdrop={!showChart ? true : false} -->
 
 <style>
 	:global(.apexcharts-svg) {
