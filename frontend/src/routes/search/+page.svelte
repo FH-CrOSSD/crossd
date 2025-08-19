@@ -251,7 +251,7 @@
 	<Listgroup>
 		{#each data.results as item}
 			<ListgroupItem>
-				<div class="grid grid-cols-3 dark:divide-gray-700 divide-x">
+				<div class="grid grid-cols-3 divide-gray-200 dark:divide-gray-700 divide-x">
 					<div class="pr-5 col-span-1">
 						<Heading tag="h4"
 							><a href="/project/{encodeURIComponent(item.name)}">{item.name}</a></Heading
