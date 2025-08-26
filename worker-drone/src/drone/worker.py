@@ -174,7 +174,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             commits_since = commits["gql"][0]["node"]["committedDate"]
             commits_since = (
                 (datetime.datetime.fromisoformat(commits_since) + datetime.timedelta(seconds=1))
-                .replace(hour=0, minute=0, second=0, microsecond=0)
+                # .replace(hour=0, minute=0, second=0, microsecond=0)
                 .isoformat()
             )
         except (KeyError, IndexError):
@@ -184,7 +184,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             commits_since_clone = (
                 datetime.datetime.fromisoformat(commits["clone"][0]["committed_iso"])
                 + datetime.timedelta(seconds=1)
-            ).replace(hour=0, minute=0, second=0, microsecond=0)
+            )#.replace(hour=0, minute=0, second=0, microsecond=0)
 
         except (KeyError, IndexError):
             pass
@@ -198,7 +198,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             commits_since_clone.isoformat()
             if commits_since_clone
             else get_past(relativedelta(months=12))
-            .replace(hour=0, minute=0, second=0, microsecond=0)
+            #.replace(hour=0, minute=0, second=0, microsecond=0)
             .isoformat()
         )
         .execute()
@@ -240,11 +240,11 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         # if count > 0:
         print(
             commits_since_clone
-            or get_past(relativedelta(months=12)).replace(hour=0, minute=0, second=0, microsecond=0)
+            or get_past(relativedelta(months=12))#.replace(hour=0, minute=0, second=0, microsecond=0)
         )
         repo.ask_commits_clone(
             since=commits_since_clone
-            or get_past(relativedelta(months=12)).replace(hour=0, minute=0, second=0, microsecond=0)
+            or get_past(relativedelta(months=12))#.replace(hour=0, minute=0, second=0, microsecond=0)
         )
     (
         repo.ask_dependencies_sbom()
