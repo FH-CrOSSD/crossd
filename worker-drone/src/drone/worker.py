@@ -159,46 +159,69 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
 
     commits_since = None
     commits_since_clone = None
-    commits = None
-    commit_query = None
+    # commits = None
+    # commit_query = None
 
     # get current identifier (e.g. username might have changed and redirects now, e.g. google/jax to jax-ml/jax)
     repo = Repository(owner, name)
     res = repo.ask_identifiers().execute()
 
-    try:
-        # commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
-        commit_query = self.commits.fetchFirstExample(
-            {"identifier": res["repository"]["nameWithOwner"]}, rawResults=False
-        )
-        # print(commits)
-    except DocumentNotFoundError:
-        pass
-
-    if commit_query:
-        commits = commit_query[0]
-        try:
-            # commits_since = commits["gql"]["repository"]["defaultBranchRef"]["last_commit"][
-            #     "history"
-            # ]["edges"][0]["node"]["committedDate"]
-            commits_since = commits["gql"][0]["node"]["committedDate"]
+    # get datetimes of last commits
+    query = """
+        FOR c IN commits
+        FILTER c.identifier == @ident
+        LIMIT 1
+        RETURN {identifier: c.identifier, gql: c.gql[0].node.committedDate, clone: c.clone[0].committed_iso}
+        """
+    vars = {
+        "ident": res["repository"]["nameWithOwner"],
+    }
+    qres = app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
+    if qres:
+        if qres["gql"]:
             commits_since = (
-                (datetime.datetime.fromisoformat(commits_since) + datetime.timedelta(seconds=1))
+                (datetime.datetime.fromisoformat(qres["gql"]) + datetime.timedelta(seconds=1))
                 # .replace(hour=0, minute=0, second=0, microsecond=0)
                 .isoformat()
             )
-        except (KeyError, IndexError):
-            pass
 
-        try:
+        if qres["clone"]:
             commits_since_clone = datetime.datetime.fromisoformat(
-                commits["clone"][0]["committed_iso"]
-            ) + datetime.timedelta(
-                seconds=1
-            )  # .replace(hour=0, minute=0, second=0, microsecond=0)
+                qres["clone"]
+            ) + datetime.timedelta(seconds=1)
+    # try:
+    #     # commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
+    #     commit_query = self.commits.fetchFirstExample(
+    #         {"identifier": res["repository"]["nameWithOwner"]}, rawResults=False
+    #     )
+    #     # print(commits)
+    # except DocumentNotFoundError:
+    #     pass
 
-        except (KeyError, IndexError):
-            pass
+    # if commit_query:
+    #     commits = commit_query[0]
+    #     try:
+    #         # commits_since = commits["gql"]["repository"]["defaultBranchRef"]["last_commit"][
+    #         #     "history"
+    #         # ]["edges"][0]["node"]["committedDate"]
+    #         commits_since = commits["gql"][0]["node"]["committedDate"]
+    #         commits_since = (
+    #             (datetime.datetime.fromisoformat(commits_since) + datetime.timedelta(seconds=1))
+    #             # .replace(hour=0, minute=0, second=0, microsecond=0)
+    #             .isoformat()
+    #         )
+    #     except (KeyError, IndexError):
+    #         pass
+
+    #     try:
+    #         commits_since_clone = datetime.datetime.fromisoformat(
+    #             commits["clone"][0]["committed_iso"]
+    #         ) + datetime.timedelta(
+    #             seconds=1
+    #         )  # .replace(hour=0, minute=0, second=0, microsecond=0)
+
+    #     except (KeyError, IndexError):
+    #         pass
 
     # print("commits_since_clone")
     # print(commits_since_clone)
