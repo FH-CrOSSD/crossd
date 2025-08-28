@@ -304,83 +304,18 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
 
     # retrieve github data
     res = repo.execute(rate_limit=True, verbose=True)
-    if not c_available:
-        if commits:
-            res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = (
-                res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
-                + commits["gql"]
-            )
 
-        users = {}
+    # handle repos without any commits
+    try:
+        res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
+    except TypeError:
+        res["repository"]["defaultBranchRef"] = {"last_commit": {"history": {"edges": []}}}
 
-        # if "defaultBranchRef" in res["repository"]:
-        # did ask for commits
-        if not count_res["repository"]["isEmpty"]:
-            for commit in res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]:
-                user = commit["node"]["author"]["user"]
-                if not user:
-                    user = commit["node"]["committer"]["user"]
-                    if not user:
-                        continue
-                if user["login"] not in users:
-                    users[user["login"]] = 0
-                users[user["login"]] += 1
-        res["contributors"] = {"users": [{"login": x, "contributions": users[x]} for x in users]}
-
-    # res = Repository(owner, name).ask_all().execute()
-
-    users = []
-    tmp = {}
-
-    # ~ 400 users failed quite often
-    # therefore split to requests of 200 users
-
-    for user in res["contributors"]["users"]:
-        # if "[bot]" not in user["login"]:
-        if all(x not in user["login"] for x in ("[bot]",)) and all(
-            x != user["login"] for x in ("Copilot",)
-        ):
-            users.append(user["login"])
-        if len(users) % 200 == 0:
-            gql_users = {}
-            try:
-                gql_users = MultiUser(login=users).ask_organizations().execute(rate_limit=True)
-            except gql.transport.exceptions.TransportQueryError as tqe:
-                gql_users = {key: value for key, value in tqe.data.items() if value is not None}
-            tmp = merge_dicts(tmp, gql_users)
-            users = []
-    else:
-        # tmp = merge_dicts(tmp, MultiUser(login=users).ask_organizations().execute(rate_limit=True))
-        try:
-            gql_users = MultiUser(login=users).ask_organizations().execute(rate_limit=True)
-        except gql.transport.exceptions.TransportQueryError as tqe:
-            gql_users = {key: value for key, value in tqe.data.items() if value is not None}
-        tmp = merge_dicts(tmp, gql_users)
-
-    # console.log(res)
-    res["organizations"] = tmp
-
-    res["task_id"] = self.request.id
-    res["timestamp"] = time.time()
-    res["scan_id"] = scan
-    res["version"] = importlib.metadata.version("crossd_metrics")
-    res["repository"]["readmes"] = {}
-
+    # store new commits
     if not count_res["repository"]["isEmpty"]:
         if "commits" not in res:
             res["commits"] = []
         comms = res["commits"]
-
-        # if commits:
-        #     comms += commits["clone"]
-        # else:
-        #     commits = self.commits.createDocument()
-        #     commits["identifier"] = res["repository"]["nameWithOwner"]
-        #     # cm["_key"] = commits["_key"]
-        # commits["clone"] = comms
-        # commits["gql"] = res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
-
-        # self.commits.ensurePersistentIndex(["identifier"], unique=True)
 
         query = """
         UPSERT {identifier: @ident}
@@ -423,11 +358,85 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             }
             app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
 
-        # commits.save()
-    try:
-        res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = []
-    except TypeError:
-        res["repository"]["defaultBranchRef"] = {"last_commit": {"history": {"edges": []}}}
+    if not c_available:
+        query = """
+            FOR c IN commits
+            FILTER c.identifier == @ident
+            FOR u IN c.gql
+            LET x = u.node.author.user.login OR u.node.committer.user.login
+            FILTER x //remove none
+            COLLECT r = x WITH COUNT INTO length
+            RETURN {login: r, contributions: length}
+            """
+        vars = {
+            "ident": res["repository"]["nameWithOwner"],
+        }
+        qres = app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
+        res["contributors"] = {"users": qres}
+
+        # if commits:
+        #     res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = (
+        #         res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
+        #         + commits["gql"]
+        #     )
+
+        # users = {}
+
+        # # if "defaultBranchRef" in res["repository"]:
+        # # did ask for commits
+        # if not count_res["repository"]["isEmpty"]:
+        #     for commit in res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]:
+        #         user = commit["node"]["author"]["user"]
+        #         if not user:
+        #             user = commit["node"]["committer"]["user"]
+        #             if not user:
+        #                 continue
+        #         if user["login"] not in users:
+        #             users[user["login"]] = 0
+        #         users[user["login"]] += 1
+        # res["contributors"] = {"users": [{"login": x, "contributions": users[x]} for x in users]}
+
+    # res = Repository(owner, name).ask_all().execute()
+
+    users = []
+    tmp = {}
+
+    # ~ 400 users failed quite often
+    # therefore split to requests of 200 users
+
+    for user in res["contributors"]["users"]:
+        # if "[bot]" not in user["login"]:
+        if all(x not in user["login"] for x in ("[bot]",)) and all(
+            x != user["login"] for x in ("Copilot",)
+        ):
+            users.append(user["login"])
+        if len(users) % 200 == 0:
+            gql_users = {}
+            try:
+                gql_users = MultiUser(login=users).ask_organizations().execute(rate_limit=True)
+            except gql.transport.exceptions.TransportQueryError as tqe:
+                gql_users = {key: value for key, value in tqe.data.items() if value is not None}
+            tmp = merge_dicts(tmp, gql_users)
+            users = []
+    else:
+        # tmp = merge_dicts(tmp, MultiUser(login=users).ask_organizations().execute(rate_limit=True))
+        try:
+            gql_users = MultiUser(login=users).ask_organizations().execute(rate_limit=True)
+        except gql.transport.exceptions.TransportQueryError as tqe:
+            gql_users = {key: value for key, value in tqe.data.items() if value is not None}
+        tmp = merge_dicts(tmp, gql_users)
+
+    # console.log(res)
+    res["organizations"] = tmp
+
+    res["task_id"] = self.request.id
+    res["timestamp"] = time.time()
+    res["scan_id"] = scan
+    res["version"] = importlib.metadata.version("crossd_metrics")
+    res["repository"]["readmes"] = {}
+
+    res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = []
+
     res["commits"] = []
 
     console.print("storing repository data in database")
