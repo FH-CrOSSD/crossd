@@ -178,16 +178,16 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     }
     qres = app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
     if qres:
-        if qres["gql"]:
+        if qres[0]["gql"]:
             commits_since = (
-                (datetime.datetime.fromisoformat(qres["gql"]) + datetime.timedelta(seconds=1))
+                (datetime.datetime.fromisoformat(qres[0]["gql"]) + datetime.timedelta(seconds=1))
                 # .replace(hour=0, minute=0, second=0, microsecond=0)
                 .isoformat()
             )
 
-        if qres["clone"]:
+        if qres[0]["clone"]:
             commits_since_clone = datetime.datetime.fromisoformat(
-                qres["clone"]
+                qres[0]["clone"]
             ) + datetime.timedelta(seconds=1)
     # try:
     #     # commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
