@@ -33,6 +33,16 @@ class BaseTask(Task):
     _commits = None
 
     @staticmethod
+    def chunks(lst, size):
+        for i in range(0, len(lst), size):
+            yield lst[i : i + size]
+
+    @staticmethod
+    def chunks_reversed(lst, size):
+        for i in range(len(lst), 0, -size):
+            yield lst[max(0, i - size) : i]
+
+    @staticmethod
     def _get_collection(name: str):
         """Retrieves an instance of a ArangoDB database collection or creates it, if not existing."""
         col = None
@@ -115,7 +125,7 @@ app.conf.task_routes = {
 # include eg. task arguments in results
 app.conf.result_extended = True
 
-app.backend.connection.timeout=200
+app.backend.connection.timeout = 200
 app.backend.connection.resetSession(
     username=os.environ.get("WORKER_USER", "root"),
     password=os.environ.get("WORKER_PASSWORD", ""),
@@ -181,10 +191,11 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             pass
 
         try:
-            commits_since_clone = (
-                datetime.datetime.fromisoformat(commits["clone"][0]["committed_iso"])
-                + datetime.timedelta(seconds=1)
-            )#.replace(hour=0, minute=0, second=0, microsecond=0)
+            commits_since_clone = datetime.datetime.fromisoformat(
+                commits["clone"][0]["committed_iso"]
+            ) + datetime.timedelta(
+                seconds=1
+            )  # .replace(hour=0, minute=0, second=0, microsecond=0)
 
         except (KeyError, IndexError):
             pass
@@ -198,7 +209,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             commits_since_clone.isoformat()
             if commits_since_clone
             else get_past(relativedelta(months=12))
-            #.replace(hour=0, minute=0, second=0, microsecond=0)
+            # .replace(hour=0, minute=0, second=0, microsecond=0)
             .isoformat()
         )
         .execute()
@@ -240,11 +251,15 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         # if count > 0:
         print(
             commits_since_clone
-            or get_past(relativedelta(months=12))#.replace(hour=0, minute=0, second=0, microsecond=0)
+            or get_past(
+                relativedelta(months=12)
+            )  # .replace(hour=0, minute=0, second=0, microsecond=0)
         )
         repo.ask_commits_clone(
             since=commits_since_clone
-            or get_past(relativedelta(months=12))#.replace(hour=0, minute=0, second=0, microsecond=0)
+            or get_past(
+                relativedelta(months=12)
+            )  # .replace(hour=0, minute=0, second=0, microsecond=0)
         )
     (
         repo.ask_dependencies_sbom()
@@ -356,17 +371,59 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             res["commits"] = []
         comms = res["commits"]
 
-        if commits:
-            comms += commits["clone"]
-        else:
-            commits = self.commits.createDocument()
-            commits["identifier"] = res["repository"]["nameWithOwner"]
-            # cm["_key"] = commits["_key"]
-        commits["clone"] = comms
-        commits["gql"] = res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
+        # if commits:
+        #     comms += commits["clone"]
+        # else:
+        #     commits = self.commits.createDocument()
+        #     commits["identifier"] = res["repository"]["nameWithOwner"]
+        #     # cm["_key"] = commits["_key"]
+        # commits["clone"] = comms
+        # commits["gql"] = res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
 
-        self.commits.ensurePersistentIndex(["identifier"], unique=True)
-        commits.save()
+        # self.commits.ensurePersistentIndex(["identifier"], unique=True)
+
+        query = """
+        UPSERT {identifier: @ident}
+        INSERT {identifier: @ident, clone: @clone, gql: @gql}
+        UPDATE {clone: APPEND(@clone, OLD.clone), gql: APPEND(@gql, OLD.gql)}
+        IN commits
+        """
+        vars = {
+            "ident": res["repository"]["nameWithOwner"],
+            "clone": comms[-10000:],
+            "gql": res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"][
+                -10000:
+            ],
+        }
+        app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
+
+        query = """
+            FOR c IN commits
+            FILTER c.identifier == @ident
+            UPDATE { _key: c._key, gql: APPEND(@gql , c.gql ) } IN commits
+            """
+        for chunk in self.chunks_reversed(
+            res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"][:-10000], 10000
+        ):
+            vars = {
+                "ident": res["repository"]["nameWithOwner"],
+                "gql": chunk,
+            }
+            app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
+
+        query = """
+            FOR c IN commits
+            FILTER c.identifier == @ident
+            UPDATE { _key: c._key, clone: APPEND(@clone , c.clone ) } IN commits
+            """
+        for chunk in self.chunks_reversed(comms[:-10000], 10000):
+            vars = {
+                "ident": res["repository"]["nameWithOwner"],
+                "clone": chunk,
+            }
+            app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
+
+        # commits.save()
     try:
         res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = []
     except TypeError:
