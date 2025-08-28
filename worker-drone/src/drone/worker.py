@@ -395,8 +395,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             "ident": res["repository"]["nameWithOwner"],
         }
         qres = app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
-        res["contributors"] = {"users": qres}
-
+        res["contributors"] = {"users": list(qres)}
         # if commits:
         #     res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = (
         #         res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
