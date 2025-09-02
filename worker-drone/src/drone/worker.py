@@ -5,17 +5,19 @@ import os
 import re
 import time
 
+import gql.transport.exceptions  # type: ignore[import]
 import pyArango
+import requests
+import urllib3
 from celery import Celery, Task
 from crossd_metrics.constants import readmes
 from crossd_metrics.metrics import get_metrics
 from crossd_metrics.MultiUser import MultiUser
 from crossd_metrics.Repository import Repository
-from crossd_metrics.utils import get_readme_index, merge_dicts, get_past
+from crossd_metrics.utils import get_past, get_readme_index, merge_dicts
 from dateutil.relativedelta import relativedelta
-from rich.console import Console
 from pyArango.theExceptions import DocumentNotFoundError
-import gql.transport.exceptions  # type: ignore[import]
+from rich.console import Console
 
 # for logging
 
@@ -189,42 +191,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             commits_since_clone = datetime.datetime.fromisoformat(
                 qres[0]["clone"]
             ) + datetime.timedelta(seconds=1)
-    # try:
-    #     # commits = self.commits.fetchDocument(f"{owner}/{name}", rawResults=True)
-    #     commit_query = self.commits.fetchFirstExample(
-    #         {"identifier": res["repository"]["nameWithOwner"]}, rawResults=False
-    #     )
-    #     # print(commits)
-    # except DocumentNotFoundError:
-    #     pass
 
-    # if commit_query:
-    #     commits = commit_query[0]
-    #     try:
-    #         # commits_since = commits["gql"]["repository"]["defaultBranchRef"]["last_commit"][
-    #         #     "history"
-    #         # ]["edges"][0]["node"]["committedDate"]
-    #         commits_since = commits["gql"][0]["node"]["committedDate"]
-    #         commits_since = (
-    #             (datetime.datetime.fromisoformat(commits_since) + datetime.timedelta(seconds=1))
-    #             # .replace(hour=0, minute=0, second=0, microsecond=0)
-    #             .isoformat()
-    #         )
-    #     except (KeyError, IndexError):
-    #         pass
-
-    #     try:
-    #         commits_since_clone = datetime.datetime.fromisoformat(
-    #             commits["clone"][0]["committed_iso"]
-    #         ) + datetime.timedelta(
-    #             seconds=1
-    #         )  # .replace(hour=0, minute=0, second=0, microsecond=0)
-
-    #     except (KeyError, IndexError):
-    #         pass
-
-    # print("commits_since_clone")
-    # print(commits_since_clone)
     repo = Repository(owner, name)
     count_res = (
         repo.ask_repo_empty()
@@ -254,80 +221,107 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
 
     print(count)
     repo = Repository(owner=owner, name=name)
-
-    repo.ask_identifiers()
     # c_available = repo.contributors_available()
     c_available = False
+    res = None
 
-    if c_available:
-        repo.clone_opts = clone_opts
-        # github contributors rest api seems to be unreliable
-        # e.g. Ebazhanov/linkedin-skill-assessments-quizzes
-        # website shows 1606 contributors
-        # rest api call results in 459 contributors
-        repo.ask_contributors()
-        repo.ask_commits_clone()  # defaults to last 12 month
+    def ask_stuff():
+        repo.ask_identifiers()
+
+        if c_available:
+            repo.clone_opts = clone_opts
+            # github contributors rest api seems to be unreliable
+            # e.g. Ebazhanov/linkedin-skill-assessments-quizzes
+            # website shows 1606 contributors
+            # rest api call results in 459 contributors
+            repo.ask_contributors()
+            repo.ask_commits_clone()  # defaults to last 12 month
+        else:
+            repo.clone_opts = clone_opts
+            console.log("get commits")
+            repo.ask_commits(details=False, diff=False, since=commits_since)
+            # if count > 0:
+            print(
+                commits_since_clone
+                or get_past(
+                    relativedelta(months=12)
+                )  # .replace(hour=0, minute=0, second=0, microsecond=0)
+            )
+            repo.ask_commits_clone(
+                since=commits_since_clone
+                or get_past(
+                    relativedelta(months=12)
+                )  # .replace(hour=0, minute=0, second=0, microsecond=0)
+            )
+        (
+            repo.ask_dependencies_sbom()
+            # .ask_dependencies_crawl()
+            # .ask_dependencies()
+            .ask_repo_empty()
+            .ask_funding_links()
+            .ask_security_policy()
+            .ask_contributing()
+            .ask_feature_requests()
+            .ask_closed_feature_requests()
+            .ask_dependents()
+            .ask_pull_requests()
+            .ask_readme()
+            .ask_workflows()
+            .ask_identifiers()
+            .ask_description()
+            .ask_license()
+            .ask_dates()
+            .ask_subscribers()
+            .ask_community_profile()
+            # .ask_contributors()
+            .ask_releases()
+            # .ask_releases_crawl()
+            .ask_security_advisories()
+            .ask_issues()
+            .ask_forks()
+            # .ask_workflow_runs()
+            # .ask_dependabot_alerts()
+            # .ask_commits_clone()
+            # .ask_commits()
+            # .ask_commit_files()
+            # .ask_commit_details()
+            .ask_branches()
+            .ask_homepage_url()
+            .ask_pull_request_templates()
+            .ask_issue_templates()
+            .ask_code_of_conduct()
+            .ask_contributing_guidelines()
+            .ask_issue_template_folder()
+        )
+
+    for page_size in (100, 70, 50, 30):
+        console.log(f"using page size {page_size}")
+        repo = Repository(owner=owner, name=name, page_size=page_size)
+        ask_stuff()
+        try:
+            # retrieve github data
+            res = repo.execute(rate_limit=True, verbose=True)
+            break
+        except requests.exceptions.RetryError as re:
+            if re.args and isinstance(re.args[0], urllib3.exceptions.MaxRetryError):
+                if re.args[0].reason and isinstance(
+                    re.args[0].reason, urllib3.exceptions.ResponseError
+                ):
+                    if re.args[0].reason.args and any(
+                        (x in re.args[0].reason.args[0] for x in ("502", "504"))
+                    ):
+                        console.log("page size too large, queries timed out")
+                        continue
+                        # repo = Repository(
+                        #     owner=owner, name=name, page_size=page_size
+                        # )  # , clone_opts=clone_opts)
+                        # ask_stuff()
+                        # res = repo.execute(rate_limit=True, verbose=True)
+            raise re
     else:
-        repo.clone_opts = clone_opts
-        console.log("get commits")
-        repo.ask_commits(details=False, diff=False, since=commits_since)
-        # if count > 0:
-        print(
-            commits_since_clone
-            or get_past(
-                relativedelta(months=12)
-            )  # .replace(hour=0, minute=0, second=0, microsecond=0)
-        )
-        repo.ask_commits_clone(
-            since=commits_since_clone
-            or get_past(
-                relativedelta(months=12)
-            )  # .replace(hour=0, minute=0, second=0, microsecond=0)
-        )
-    (
-        repo.ask_dependencies_sbom()
-        # .ask_dependencies_crawl()
-        # .ask_dependencies()
-        .ask_repo_empty()
-        .ask_funding_links()
-        .ask_security_policy()
-        .ask_contributing()
-        .ask_feature_requests()
-        .ask_closed_feature_requests()
-        .ask_dependents()
-        .ask_pull_requests()
-        .ask_readme()
-        .ask_workflows()
-        .ask_identifiers()
-        .ask_description()
-        .ask_license()
-        .ask_dates()
-        .ask_subscribers()
-        .ask_community_profile()
-        # .ask_contributors()
-        .ask_releases()
-        # .ask_releases_crawl()
-        .ask_security_advisories()
-        .ask_issues()
-        .ask_forks()
-        # .ask_workflow_runs()
-        # .ask_dependabot_alerts()
-        # .ask_commits_clone()
-        # .ask_commits()
-        # .ask_commit_files()
-        # .ask_commit_details()
-        .ask_branches()
-        .ask_homepage_url()
-        .ask_pull_request_templates()
-        .ask_issue_templates()
-        .ask_code_of_conduct()
-        .ask_contributing_guidelines()
-        .ask_issue_template_folder()
-    )
-
-    # retrieve github data
-    res = repo.execute(rate_limit=True, verbose=True)
-
+        console.log("attempts with reduced page sizes failed")
+        console.log("aborting")
+        raise RuntimeError("Github is taking too long to answer graphql queries")
     # handle repos without any commits
     try:
         res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
