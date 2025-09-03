@@ -2,7 +2,7 @@ FROM python:3.13-alpine as build
 
 WORKDIR /home/collector-drone
 # RUN wget https://github.com/FH-CrOSSD/metrics/archive/refs/heads/main.zip -O - | unzip -
-ARG VERSION=2.4.0
+ARG VERSION=2.4.1
 RUN wget https://github.com/FH-CrOSSD/metrics/archive/refs/tags/v${VERSION}.zip -O - \
     | unzip - && mv metrics-${VERSION} metrics
 # install PDM

@@ -519,6 +519,7 @@ def do_metrics(self, retval: str):
     try:
         res["commits"] = qres[0]
     except IndexError:
+        console.log("no commits found")
         pass
     # try:
     #     # commits = self.commits.fetchDocument(res["repository"]["nameWithOwner"], rawResults=True)
