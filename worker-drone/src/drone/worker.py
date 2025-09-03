@@ -431,7 +431,14 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             try:
                 gql_users = MultiUser(login=users).ask_organizations().execute(rate_limit=True)
             except gql.transport.exceptions.TransportQueryError as tqe:
-                gql_users = {key: value for key, value in tqe.data.items() if value is not None}
+                if tqe.errors and tqe.errors[0]["type"] == "RESOURCE_LIMITS_EXCEEDED":
+                    console.log("RESOURCE_LIMITS_EXCEEDED - trying with smaller group size")
+                    gql_users = merge_dicts(
+                        MultiUser(login=users[:100]).ask_organizations().execute(rate_limit=True),
+                        MultiUser(login=users[100:]).ask_organizations().execute(rate_limit=True),
+                    )
+                else:
+                    gql_users = {key: value for key, value in tqe.data.items() if value is not None}
             tmp = merge_dicts(tmp, gql_users)
             users = []
     else:
