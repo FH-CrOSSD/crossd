@@ -507,18 +507,31 @@ def do_metrics(self, retval: str):
     # this doc is mandatory
     res = app.backend.db["repositories"].fetchDocument(retval["repository_key"], rawResults=True)
     # commits are not mandatory (to be stored separatedly)
+    query = """
+        FOR c IN commits
+        FILTER c.identifier == @ident
+        RETURN c.clone
+        """
+    vars = {
+        "ident": res["repository"]["nameWithOwner"],
+    }
+    qres = app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
     try:
-        # commits = self.commits.fetchDocument(res["repository"]["nameWithOwner"], rawResults=True)
-        commits = self.commits.fetchFirstExample(
-            {"identifier": res["repository"]["nameWithOwner"]}, rawResults=True
-        )
-        if len(commits) > 0:
-            res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = commits[0][
-                "gql"
-            ]
-            res["commits"] = commits[0]["clone"]
-    except DocumentNotFoundError:
+        res["commits"] = qres[0]
+    except IndexError:
         pass
+    # try:
+    #     # commits = self.commits.fetchDocument(res["repository"]["nameWithOwner"], rawResults=True)
+    #     commits = self.commits.fetchFirstExample(
+    #         {"identifier": res["repository"]["nameWithOwner"]}, rawResults=True
+    #     )
+    #     if len(commits) > 0:
+    #         res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"] = commits[0][
+    #             "gql"
+    #         ]
+    #         res["commits"] = commits[0]["clone"]
+    # except DocumentNotFoundError:
+    #     pass
 
     # console.print(len(res["commits"]))
     # console.print(len(res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]))
