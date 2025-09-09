@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Card, Heading, Hr, P } from 'flowbite-svelte';
+	import { A, Card, Heading, Hr, P } from 'flowbite-svelte';
 	import {
 		Table,
 		TableBody,
@@ -25,21 +25,29 @@
 	// 	{ id: 4, maker: 'Saab', type: 'IJK', make: 2020 }
 	// ];
 	//   let filteredItems = $derived.by(() => items.filter((item) => !searchTerm || item.maker.toLowerCase().includes(searchTerm.toLowerCase())));
-	$: filteredItems = data.group["projects"].filter(
+	$: filteredItems = data.group['projects'].filter(
 		(item) => !searchTerm || item.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 </script>
 
 {console.log(data)}
 
-<TableSearch placeholder="Search by name" hoverable bind:inputValue={searchTerm} divClass="w-1/3 ml-auto relative" tableClass="">
+<TableSearch
+	placeholder="Search by name"
+	hoverable
+	bind:inputValue={searchTerm}
+	divClass="w-1/3 ml-auto relative"
+	tableClass=""
+>
 	<TableHead>
 		<TableHeadCell>Repository</TableHeadCell>
 	</TableHead>
-	<TableBody>
+	<TableBody class="w-full">
 		{#each filteredItems as item}
 			<TableBodyRow>
-				<TableBodyCell>{item}</TableBodyCell>
+				<A class="w-full" href="/project/{encodeURIComponent(item)}">
+					<TableBodyCell>{item}</TableBodyCell>
+				</A>
 			</TableBodyRow>
 		{/each}
 	</TableBody>
