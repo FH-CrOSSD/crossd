@@ -414,40 +414,80 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
 
     # res = Repository(owner, name).ask_all().execute()
 
-    users = []
+    # users = []
     tmp = {}
 
     # ~ 400 users failed quite often
     # therefore split to requests of 200 users
-
+    groups = [[]]
+    index = 0
     for user in res["contributors"]["users"]:
         # if "[bot]" not in user["login"]:
         if all(x not in user["login"] for x in ("[bot]",)) and all(
             x != user["login"] for x in ("Copilot",)
         ):
-            users.append(user["login"])
-        if len(users) % 200 == 0:
-            gql_users = {}
-            try:
-                gql_users = MultiUser(login=users).ask_organizations().execute(rate_limit=True)
-            except gql.transport.exceptions.TransportQueryError as tqe:
-                if tqe.errors and tqe.errors[0]["type"] == "RESOURCE_LIMITS_EXCEEDED":
-                    console.log("RESOURCE_LIMITS_EXCEEDED - trying with smaller group size")
-                    gql_users = merge_dicts(
-                        MultiUser(login=users[:100]).ask_organizations().execute(rate_limit=True),
-                        MultiUser(login=users[100:]).ask_organizations().execute(rate_limit=True),
-                    )
-                else:
-                    gql_users = {key: value for key, value in tqe.data.items() if value is not None}
-            tmp = merge_dicts(tmp, gql_users)
-            users = []
-    else:
-        # tmp = merge_dicts(tmp, MultiUser(login=users).ask_organizations().execute(rate_limit=True))
+            # users.append(user["login"])
+            if len(groups[index]) >= 200:
+                index += 1
+                groups.append([])
+            groups[index].append(user)
+
+    index = 0
+    while index < len(groups):
         try:
-            gql_users = MultiUser(login=users).ask_organizations().execute(rate_limit=True)
+            gql_users = MultiUser(login=groups[index]).ask_organizations().execute(rate_limit=True)
+            index += 1
+            tmp = merge_dicts(tmp, gql_users)
         except gql.transport.exceptions.TransportQueryError as tqe:
-            gql_users = {key: value for key, value in tqe.data.items() if value is not None}
-        tmp = merge_dicts(tmp, gql_users)
+            if (
+                tqe.errors
+                and tqe.errors[0]["type"] == "NOT_FOUND"
+                and (
+                    match := re.match(
+                        r"Could not resolve to a User with the login of '(.+)'.",
+                        tqe.errors[0]["message"],
+                    )
+                )
+            ):
+                user = match.groups()[0]
+                groups[index].remove(user)
+                console.log(f"Github GQL could not find user {user} - removed")
+            elif tqe.errors and tqe.errors[0]["type"] == "RESOURCE_LIMITS_EXCEEDED":
+                console.log("RESOURCE_LIMITS_EXCEEDED - trying with smaller group size")
+                orig = groups[index]
+                groups[index] = orig[0 : len(orig) // 2]
+                groups.insert(index + 1, orig[len(orig) // 2 : len(orig)])
+            else:
+                raise tqe
+
+    # for user in res["contributors"]["users"]:
+    #     # if "[bot]" not in user["login"]:
+    #     if all(x not in user["login"] for x in ("[bot]",)) and all(
+    #         x != user["login"] for x in ("Copilot",)
+    #     ):
+    #         users.append(user["login"])
+    #     if len(users) % 200 == 0:
+    #         gql_users = {}
+    #         try:
+    #             gql_users = MultiUser(login=users).ask_organizations().execute(rate_limit=True)
+    #         except gql.transport.exceptions.TransportQueryError as tqe:
+    #             if tqe.errors and tqe.errors[0]["type"] == "RESOURCE_LIMITS_EXCEEDED":
+    #                 console.log("RESOURCE_LIMITS_EXCEEDED - trying with smaller group size")
+    #                 gql_users = merge_dicts(
+    #                     MultiUser(login=users[:100]).ask_organizations().execute(rate_limit=True),
+    #                     MultiUser(login=users[100:]).ask_organizations().execute(rate_limit=True),
+    #                 )
+    #             else:
+    #                 gql_users = {key: value for key, value in tqe.data.items() if value is not None}
+    #         tmp = merge_dicts(tmp, gql_users)
+    #         users = []
+    # else:
+    #     # tmp = merge_dicts(tmp, MultiUser(login=users).ask_organizations().execute(rate_limit=True))
+    #     try:
+    #         gql_users = MultiUser(login=users).ask_organizations().execute(rate_limit=True)
+    #     except gql.transport.exceptions.TransportQueryError as tqe:
+    #         gql_users = {key: value for key, value in tqe.data.items() if value is not None}
+    #     tmp = merge_dicts(tmp, gql_users)
 
     # console.log(res)
     res["organizations"] = tmp
