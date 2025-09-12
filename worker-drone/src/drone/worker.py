@@ -430,7 +430,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             if len(groups[index]) >= 200:
                 index += 1
                 groups.append([])
-            groups[index].append(user)
+            groups[index].append(user["login"])
 
     index = 0
     while index < len(groups):
