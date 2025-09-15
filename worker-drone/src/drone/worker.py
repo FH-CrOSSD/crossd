@@ -302,13 +302,13 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             # retrieve github data
             res = repo.execute(rate_limit=True, verbose=True)
             break
-        except requests.exceptions.RetryError as re:
-            if re.args and isinstance(re.args[0], urllib3.exceptions.MaxRetryError):
-                if re.args[0].reason and isinstance(
-                    re.args[0].reason, urllib3.exceptions.ResponseError
+        except requests.exceptions.RetryError as rre:
+            if rre.args and isinstance(rre.args[0], urllib3.exceptions.MaxRetryError):
+                if rre.args[0].reason and isinstance(
+                    rre.args[0].reason, urllib3.exceptions.ResponseError
                 ):
-                    if re.args[0].reason.args and any(
-                        (x in re.args[0].reason.args[0] for x in ("502", "504"))
+                    if rre.args[0].reason.args and any(
+                        (x in rre.args[0].reason.args[0] for x in ("502", "504"))
                     ):
                         console.log("page size too large, queries timed out")
                         continue
@@ -317,7 +317,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
                         # )  # , clone_opts=clone_opts)
                         # ask_stuff()
                         # res = repo.execute(rate_limit=True, verbose=True)
-            raise re
+            raise rre
     else:
         console.log("attempts with reduced page sizes failed")
         console.log("aborting")
