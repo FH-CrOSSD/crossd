@@ -12,7 +12,7 @@
 </script>
 
 <div class="flex flex-wrap gap-10">
-	<Card class="p-5 h-fit w-fit">
+	<Card class="p-5 w-96">
 		<Heading tag="h4" class="mb-5">Stats</Heading>
 		<div class="grid gap-y-4 gap-x-12 max-w-xl grid-cols-[max-content_max-content]">
 			<P class="max-w-60">Repository count:</P>

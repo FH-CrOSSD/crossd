@@ -1,5 +1,17 @@
 <script lang="ts">
-	import { A, Badge, Card, CardPlaceholder, Heading, Hr, P, Skeleton } from 'flowbite-svelte';
+	import { chartOptions } from '$lib/chartOptions';
+	import { Chart } from '@flowbite-svelte-plugins/chart';
+	import {
+		A,
+		Badge,
+		Card,
+		CardPlaceholder,
+		Heading,
+		Hr,
+		P,
+		Skeleton,
+		WidgetPlaceholder
+	} from 'flowbite-svelte';
 	import {
 		Table,
 		TableBody,
@@ -21,19 +33,84 @@
 	import type { PageProps } from './$types';
 	import LoadingStatistics from './LoadingStatistics.svelte';
 	import Statistics from './Statistics.svelte';
+	import { page } from '$app/state';
+	import { Listgroup } from 'flowbite-svelte';
+	let buttonsTemplate = [
+		{ name: 'Elephant factor', data: 'elephant_factor' },
+		{ name: 'Maturity level', data: 'maturity_level' },
+		{ name: 'Criticality score', data: 'criticality_score' },
+		{ name: 'Support rate', data: 'support_rate' },
+		{ name: 'Github community health percentage', data: 'github_community_health_percentage' }
+	];
+	let currentButton = $state('Elephant factor');
+	let buttons = $derived.by(() => {
+		console.log(currentButton);
+		let c = [];
+		for (const elem of buttonsTemplate) {
+			console.log(elem);
+			let tmp = { ...elem };
+			if (tmp.name == currentButton) {
+				tmp.current = true;
+			} else {
+				tmp.current = false;
+			}
+			c.push(tmp);
+		}
+		return c;
+	});
 
 	let { data }: PageProps = $props();
 	let test = $state();
 	data.group.then((val) => (test = val));
 
+	let chart = $state();
+	data.chart.then((val) => (chart = val));
 	let searchTerm = $state('');
 	let filteredItems = $derived.by(() => {
 		return test?.projects?.filter(
 			(item) => !searchTerm || item.toLowerCase().includes(searchTerm.toLowerCase())
 		);
 	});
-	let activeClass="inline-block text-sm font-medium text-center disabled:cursor-not-allowed active p-4 text-primary-600 bg-gray-100 rounded-t-lg dark:bg-gray-900 dark:text-primary-500";
+	let activeTab = $state('avg');
+	let activeClass =
+		'inline-block text-sm font-medium text-center disabled:cursor-not-allowed active p-4 text-primary-600 bg-gray-100 rounded-t-lg dark:bg-gray-900 dark:text-primary-500';
+	chartOptions.chart.type = 'bar';
+	chartOptions.yaxis['labels'] = { minWidth: 35 };
+	let chartOpts = $derived.by(() => {
+		if (chart) {
+			console.log('doStuff');
+			let opts = { ...chartOptions };
+			let x: [] = [];
+			let y: [] = [];
+			for (const elem of chart) {
+				x.push(elem[activeTab]);
+				y.push(elem['month']);
+			}
 
+			opts.series[0].data = x;
+			opts.xaxis.categories = y;
+			console.log(opts);
+			return opts;
+		}
+	});
+	async function chartClick(e) {
+		currentButton = e?.detail['name'];
+		const res = await fetch(page.url + '/chart', {
+			method: 'POST',
+			body: JSON.stringify({
+				name: decodeURIComponent(page.params.slug),
+				parameter: e?.detail['data']
+			}),
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		const jres = await res.json();
+		console.log(jres);
+		chart = jres;
+		console.log(chart);
+	}
+	// let chartelem=new Chart(chartOpts);
 	// $: filteredItems = data.group.projects?.filter(
 	// 	(item) => !searchTerm || item.toLowerCase().includes(searchTerm.toLowerCase())
 	// );
@@ -49,74 +126,161 @@
 		{:then group}
 			<!-- <Statistics name={data.name} count={test?.projects?.length} elephant_factor={group.data.elephant_factor} maturity_level={group.data.maturity_level}/> -->
 			<Tabs style="underline" class="w-full" contentClass="bg-white dark:bg-gray-800">
-				<TabItem open title="Avg" {activeClass}>
-					<Statistics
-						{...{
-							name: data.name,
-							count: test?.projects?.length,
-							elephant_factor: group.data.avg.elephant_factor,
-							maturity_level: group.data.avg.maturity_level,
-							criticality_score: group.data.avg.criticality_score,
-							support_rate: group.data.avg.support_rate,
-							github_community_health_percentage: group.data.avg.github_community_health_percentage
-						}}
-					/>
+				<TabItem
+					open
+					title="Avg"
+					{activeClass}
+					onclick={() => {
+						activeTab = 'avg';
+					}}
+				>
+					<div class="flex gap-10">
+						<Statistics
+							{...{
+								name: data.name,
+								count: test?.projects?.length,
+								elephant_factor: group.data.avg.elephant_factor,
+								maturity_level: group.data.avg.maturity_level,
+								criticality_score: group.data.avg.criticality_score,
+								support_rate: group.data.avg.support_rate,
+								github_community_health_percentage:
+									group.data.avg.github_community_health_percentage
+							}}
+						/>
+						{#await data.chart}
+							<WidgetPlaceholder />
+						{:then dchart}
+							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
+								<Chart bind:options={chartOpts} class="w-fill min-w-96" />
+								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
+							</div>
+						{/await}
+					</div>
 				</TabItem>
-				<TabItem title="Min" {activeClass}>
-					<Statistics
-						{...{
-							name: data.name,
-							count: test?.projects?.length,
-							elephant_factor: group.data.min.elephant_factor,
-							maturity_level: group.data.min.maturity_level,
-							criticality_score: group.data.min.criticality_score,
-							support_rate: group.data.min.support_rate,
-							github_community_health_percentage: group.data.min.github_community_health_percentage
-						}}
-					/>
+				<TabItem
+					title="Min"
+					{activeClass}
+					onclick={() => {
+						activeTab = 'min';
+					}}
+				>
+					<div class="flex gap-10">
+						<Statistics
+							{...{
+								name: data.name,
+								count: test?.projects?.length,
+								elephant_factor: group.data.min.elephant_factor,
+								maturity_level: group.data.min.maturity_level,
+								criticality_score: group.data.min.criticality_score,
+								support_rate: group.data.min.support_rate,
+								github_community_health_percentage:
+									group.data.min.github_community_health_percentage
+							}}
+						/>
+						{#await data.chart}
+							<WidgetPlaceholder />
+						{:then dchart}
+							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
+								<Chart options={chartOpts} class="w-fill min-w-96" />
+								<Listgroup active items={buttons} class="w-50" onclick={chartClick}></Listgroup>
+							</div>
+						{/await}
+					</div>
 				</TabItem>
-				<TabItem title="Max" {activeClass}>
-					<Statistics
-						{...{
-							name: data.name,
-							count: test?.projects?.length,
-							elephant_factor: group.data.max.elephant_factor,
-							maturity_level: group.data.max.maturity_level,
-							criticality_score: group.data.max.criticality_score,
-							support_rate: group.data.max.support_rate,
-							github_community_health_percentage: group.data.max.github_community_health_percentage
-						}}
-					/>
+				<TabItem
+					title="Max"
+					{activeClass}
+					onclick={() => {
+						activeTab = 'max';
+					}}
+				>
+					<div class="flex gap-10">
+						<Statistics
+							{...{
+								name: data.name,
+								count: test?.projects?.length,
+								elephant_factor: group.data.max.elephant_factor,
+								maturity_level: group.data.max.maturity_level,
+								criticality_score: group.data.max.criticality_score,
+								support_rate: group.data.max.support_rate,
+								github_community_health_percentage:
+									group.data.max.github_community_health_percentage
+							}}
+						/>
+						{#await data.chart}
+							<WidgetPlaceholder />
+						{:then dchart}
+							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
+								<Chart options={chartOpts} class="w-fill min-w-96" />
+								<Listgroup active items={buttons} class="w-50" onclick={chartClick}></Listgroup>
+							</div>
+						{/await}
+					</div>
 				</TabItem>
-				<TabItem title="Agg" {activeClass}>
-					<Statistics
-						{...{
-							name: data.name,
-							count: test?.projects?.length,
-							elephant_factor: group.data.sum.elephant_factor,
-							maturity_level: group.data.sum.maturity_level,
-							criticality_score: group.data.sum.criticality_score,
-							support_rate: group.data.sum.support_rate,
-							github_community_health_percentage: group.data.sum.github_community_health_percentage
-						}}
-					/>
+				<TabItem
+					title="Agg"
+					{activeClass}
+					onclick={() => {
+						activeTab = 'agg';
+					}}
+				>
+					<div class="flex gap-10">
+						<Statistics
+							{...{
+								name: data.name,
+								count: test?.projects?.length,
+								elephant_factor: group.data.sum.elephant_factor,
+								maturity_level: group.data.sum.maturity_level,
+								criticality_score: group.data.sum.criticality_score,
+								support_rate: group.data.sum.support_rate,
+								github_community_health_percentage:
+									group.data.sum.github_community_health_percentage
+							}}
+						/>{#await data.chart}
+							<WidgetPlaceholder />
+						{:then dchart}
+							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
+								<Chart options={chartOpts} class="w-fill min-w-96" />
+								<Listgroup active items={buttons} class="w-50" onclick={chartClick}></Listgroup>
+							</div>
+						{/await}
+					</div>
 				</TabItem>
-				<TabItem title="Stddev" {activeClass}>
-					<Statistics
-						{...{
-							name: data.name,
-							count: test?.projects?.length,
-							elephant_factor: group.data.stddev.elephant_factor,
-							maturity_level: group.data.stddev.maturity_level,
-							criticality_score: group.data.stddev.criticality_score,
-							support_rate: group.data.stddev.support_rate,
-							github_community_health_percentage: group.data.stddev.github_community_health_percentage
-						}}
-					/>
+
+				<TabItem
+					title="Stddev"
+					{activeClass}
+					onclick={() => {
+						activeTab = 'stddev';
+					}}
+				>
+					<div class="flex gap-10">
+						<Statistics
+							{...{
+								name: data.name,
+								count: test?.projects?.length,
+								elephant_factor: group.data.stddev.elephant_factor,
+								maturity_level: group.data.stddev.maturity_level,
+								criticality_score: group.data.stddev.criticality_score,
+								support_rate: group.data.stddev.support_rate,
+								github_community_health_percentage:
+									group.data.stddev.github_community_health_percentage
+							}}
+						/>
+						{#await data.chart}
+							<WidgetPlaceholder />
+						{:then dchart}
+							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
+								<Chart options={chartOpts} class="w-fill min-w-96" />
+								<Listgroup active items={buttons} class="w-50" onclick={chartClick}></Listgroup>
+							</div>
+						{/await}
+					</div>
 				</TabItem>
 			</Tabs>
 		{/await}
 	</div>
+
 	<!-- <div>
 		<Heading tag="h1" class="mb-4"
 			>Group <span class="bg-gray-200 dark:bg-gray-600 px-1 rounded-md">{data.name}</span></Heading

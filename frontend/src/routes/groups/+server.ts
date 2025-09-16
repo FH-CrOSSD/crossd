@@ -18,32 +18,7 @@ const projectsColl = db.collection("projects");
  * @throws HTTPError
  */
 export async function POST({ request }) {
-    // let resp;
-
-    // try {
-    //     resp = await request.json();
-    // } catch (err: any) {
-    //     console.log(err);
-    //     if (err instanceof SyntaxError) {
-    //         error(400, { message: "Body could not be parsed as json" });
-    //     }
-    // }
-    // const { term, timestamp } = resp;
-
-    // if (!term || !term.match(repoRegex)) {
-    //     error(422, { message: "Body needs to contain term of alphanumeric characters and -_./" });
-    // }
-
-    // if (!timestamp || !Number.isFinite(timestamp)) {
-    //     error(422, { message: "Body needs to contain timestamp with numerical value" });
-    // }
-
     try {
-        /**
-         * 1. Get scans for the project
-         * 2. Get the scan with the requested timestamp
-         * 3. Get the metric and bak metrics for this snapshot
-         */
         const res = await db.query(aql`
         FOR group IN ${groupsColl}
         FOR tag IN group.tags
