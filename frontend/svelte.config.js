@@ -22,6 +22,12 @@ const config = {
 				'script-src': ['self']
 			},
 		},
+	},
+	compilerOptions: {
+		customElement: true,
+		compatibility: {
+			componentApi: 4
+		}
 	}
 };
 

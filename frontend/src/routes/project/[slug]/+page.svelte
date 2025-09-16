@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { chartOptions } from '$lib/chartOptions';
 	import { processMD, toFixed2 } from '$lib/util';
-	import { Chart, CloseButton, Drawer, Heading, Hr, Modal, P, Select } from 'flowbite-svelte';
+	import { CloseButton, Drawer, Drawerhead, Heading, Hr, Modal, P, Select } from 'flowbite-svelte';
+	import { Chart } from '@flowbite-svelte-plugins/chart';
 	import { onDestroy } from 'svelte';
 	import { sineIn } from 'svelte/easing';
 	import CommunityHealthCard from './CommunityHealthCard.svelte';
@@ -14,6 +15,7 @@
 	import PullRequestCard from './PullRequestCard.svelte';
 	import { clickedSelector, overlayStore } from './Row.svelte';
 	import SecurityAdvisoriesCard from './SecurityAdvisoriesCard.svelte';
+	import { draw } from 'svelte/transition';
 
 	/** @type {import('./$types').PageData */
 	export let data: {
@@ -27,15 +29,18 @@
 	let snapshots: Array<{ value: number; name: string }>;
 	let selected: string;
 	let overlayID: string;
-	let showChart: Boolean = false;
-	let showDefinition: Boolean = false;
+	let showChart: boolean = false;
+	let showDefinition: boolean = false;
 	let overlayMD: string;
 	let scrollFinished = false;
-	let drawerHidden = true;
+	let drawerHidden = false;
 
 	// hide drawer if there is no definition to show or if the chart should not be shown
 	$: {
-		drawerHidden = showDefinition === true ? !showChart : true;
+		drawerHidden = showDefinition === true ? showChart : false;
+		// drawerHidden;
+		// console.log(showDefinition);
+		// console.log(drawerHidden);
 	}
 	// transition for the drawer (sidebar)
 	const transitionParamsRight = {
@@ -74,7 +79,7 @@
 				data.md['metrics'][md + '.md']['text'] + '\n\n' + data.md['footnotes']['text']
 			)
 		).toString();
-		drawerHidden = false;
+		drawerHidden = true;
 	}
 
 	function prepareChart(id: string) {
@@ -203,31 +208,38 @@
 <!-- modal for displaying the charts -->
 <Modal
 	title={chartOptions.series[0].name}
-	bind:open={showChart}
+	bind:open={drawerHidden}
 	size="lg"
 	autoclose
 	outsideclose={true}
+	classes={{ header: !showChart?'hidden':'', body: !showChart?'p-0 md:p-0 border-0':'' }}
 >
-	<div class="chart-container">
+	<div class="chart-container {!showChart?'hidden':''}">
 		<Chart options={chartOptions} size="lg" />
 	</div>
+
+	<Drawer
+	placement="right"
+	transitionParams={transitionParamsRight}
+	bind:open={drawerHidden}
+	outsideclose={showChart ? true : false}
+	id="sidebar6"
+	modal={false}
+	dismissable={false}
+	class="{!showChart ? 'backdrop:bg-black/50' :''} fixed top-0 left-0 !z-50 h-auto p-0"
+>
+
+	<div class="flex items-center border-b-1 border-gray-300 dark:border-gray-700 py-2" use:onShown>
+		<CloseButton onclick={() => (showChart = false)} class="mr-auto " />
+	</div>
+	<div class="overflow-auto w-full h-full p-2">
+	{@html overlayMD}
+	</div>
+</Drawer>
 </Modal>
 
 <!-- a sidebar for showing the metric documentation -->
-<Drawer
-	placement="right"
-	transitionType="fly"
-	transitionParams={transitionParamsRight}
-	bind:hidden={drawerHidden}
-	backdrop={!showChart ? true : false}
-	activateClickOutside={!showChart ? true : false}
-	id="sidebar6"
->
-	<div class="flex items-center" use:onShown>
-		<CloseButton on:click={() => (drawerHidden = true)} class="mb-4 dark:text-white" />
-	</div>
-	{@html overlayMD}
-</Drawer>
+<!-- backdrop={!showChart ? true : false} -->
 
 <style>
 	:global(.apexcharts-svg) {
