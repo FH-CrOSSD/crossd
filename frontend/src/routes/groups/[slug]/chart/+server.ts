@@ -53,6 +53,7 @@ export async function POST({ request }) {
                     FOR m IN metrics
                     FILTER m.scan_id IN scanIds
                     LET ts = m.timestamp*1000
+                    FILTER m.${parameter}
                     COLLECT month = DATE_MONTH(ts)<10 ? CONCAT_SEPARATOR("/", DATE_YEAR(ts), CONCAT(0, DATE_MONTH(ts))) : CONCAT_SEPARATOR("/", DATE_YEAR(ts), DATE_MONTH(ts))
                     AGGREGATE avg_ = AVG(m.${parameter}), min_ = MIN(m.${parameter}), max_ = MAX(m.${parameter}), agg_ = SUM(m.${parameter}), stddev_ = STDDEV(m.${parameter})
                     RETURN {"month": month, "avg": ROUND(avg_*100)/100, "min": ROUND(min_*100)/100, "max": ROUND(max_*100)/100, "agg": ROUND(agg_*100)/100, "stddev": ROUND(stddev_*100)/100}

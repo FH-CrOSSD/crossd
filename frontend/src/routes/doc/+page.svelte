@@ -31,7 +31,7 @@
 			<div
 				class="w-1/4 fixed right-0 top-[12.5%] flex justify-end overflow-y-auto h-3/4 md:flex"
 			>
-				<Sidebar {activeUrl} position="static" class="w-full">
+				<Sidebar {activeUrl} position="static" class="w-full scrollbar">
 					<SidebarWrapper>
 						<SidebarGroup>
 							{#each document.getElementsByClassName('metric_heading') as heading}
@@ -44,3 +44,11 @@
 		{/await}
 	</div>
 {/await}
+
+<style>
+	:global(.scrollbar) {
+		overflow: auto;
+		scrollbar-width: thin;
+		scrollbar-color: light-dark(black, white) light-dark(lightslategray, darkslategray);
+	}
+</style>

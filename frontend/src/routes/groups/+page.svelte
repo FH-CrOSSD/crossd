@@ -10,7 +10,7 @@
 
 {console.log(data)}
 
-<div class="flex">
+<div class="flex gap-5">
     {#each data.data as group}
     <Card size="xs" class="h-38 p-2" href="/groups/{group.group.name}">
         <Heading tag="h5" class="">{group.group.name}</Heading>

@@ -55,13 +55,14 @@ export async function POST({ request }) {
             FOR scanid IN scanIds
             FOR m IN metrics
             FILTER m.scan_id==scanid
+            SORT m.identity.name_with_owner
             RETURN DISTINCT m.identity.name_with_owner
         )
         LET data=(
             FOR s IN scanIds
             FOR m IN metrics
             FILTER m.scan_id == s
-            FILTER m.version > "2"
+            // FILTER m.version > "2"
             COLLECT aggregate elephant_avg=AVERAGE(m.elephant_factor), maturity_avg=AVERAGE(m.maturity_level), criticality_avg=AVERAGE(m.criticality_score), 
                 github_score_avg=AVERAGE(m.github_community_health_percentage.custom_health_score), support_avg=AVERAGE(m.support_rate),
                 elephant_min=MIN(m.elephant_factor), maturity_min=MIN(m.maturity_level), criticality_min=MIN(m.criticality_score), 

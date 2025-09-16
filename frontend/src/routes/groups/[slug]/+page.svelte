@@ -182,7 +182,7 @@
 						{:then dchart}
 							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
 								<Chart options={chartOpts} class="w-fill min-w-96" />
-								<Listgroup active items={buttons} class="w-50" onclick={chartClick}></Listgroup>
+								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
 							</div>
 						{/await}
 					</div>
@@ -212,7 +212,7 @@
 						{:then dchart}
 							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
 								<Chart options={chartOpts} class="w-fill min-w-96" />
-								<Listgroup active items={buttons} class="w-50" onclick={chartClick}></Listgroup>
+								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
 							</div>
 						{/await}
 					</div>
@@ -241,7 +241,7 @@
 						{:then dchart}
 							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
 								<Chart options={chartOpts} class="w-fill min-w-96" />
-								<Listgroup active items={buttons} class="w-50" onclick={chartClick}></Listgroup>
+								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
 							</div>
 						{/await}
 					</div>
@@ -272,7 +272,7 @@
 						{:then dchart}
 							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
 								<Chart options={chartOpts} class="w-fill min-w-96" />
-								<Listgroup active items={buttons} class="w-50" onclick={chartClick}></Listgroup>
+								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
 							</div>
 						{/await}
 					</div>
@@ -281,123 +281,15 @@
 		{/await}
 	</div>
 
-	<!-- <div>
-		<Heading tag="h1" class="mb-4"
-			>Group <span class="bg-gray-200 dark:bg-gray-600 px-1 rounded-md">{data.name}</span></Heading
-		>
-		<div class="flex flex-wrap gap-10">
-			<Card class="p-5 h-fit w-fit">
-				<Heading tag="h4" class="mb-5">Stats</Heading>
-				{#await data.group}
-					<Skeleton size="sm" class="my-5"></Skeleton>
-				{:then group}
-					<div class="grid gap-y-4 gap-x-12 max-w-xl grid-cols-[max-content_max-content]">
-						{console.log(group.data)}
-						<P class="max-w-60">Repository count:</P>
-						<P class="max-w-60">{test?.projects?.length}</P>
-						<P class="max-w-60">Elephant factor:</P>
-						<P class="max-w-60">{group.data.elephant_factor}</P>
-						<P class="max-w-60">Maturity level:</P>
-						<P class="max-w-60">{group.data.maturity_level}</P>
-						<P class="max-w-60">Criticality score:</P>
-						<P class="max-w-60">{group.data.criticality_score}</P>
-						<P class="max-w-60">Support rate:</P>
-						<P class="max-w-60">{group.data.support_rate}</P>
-						<P class="max-w-60">Github community health:</P>
-						<P class="max-w-60">{group.data.github_community_health_percentage}</P>
-					</div>
-				{/await}
-			</Card>
-			<Card class="p-5 h-fit w-fit">
-				<Heading tag="h4" class="mb-5">Stats</Heading>
-				{#await data.group}
-					<Skeleton size="sm" class="my-5"></Skeleton>
-				{:then group}
-					<div class="grid gap-y-4 gap-x-12 max-w-xl grid-cols-[max-content_max-content]">
-						{console.log(group.data)}
-						<P class="max-w-60">Elephant factor:</P>
-						<P class="max-w-60">{group.data.elephant_factor}</P>
-						<P class="max-w-60">Maturity level:</P>
-						<P class="max-w-60">{group.data.maturity_level}</P>
-						<P class="max-w-60">Criticality score:</P>
-						<P class="max-w-60">{group.data.criticality_score}</P>
-						<P class="max-w-60">Support rate:</P>
-						<P class="max-w-60">{group.data.support_rate}</P>
-						<P class="max-w-60">Github community health:</P>
-						<P class="max-w-60">{group.data.github_community_health_percentage}</P>
-					</div>
-				{/await}
-			</Card>
-			<Card class="p-5 h-fit w-fit">
-				<Heading tag="h4" class="mb-5">Stats</Heading>
-				{#await data.group}
-					<Skeleton size="sm" class="my-5"></Skeleton>
-				{:then group}
-					<div class="grid gap-y-4 gap-x-12 max-w-xl grid-cols-[max-content_max-content]">
-						{console.log(group.data)}
-						<P class="max-w-60">Elephant factor:</P>
-						<P class="max-w-60">{group.data.elephant_factor}</P>
-						<P class="max-w-60">Maturity level:</P>
-						<P class="max-w-60">{group.data.maturity_level}</P>
-						<P class="max-w-60">Criticality score:</P>
-						<P class="max-w-60">{group.data.criticality_score}</P>
-						<P class="max-w-60">Support rate:</P>
-						<P class="max-w-60">{group.data.support_rate}</P>
-						<P class="max-w-60">Github community health:</P>
-						<P class="max-w-60">{group.data.github_community_health_percentage}</P>
-					</div>
-				{/await}
-			</Card>
-			<Card class="p-5 h-fit w-fit">
-				<Heading tag="h4" class="mb-5">Stats</Heading>
-				{#await data.group}
-					<Skeleton size="sm" class="my-5"></Skeleton>
-				{:then group}
-					<div class="grid gap-y-4 gap-x-12 max-w-xl grid-cols-[max-content_max-content]">
-						{console.log(group.data)}
-						<P class="max-w-60">Elephant factor:</P>
-						<P class="max-w-60">{group.data.elephant_factor}</P>
-						<P class="max-w-60">Maturity level:</P>
-						<P class="max-w-60">{group.data.maturity_level}</P>
-						<P class="max-w-60">Criticality score:</P>
-						<P class="max-w-60">{group.data.criticality_score}</P>
-						<P class="max-w-60">Support rate:</P>
-						<P class="max-w-60">{group.data.support_rate}</P>
-						<P class="max-w-60">Github community health:</P>
-						<P class="max-w-60">{group.data.github_community_health_percentage}</P>
-					</div>
-				{/await}
-			</Card>
-			<Card class="p-5 h-fit w-fit">
-				<Heading tag="h4" class="mb-5">Stats</Heading>
-				{#await data.group}
-					<Skeleton size="sm" class="my-5"></Skeleton>
-				{:then group}
-					<div class="grid gap-y-4 gap-x-12 max-w-xl grid-cols-[max-content_max-content]">
-						{console.log(group.data)}
-						<P class="max-w-60">Elephant factor:</P>
-						<P class="max-w-60">{group.data.elephant_factor}</P>
-						<P class="max-w-60">Maturity level:</P>
-						<P class="max-w-60">{group.data.maturity_level}</P>
-						<P class="max-w-60">Criticality score:</P>
-						<P class="max-w-60">{group.data.criticality_score}</P>
-						<P class="max-w-60">Support rate:</P>
-						<P class="max-w-60">{group.data.support_rate}</P>
-						<P class="max-w-60">Github community health:</P>
-						<P class="max-w-60">{group.data.github_community_health_percentage}</P>
-					</div>
-				{/await}
-			</Card>
-		</div>
-	</div> -->
-	<div class="max-w-1/4 w-1/4 ml-auto">
+	<div class="w-1/3 ml-auto h-[calc(70vh))]">
 		<Heading tag="h4" class="mx-5 mt-5">Group repositories</Heading>
 		<TableSearch
 			placeholder="Search by name"
 			hoverable
 			bind:inputValue={searchTerm}
-			divClass="shadow-none"
+			divClass="shadow-none overflow-y-visible h-full scrollbar"
 			tableClass=""
+			searchClass="pr-2"
 			striped={true}
 		>
 			<!-- <Table shadow={false} border={false}> -->
@@ -427,3 +319,11 @@
 		</TableSearch>
 	</div>
 </div>
+
+<style>
+	:global(.scrollbar) {
+		overflow: auto;
+		scrollbar-width: thin;
+		scrollbar-color: light-dark(black, white) light-dark(lightslategray, darkslategray);
+	}
+</style>

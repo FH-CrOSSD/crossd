@@ -212,30 +212,29 @@
 	size="lg"
 	autoclose
 	outsideclose={true}
-	classes={{ header: !showChart?'hidden':'', body: !showChart?'p-0 md:p-0 border-0':'' }}
+	classes={{ header: !showChart ? 'hidden' : '', body: !showChart ? 'p-0 md:p-0 border-0' : '' }}
 >
-	<div class="chart-container {!showChart?'hidden':''}">
+	<div class="chart-container {!showChart ? 'hidden' : ''}">
 		<Chart options={chartOptions} size="lg" />
 	</div>
 
 	<Drawer
-	placement="right"
-	transitionParams={transitionParamsRight}
-	bind:open={drawerHidden}
-	outsideclose={showChart ? true : false}
-	id="sidebar6"
-	modal={false}
-	dismissable={false}
-	class="{!showChart ? 'backdrop:bg-black/50' :''} fixed top-0 left-0 !z-50 h-auto p-0"
->
-
-	<div class="flex items-center border-b-1 border-gray-300 dark:border-gray-700 py-2" use:onShown>
-		<CloseButton onclick={() => (showChart = false)} class="mr-auto " />
-	</div>
-	<div class="overflow-auto w-full h-full p-2">
-	{@html overlayMD}
-	</div>
-</Drawer>
+		placement="right"
+		transitionParams={transitionParamsRight}
+		bind:open={drawerHidden}
+		outsideclose={showChart ? true : false}
+		id="sidebar6"
+		modal={false}
+		dismissable={false}
+		class="{!showChart ? 'backdrop:bg-black/50' : ''} fixed top-0 left-0 !z-50 h-auto p-0"
+	>
+		<div class="flex items-center border-b-1 border-gray-300 dark:border-gray-700 py-2" use:onShown>
+			<CloseButton onclick={() => (showChart = false)} class="mr-auto " />
+		</div>
+		<div class="overflow-auto w-full h-full p-2 scrollbar">
+			{@html overlayMD}
+		</div>
+	</Drawer>
 </Modal>
 
 <!-- a sidebar for showing the metric documentation -->
@@ -248,5 +247,10 @@
 	.chart-container {
 		padding-left: 5rem;
 		margin-right: 5rem;
+	}
+	:global(.scrollbar) {
+		overflow: auto;
+		scrollbar-width: thin;
+		scrollbar-color: light-dark(black, white) light-dark(lightslategray, darkslategray);
 	}
 </style>
