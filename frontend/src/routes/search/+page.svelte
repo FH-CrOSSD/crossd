@@ -25,7 +25,10 @@
 	export let data: PageData;
 
 	let length;
-	data.search.then((val) => (length = val['length']));
+	// data.search.then((val) => (length = val['length']));
+	$:{
+		data.search.then((val) => (length = val['length']));
+	}
 
 	const searchAnchor = '#search-results';
 
