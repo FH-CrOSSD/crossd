@@ -75,7 +75,15 @@
 	let activeClass =
 		'inline-block text-sm font-medium text-center disabled:cursor-not-allowed active p-4 text-primary-600 bg-gray-100 rounded-t-lg dark:bg-gray-900 dark:text-primary-500';
 	chartOptions.chart.type = 'bar';
-	chartOptions.yaxis['labels'] = { minWidth: 35 };
+	chartOptions.yaxis['labels'] = { minWidth: 35, offsetY: 1,style:{
+                fontFamily: 'Inter, sans-serif',
+                cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+            }};
+	// chartOptions.yaxis['labels']["style"] =  {
+    //             fontFamily: 'Inter, sans-serif',
+    //             cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+    //         };
+	
 	let chartOpts = $derived.by(() => {
 		if (chart) {
 			console.log('doStuff');
@@ -150,7 +158,7 @@
 						{#await data.chart}
 							<WidgetPlaceholder />
 						{:then dchart}
-							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
+							<div class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md">
 								<Chart bind:options={chartOpts} class="w-fill min-w-96" />
 								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
 							</div>
@@ -180,7 +188,7 @@
 						{#await data.chart}
 							<WidgetPlaceholder />
 						{:then dchart}
-							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
+							<div class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md">
 								<Chart options={chartOpts} class="w-fill min-w-96" />
 								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
 							</div>
@@ -210,7 +218,7 @@
 						{#await data.chart}
 							<WidgetPlaceholder />
 						{:then dchart}
-							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
+							<div class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md">
 								<Chart options={chartOpts} class="w-fill min-w-96" />
 								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
 							</div>
@@ -239,7 +247,7 @@
 						/>{#await data.chart}
 							<WidgetPlaceholder />
 						{:then dchart}
-							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
+							<div class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md">
 								<Chart options={chartOpts} class="w-fill min-w-96" />
 								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
 							</div>
@@ -270,7 +278,7 @@
 						{#await data.chart}
 							<WidgetPlaceholder />
 						{:then dchart}
-							<div class="flex gap-5 p-5 border border-solid border-gray-200 shadow-md rounded-md">
+							<div class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md">
 								<Chart options={chartOpts} class="w-fill min-w-96" />
 								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
 							</div>
