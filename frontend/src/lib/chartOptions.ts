@@ -40,7 +40,9 @@ export let chartOptions = {
         {
             // name: 'Clicks',
             data: [6500, 6418, 6456, 6526, 6356, 6456],
-            color: '#1A56DB'
+            // color: '#1A56DB'
+            // color: '#FE795D'
+            // color: '#EF562F'
         }
     ],
     legend: {
@@ -63,6 +65,12 @@ export let chartOptions = {
         }
     },
     yaxis: {
-        show: true
+        labels: {
+            show: true,
+            style: {
+                fontFamily: 'Inter, sans-serif',
+                cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+            }
+        }
     }
 };
