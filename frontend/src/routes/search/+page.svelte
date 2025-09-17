@@ -11,6 +11,7 @@
 		ListgroupItem,
 		P,
 		Pagination,
+		PaginationNav,
 		Search
 	} from 'flowbite-svelte';
 	import { SearchOutline } from 'flowbite-svelte-icons';
@@ -56,8 +57,10 @@
 
 	// calculate the number of the last page of the pagination
 	$: lastPage = Math.ceil(data.length / PER_PAGE);
+	$: totalPages = lastPage;
 	// get current page from query parameter and set to 1 if not a number
 	$: activePage = Number($page.url.searchParams.get('page')) || 1;
+	$: currentPage = activePage;
 	// if page not in allowed range set to 1
 	$: {
 		if (activePage < 1 || activePage > lastPage) {
@@ -90,7 +93,7 @@
 		} else if (activePage > lastPage - 3) {
 			// get last pages
 			// insert 5 pages unless total pages is less
-			for (let i = lastPage - 5 < 1 ? 2 : lastPage - 5; i <= lastPage - 1; i++) {
+			for (let i = lastPage - 5 <= 1 ? 2 : lastPage - 5; i <= lastPage - 1; i++) {
 				pages.push({ name: i, href: base_url + '&page=' + i + searchAnchor });
 			}
 		} else {
@@ -148,6 +151,10 @@
 		checkButtons(activePage + 1);
 	};
 
+	const handlePageChange = ()=> {
+		goto(base_url + '&page=' + (activePage + 1) + searchAnchor); 
+	};
+
 	function removeHoverClasses(elem) {
 		//remove the tailwind classes for mouseover from the next/previous button
 		for (let i = 0; i < hoverClasses.length; i++) {
@@ -164,6 +171,9 @@
 
 	function checkButtons(page) {
 		// handle disabling pagination buttons as flowbite-svelte does not provide this for their component
+		console.log("checkButtons")
+		console.log(page)
+		console.log(hoverClasses);
 		if (page === 1) {
 			// disable previous btn - enable next btn
 			document.querySelector('button:has(span#previous)').disabled = true;
@@ -186,7 +196,7 @@
 	}
 
 	// stores the mouseover tailwind classes
-	let hoverClasses = [];
+	let hoverClasses = ["cursor-pointer"];
 
 	const click = (event) => {
 		// when clicking on a pagination number
@@ -237,7 +247,12 @@
 <div class="justify-center mb-10" style="object-position:bottom">
 	<Card class="mx-auto max-w-screen mt-10 p-4 sm:p-8">
 		<form method="GET" class="flex gap-0" action="/search">
-			<Search classes={{ input: "rounded-r-none py-2.5" }} id="project" name="project" value={data['term']} />
+			<Search
+				classes={{ input: 'rounded-r-none py-2.5' }}
+				id="project"
+				name="project"
+				value={data['term']}
+			/>
 			<Button class="pb-2 rounded-s-none" type="submit">
 				<SearchOutline class="w-5 h-5" />
 				<Heading tag="h6" class="text-white ml-2">Search</Heading>
@@ -276,15 +291,17 @@
 	</Listgroup>
 </Card>
 {#if lastPage > 1}
-	<div class="mt-10 mx-auto w-fit remove-nav-border">
-		<Pagination {pages} large on:previous={previous} on:next={next} on:click={click}>
-			<svelte:fragment slot="prev">
-				<span id="previous">Previous</span>
-			</svelte:fragment>
-			<svelte:fragment slot="next">
-				<span id="next">Next</span>
-			</svelte:fragment>
+	<div class="mt-10 mx-auto w-fit remove-nav-border" data-sveltekit-preload-data="tap">
+		<Pagination {pages} size="large" {previous} {next}> 
+			<!-- onclick={click} -->
+			{#snippet prevContent()}
+				<span class="" id="previous">Previous</span>
+			{/snippet}
+			{#snippet nextContent()}
+				<span class="" id="next">Next</span>
+			{/snippet}
 		</Pagination>
+		<!-- <PaginationNav {currentPage} {totalPages} onPageChange={handlePageChange} size="large" visiblePages={7}/> -->
 	</div>
 {/if}
 
