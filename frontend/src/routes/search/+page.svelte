@@ -12,13 +12,20 @@
 		P,
 		Pagination,
 		PaginationNav,
-		Search
+		Search,
+		Skeleton,
+
+		Spinner
+
 	} from 'flowbite-svelte';
 	import { SearchOutline } from 'flowbite-svelte-icons';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
+
+	let length;
+	data.search.then((val) => (length = val['length']));
 
 	const searchAnchor = '#search-results';
 
@@ -56,11 +63,12 @@
 	}
 
 	// calculate the number of the last page of the pagination
-	$: lastPage = Math.ceil(data.length / PER_PAGE);
-	$: totalPages = lastPage;
+	// $: lastPage = Math.ceil(data.search?.length ?? 1 / PER_PAGE);
+	$: lastPage = Math.ceil((length ?? 1) / PER_PAGE);
+	// $: totalPages = lastPage;
 	// get current page from query parameter and set to 1 if not a number
 	$: activePage = Number($page.url.searchParams.get('page')) || 1;
-	$: currentPage = activePage;
+	// $: currentPage = activePage;
 	// if page not in allowed range set to 1
 	$: {
 		if (activePage < 1 || activePage > lastPage) {
@@ -151,8 +159,8 @@
 		checkButtons(activePage + 1);
 	};
 
-	const handlePageChange = ()=> {
-		goto(base_url + '&page=' + (activePage + 1) + searchAnchor); 
+	const handlePageChange = () => {
+		goto(base_url + '&page=' + (activePage + 1) + searchAnchor);
 	};
 
 	function removeHoverClasses(elem) {
@@ -171,9 +179,6 @@
 
 	function checkButtons(page) {
 		// handle disabling pagination buttons as flowbite-svelte does not provide this for their component
-		console.log("checkButtons")
-		console.log(page)
-		console.log(hoverClasses);
 		if (page === 1) {
 			// disable previous btn - enable next btn
 			document.querySelector('button:has(span#previous)').disabled = true;
@@ -196,7 +201,7 @@
 	}
 
 	// stores the mouseover tailwind classes
-	let hoverClasses = ["cursor-pointer"];
+	let hoverClasses = ['cursor-pointer'];
 
 	const click = (event) => {
 		// when clicking on a pagination number
@@ -204,15 +209,17 @@
 	};
 
 	onMount(async () => {
-		// check pagination buttons on page load
-		// copy classes, since we are modifying the array
-		let classes = [...document.querySelector('button:has(span#previous)')?.classList];
-		for (let i = 0; i < classes.length; i++) {
-			if (classes[i].includes('hover:')) {
-				hoverClasses.push(classes[i]);
+		data.search.then(() => {
+			// check pagination buttons on page load
+			// copy classes, since we are modifying the array
+			let classes = [...document.querySelector('button:has(span#previous)')?.classList];
+			for (let i = 0; i < classes.length; i++) {
+				if (classes[i].includes('hover:')) {
+					hoverClasses.push(classes[i]);
+				}
 			}
-		}
-		checkButtons(activePage);
+			checkButtons(activePage);
+		});
 	});
 
 	function onKeyDown(e) {
@@ -243,67 +250,115 @@
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
-
-<div class="justify-center mb-10" style="object-position:bottom">
-	<Card class="mx-auto max-w-screen mt-10 p-4 sm:p-8">
-		<form method="GET" class="flex gap-0" action="/search">
-			<Search
-				classes={{ input: 'rounded-r-none py-2.5' }}
-				id="project"
-				name="project"
-				value={data['term']}
-			/>
-			<Button class="pb-2 rounded-s-none" type="submit">
-				<SearchOutline class="w-5 h-5" />
-				<Heading tag="h6" class="text-white ml-2">Search</Heading>
-			</Button>
-		</form>
-	</Card>
-</div>
-<Hr />
-<Heading tag="h1" class="mb-10" id="search-results">Search results:</Heading>
-<Card size="xl" class="break-words max-w-full p-4 sm:p-6">
-	<Listgroup>
-		{#each data.results as item}
+{#await data.search}
+	<div class="justify-center mb-10" style="object-position:bottom">
+		<Card class="mx-auto max-w-screen mt-10 p-4 sm:p-8">
+			<form method="GET" class="flex gap-0" action="/search">
+				<Search
+					classes={{ input: 'rounded-r-none py-2.5 text-gray-500 dark:text-gray-600' }}
+					id="project"
+					name="project"
+					value={data['term']}
+					disabled
+				/>
+				<Button class="pb-2 rounded-s-none" type="submit" disabled>
+					<SearchOutline class="w-5 h-5" />
+					<Heading tag="h6" class="text-white ml-2">Search</Heading>
+				</Button>
+			</form>
+		</Card>
+	</div>
+	<Hr />
+	<Heading tag="h1" class="mb-10" id="search-results">Search results:</Heading>
+	<Heading tag="h4" class="mb-10"><Spinner/> Loading Results</Heading>
+	<Card size="xl" class="break-words max-w-full p-4 sm:p-6">
+		<Listgroup>
 			<ListgroupItem>
 				<div class="grid grid-cols-3 divide-gray-200 dark:divide-gray-700 divide-x w-full">
 					<div class="pr-5 col-span-1">
-						<Heading tag="h4"
+						<Skeleton />
+						<!-- <Heading tag="h4"
 							><a href="/project/{encodeURIComponent(item.name)}">{item.name}</a></Heading
 						>
 						{#if item.timestamp}
 							<P class="mt-4"
 								><strong>Last Crawled:</strong> {new Date(item.timestamp * 1000).toUTCString()}</P
 							>
-						{/if}
+						{/if} -->
 					</div>
 
-					<P class="px-5 col-span-2">
-						{#if item.repository}
+					<span class="px-5 col-span-2">
+						<Skeleton />
+						<!-- {#if item.repository}
 							{item.repository.description ? item.repository.description : get_readme(item)}
-						{/if}
-					</P>
+						{/if} -->
+					</span>
 				</div>
 			</ListgroupItem>
-		{:else}
-			<ListgroupItem>No results found</ListgroupItem>
-		{/each}
-	</Listgroup>
-</Card>
-{#if lastPage > 1}
-	<div class="mt-10 mx-auto w-fit remove-nav-border" data-sveltekit-preload-data="tap">
-		<Pagination {pages} size="large" {previous} {next}> 
-			<!-- onclick={click} -->
-			{#snippet prevContent()}
-				<span class="" id="previous">Previous</span>
-			{/snippet}
-			{#snippet nextContent()}
-				<span class="" id="next">Next</span>
-			{/snippet}
-		</Pagination>
-		<!-- <PaginationNav {currentPage} {totalPages} onPageChange={handlePageChange} size="large" visiblePages={7}/> -->
+		</Listgroup>
+	</Card>
+{:then search}
+	<div class="justify-center mb-10" style="object-position:bottom">
+		<Card class="mx-auto max-w-screen mt-10 p-4 sm:p-8">
+			<form method="GET" class="flex gap-0" action="/search">
+				<Search
+					classes={{ input: 'rounded-r-none py-2.5' }}
+					id="project"
+					name="project"
+					value={data['term']}
+				/>
+				<Button class="pb-2 rounded-s-none" type="submit">
+					<SearchOutline class="w-5 h-5" />
+					<Heading tag="h6" class="text-white ml-2">Search</Heading>
+				</Button>
+			</form>
+		</Card>
 	</div>
-{/if}
+	<Hr />
+	<Heading tag="h1" class="mb-10" id="search-results">Search results:</Heading>
+	<Card size="xl" class="break-words max-w-full p-4 sm:p-6">
+		<Listgroup>
+			{#each search.results as item}
+				<ListgroupItem>
+					<div class="grid grid-cols-3 divide-gray-200 dark:divide-gray-700 divide-x w-full">
+						<div class="pr-5 col-span-1">
+							<Heading tag="h4"
+								><a href="/project/{encodeURIComponent(item.name)}">{item.name}</a></Heading
+							>
+							{#if item.timestamp}
+								<P class="mt-4"
+									><strong>Last Crawled:</strong> {new Date(item.timestamp * 1000).toUTCString()}</P
+								>
+							{/if}
+						</div>
+
+						<P class="px-5 col-span-2">
+							{#if item.repository}
+								{item.repository.description ? item.repository.description : get_readme(item)}
+							{/if}
+						</P>
+					</div>
+				</ListgroupItem>
+			{:else}
+				<ListgroupItem>No results found</ListgroupItem>
+			{/each}
+		</Listgroup>
+	</Card>
+	{#if lastPage > 1}
+		<div class="mt-10 mx-auto w-fit remove-nav-border" data-sveltekit-preload-data="tap">
+			<Pagination {pages} size="large" {previous} {next}>
+				<!-- onclick={click} -->
+				{#snippet prevContent()}
+					<span class="" id="previous">Previous</span>
+				{/snippet}
+				{#snippet nextContent()}
+					<span class="" id="next">Next</span>
+				{/snippet}
+			</Pagination>
+			<!-- <PaginationNav {currentPage} {totalPages} onPageChange={handlePageChange} size="large" visiblePages={7}/> -->
+		</div>
+	{/if}
+{/await}
 
 <style>
 	:global(.remove-nav-border > nav) {
