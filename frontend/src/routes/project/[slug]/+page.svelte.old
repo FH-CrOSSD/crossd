@@ -1,28 +1,7 @@
 <script lang="ts">
 	import { chartOptions } from '$lib/chartOptions';
 	import { processMD, toFixed2 } from '$lib/util';
-	import {
-		Card,
-		CardPlaceholder,
-		CloseButton,
-		Drawer,
-		Drawerhead,
-		Heading,
-		Hr,
-		Modal,
-		P,
-		Select,
-		Skeleton,
-		TabItem,
-		Table,
-		TableBody,
-		TableBodyCell,
-		TableBodyRow,
-		TableHead,
-		TableHeadCell,
-		Tabs,
-		WidgetPlaceholder
-	} from 'flowbite-svelte';
+	import { CloseButton, Drawer, Drawerhead, Heading, Hr, Modal, P, Select } from 'flowbite-svelte';
 	import { Chart } from '@flowbite-svelte-plugins/chart';
 	import { onDestroy } from 'svelte';
 	import { sineIn } from 'svelte/easing';
@@ -37,8 +16,6 @@
 	import { clickedSelector, overlayStore } from './Row.svelte';
 	import SecurityAdvisoriesCard from './SecurityAdvisoriesCard.svelte';
 	import { draw } from 'svelte/transition';
-	import Details from './Details.svelte';
-	import Overview from './Overview.svelte';
 
 	/** @type {import('./$types').PageData */
 	export let data: {
@@ -46,7 +23,6 @@
 		data: [{ [key: string]: any }];
 		bak: [{ [key: string]: any }];
 		md: [{ [key: string]: any }];
-		avg: { [key: string]: any };
 	};
 
 	let project_id: string;
@@ -58,14 +34,7 @@
 	let overlayMD: string;
 	let scrollFinished = false;
 	let drawerHidden = false;
-	// store data retrieved from metrics collections
-	let projects = {};
-	let projectData: { [key: string]: any } = {};
-	// store data retrieved from bak_metrics collections
-	let bak: { [key: string]: any } = {};
-	let avg;
-	// stores timestamp (epoch) and a human-readable interpretation of that timestamp
-	chartOptions.chart.type = 'line';
+
 	// hide drawer if there is no definition to show or if the chart should not be shown
 	$: {
 		drawerHidden = showDefinition === true ? showChart : false;
@@ -74,41 +43,11 @@
 		// console.log(drawerHidden);
 	}
 	// transition for the drawer (sidebar)
-	// const transitionParamsRight = {
-	// 	x: 320,
-	// 	duration: 200,
-	// 	easing: sineIn
-	// };
-
-	data.projects.then((val) => {
-		projects = val;
-	});
-
-	data.avg.then((val) => {
-		avg = val;
-	});
-
-	$: {
-		if (projects?.scans) {
-			let tmpdata = {};
-			let tmpbak = {};
-			let tmpsnapshots = [];
-
-			for (let i = 0; i < projects?.scans.length; i++) {
-				tmpdata[projects.scans[i]['issuedAt']] = projects.scans[i].metric[0];
-				tmpbak[projects.scans[i]['issuedAt']] = projects.scans[i].bak[0];
-				if(Object.keys(projects.scans[i].metric[0] ?? {}).length > 0 || projects.scans[i].bak[0]){
-				tmpsnapshots.push({
-					value: projects.scans[i]['issuedAt'].toString(),
-					name: new Date(projects.scans[i]['issuedAt'] * 1000).toUTCString()
-				});}
-			}
-			projectData = tmpdata;
-			bak = tmpbak;
-			snapshots = tmpsnapshots;
-			updateSelected();
-		}
-	}
+	const transitionParamsRight = {
+		x: 320,
+		duration: 200,
+		easing: sineIn
+	};
 
 	// components can trigger the drawer by setting a value in the store
 	let unsubscribe = overlayStore.subscribe((value) => {
@@ -197,17 +136,17 @@
 	}
 
 	// whenever data changes
-	// $: {
-	// 	snapshots = data.snapshots;
-	// 	updateSelected();
-	// }
+	$: {
+		snapshots = data.snapshots;
+		updateSelected();
+	}
 
-	// whener bak changes
+	// whener data.bak changes
 	// retrieve the project id, which is used in all bak metrics
 	// elephant_factor is always there, so we chose it to retrieve the project id
 	$: {
-		if (bak) {
-			project_id = Object.keys(bak[selected]?.elephant_factor ?? [])[0];
+		if (data.bak) {
+			project_id = Object.keys(data.bak[selected]?.elephant_factor ?? [])[0];
 		}
 	}
 
@@ -218,99 +157,56 @@
 	});
 </script>
 
-<div class="flex gap-10">
-	<div class="w-4/5">
-		{#await Promise.all([data.projects, data.avg])}
-			<Heading class="break-words max-w-[calc(100%-25rem)]" tag="h1">{data.title}</Heading>
-			<Hr />
-			<Tabs style="underline" class="w-full" classes={{ content: 'bg-white dark:bg-gray-800' }}>
-				<TabItem open class="">
-					{#snippet titleSlot()}
-						<div
-							class="mb-2.5 h-2.5 w-32 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"
-						></div>
-					{/snippet}
-					<div class="flex flex-wrap gap-10">
-						<Card class="p-5">
-							<Heading tag="h4" class="mb-5">Stats</Heading>
-							<Skeleton size="sm" class="my-5"></Skeleton>
-						</Card>
-						<WidgetPlaceholder class="w-1/3" />
-					</div>
-				</TabItem>
-				<TabItem class="" disabled>
-					{#snippet titleSlot()}
-						<div
-							class="mb-2.5 h-2.5 w-32 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"
-						></div>
-					{/snippet}
-				</TabItem>
-			</Tabs>
-			<!-- <div class="flex flex-wrap gap-10">
-			<CardPlaceholder size="lg" class="w-1/3" />
-			<WidgetPlaceholder class="w-1/3" />
-		</div> -->
-		{:then _}
-			<div class="flex flex-wrap justify-between">
-				<!-- max-w-sm is 24 rem, so make max heading width slightly smaller -->
-				<Heading class="break-words max-w-[calc(100%-25rem)]" tag="h1">{data.title}</Heading>
-				<!-- <Select underline items={snapshots} bind:value={selected} class="max-w-sm min-w-sm" /> -->
-			</div>
-			<Hr />
-			<Tabs classes={{ content: 'bg-white dark:bg-gray-800 p-0' }}>
-				<TabItem open title="Overview">
-					{#if !('version' in (projectData?.[selected] ?? {}))}
-						{#if Object.keys(bak?.[selected] ?? {}).length <= 0 && !bak[selected]}
-							<P size="lg">There is currently no overview data available for this snapshot.</P>
-						{:else}
-							<Overview data={bak} {avg} bind:selected {project_id} {snapshots} />
-						{/if}
-					{:else}
-						<Overview data={projectData} {avg} bind:selected {snapshots} />
-					{/if}
-				</TabItem>
-				<TabItem title="Details">
-					<Details data={{ data: projectData, bak: bak, md: data.md }} bind:selected {snapshots} />
-				</TabItem>
-			</Tabs>
-		{/await}
+<div class="">
+	<div class="flex flex-wrap justify-between">
+		<!-- max-w-sm is 24 rem, so make max heading width slightly smaller -->
+		<Heading class="max-w-fit break-words max-w-[calc(100%-25rem)]" tag="h1">{data.title}</Heading>
+		<Select underline items={snapshots} bind:value={selected} class="max-w-sm min-w-sm" />
 	</div>
-	<!-- h-[calc(65vh))] -->
-	<div class="w-1/5 ml-auto h-[calc(65vh))] sticky top-10">
-		<Heading tag="h4" class="mx-5 mb-5">Snapshots</Heading>
-		<Table hoverable divClass="shadow-none overflow-y-visible h-full scrollbar" striped={true}>
-			<!-- <Table shadow={false} border={false}> -->
-			<!-- <TableHead class="">
-			<TableHeadCell class="flex"><P>Snapshots</P></TableHeadCell>
-		</TableHead> -->
-			<TableBody class="">
-				{#await Promise.all([data.projects, data.avg])}
-					<TableBodyRow>
-						<TableBodyCell><Skeleton></Skeleton></TableBodyCell>
-					</TableBodyRow>
-				{:then _}
-					{#each snapshots.toReversed() as item}
-						<TableBodyRow
-							onclick={(e) => {
-								selected = e.target.dataset.value;
-								console.log(e.target);
-							}}
-						>
-							<TableBodyCell
-								class="whitespace-normal {item.value == selected ? 'dark:bg-gray-900 bg-gray-100 text-primary-600' : ''}"
-								data-value={item.value}>{item.name}</TableBodyCell
-							>
-						</TableBodyRow>
-					{/each}
-				{/await}
-			</TableBody>
-			<!-- </Table> -->
-		</Table>
+	<Hr />
+	<div class="flex flex-wrap gap-4">
+		<!-- show cards if there is data for them -->
+		{#if Object.keys(data.data?.[selected] ?? {}).length > 0}
+			<GenericMetricCard data={data.data} {selected} />
+		{/if}
+		{#if !('version' in (data.data?.[selected] ?? {}))}
+			{#if data.bak[selected]}
+				<GenericBakCard data={data.bak} bind:selected {project_id} />
+				<PullRequestCard data={data.bak} {selected} {project_id} />
+				<ProjectVelocityCard data={data.bak} {selected} {project_id} />
+				<CommunityHealthCard data={data.bak} {selected} {project_id} />
+				{#if Object.keys(data.bak[selected]['issues']).length > 0}
+					<IssueCard data={data.bak} {selected} {project_id} />
+				{/if}
+				{#if Object.keys(data.bak[selected]['contributions_distributions']).length > 0}
+					<DistributionContributionCard data={data.bak} {selected} {project_id} />
+				{/if}
+				<LifecycleBranchesCard data={data.bak} {selected} {project_id} />
+				<SecurityAdvisoriesCard data={data.bak} {selected} {project_id} />
+			{/if}
+			<!-- show when no data is available -->
+			{#if Object.keys(data.data?.[selected] ?? {}).length <= 0 && !data.bak[selected]}
+				<P size="lg">There is currently no data available for this snapshot.</P>
+			{/if}
+		{:else if data.data[selected]['version'].split('.')[0] === '2'}
+			<GenericBakCard data={data.data} bind:selected />
+			<PullRequestCard data={data.data} {selected} />
+			<ProjectVelocityCard data={data.data} {selected} />
+			<CommunityHealthCard data={data.data} {selected} />
+			{#if Object.keys(data.data[selected]['issues']).length > 0}
+				<IssueCard data={data.data} {selected} />
+			{/if}
+			{#if Object.keys(data.data[selected]['contributions_distributions']).length > 0}
+				<DistributionContributionCard data={data.data} {selected} />
+			{/if}
+			<LifecycleBranchesCard data={data.data} {selected} />
+			<SecurityAdvisoriesCard data={data.data} {selected} />
+		{/if}
 	</div>
 </div>
 
 <!-- modal for displaying the charts -->
-<!-- <Modal
+<Modal
 	title={chartOptions.series[0].name}
 	bind:open={drawerHidden}
 	size="lg"
@@ -339,7 +235,7 @@
 			{@html overlayMD}
 		</div>
 	</Drawer>
-</Modal> -->
+</Modal>
 
 <!-- a sidebar for showing the metric documentation -->
 <!-- backdrop={!showChart ? true : false} -->

@@ -34,7 +34,10 @@
 		return (selected: number) => {
 			const date = data[selected]?.[category];
 			if (typeof date === 'number') {
-				return Duration.fromMillis(date).rescale().toHuman({ unitDisplay: 'short' });
+				return Duration.fromMillis(date)
+					.rescale()
+					.set({ seconds: 0, milliseconds: 0 })
+					.toHuman({ unitDisplay: 'short', showZeros: false });
 			} else {
 				return date;
 			}
@@ -71,7 +74,7 @@
 	<BoolMetricRow {selected} selector={genericDataFn('uses_workflows')}>Workflows:</BoolMetricRow>
 	{#if data[selected]?.['uses_workflows']}
 		<MetricLabel>Workflow Statuses:</MetricLabel>
-		<P class="max-w-xs">
+		<P class="max-w-28 break-all wrap-anywhere">
 			{#each Object.entries(workflow_statuses) as status}
 				{status[1]} {status[0]}<br />
 			{/each}

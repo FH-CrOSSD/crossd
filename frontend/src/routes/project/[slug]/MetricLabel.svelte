@@ -6,7 +6,7 @@
 	export let chart: Boolean = false;
 </script>
 
-<P class="max-w-60">
+<P class="max-w-52">
 	{#if click && (data_md || chart)}
 		<A
 			class="text-gray-900 dark:text-white underline hover:no-underline"

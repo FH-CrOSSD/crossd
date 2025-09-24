@@ -7,11 +7,12 @@
 	export let selector: Function;
 	export let selected: number;
 	export let chart: Boolean = false;
+	export let valueClass="";
 </script>
 
 <Row {data_id} {data_md} {selector} {chart}>
 	<slot />
 	<svelte:fragment slot="value">
-		<MetricValue value={selector(selected)} />
+		<MetricValue value={selector(selected)} {valueClass} />
 	</svelte:fragment>
 </Row>

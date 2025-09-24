@@ -74,16 +74,12 @@
 	let activeTab = $state('avg');
 	let activeClass =
 		'inline-block text-sm font-medium text-center disabled:cursor-not-allowed active p-4 text-primary-600 bg-gray-100 rounded-t-lg dark:bg-gray-900 dark:text-primary-500';
-	chartOptions.chart.type = 'bar';
-	chartOptions.yaxis['labels'] = { minWidth: 35, offsetY: 1,style:{
-                fontFamily: 'Inter, sans-serif',
-                cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
-            }};
+
 	// chartOptions.yaxis['labels']["style"] =  {
-    //             fontFamily: 'Inter, sans-serif',
-    //             cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
-    //         };
-	
+	//             fontFamily: 'Inter, sans-serif',
+	//             cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+	//         };
+
 	let chartOpts = $derived.by(() => {
 		if (chart) {
 			console.log('doStuff');
@@ -97,6 +93,15 @@
 
 			opts.series[0].data = x;
 			opts.xaxis.categories = y;
+			opts.chart.type = 'bar';
+			opts.yaxis['labels'] = {
+				minWidth: 35,
+				offsetY: 1,
+				style: {
+					fontFamily: 'Inter, sans-serif',
+					cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+				}
+			};
 			console.log(opts);
 			return opts;
 		}
@@ -133,7 +138,7 @@
 			<LoadingStatistics />
 		{:then group}
 			<!-- <Statistics name={data.name} count={test?.projects?.length} elephant_factor={group.data.elephant_factor} maturity_level={group.data.maturity_level}/> -->
-			<Tabs style="underline" class="w-full" contentClass="bg-white dark:bg-gray-800">
+			<Tabs style="underline" class="w-full" classes={{ content: 'bg-white dark:bg-gray-800' }}>
 				<TabItem
 					open
 					title="Avg"
@@ -158,9 +163,18 @@
 						{#await data.chart}
 							<WidgetPlaceholder />
 						{:then dchart}
-							<div class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md">
+							<div
+								class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md"
+							>
 								<Chart bind:options={chartOpts} class="w-fill min-w-96" />
-								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
+								<Listgroup
+									id="lgroup1"
+									active
+									items={buttons}
+									class="w-50"
+									onclick={chartClick}
+									itemClass="h-1/5"
+								></Listgroup>
 							</div>
 						{/await}
 					</div>
@@ -188,9 +202,18 @@
 						{#await data.chart}
 							<WidgetPlaceholder />
 						{:then dchart}
-							<div class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md">
+							<div
+								class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md"
+							>
 								<Chart options={chartOpts} class="w-fill min-w-96" />
-								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
+								<Listgroup
+									id="lgroup1"
+									active
+									items={buttons}
+									class="w-50"
+									onclick={chartClick}
+									itemClass="h-1/5"
+								></Listgroup>
 							</div>
 						{/await}
 					</div>
@@ -218,9 +241,18 @@
 						{#await data.chart}
 							<WidgetPlaceholder />
 						{:then dchart}
-							<div class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md">
+							<div
+								class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md"
+							>
 								<Chart options={chartOpts} class="w-fill min-w-96" />
-								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
+								<Listgroup
+									id="lgroup1"
+									active
+									items={buttons}
+									class="w-50"
+									onclick={chartClick}
+									itemClass="h-1/5"
+								></Listgroup>
 							</div>
 						{/await}
 					</div>
@@ -247,9 +279,18 @@
 						/>{#await data.chart}
 							<WidgetPlaceholder />
 						{:then dchart}
-							<div class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md">
+							<div
+								class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md"
+							>
 								<Chart options={chartOpts} class="w-fill min-w-96" />
-								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
+								<Listgroup
+									id="lgroup1"
+									active
+									items={buttons}
+									class="w-50"
+									onclick={chartClick}
+									itemClass="h-1/5"
+								></Listgroup>
 							</div>
 						{/await}
 					</div>
@@ -278,9 +319,18 @@
 						{#await data.chart}
 							<WidgetPlaceholder />
 						{:then dchart}
-							<div class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md">
+							<div
+								class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md"
+							>
 								<Chart options={chartOpts} class="w-fill min-w-96" />
-								<Listgroup active items={buttons} class="w-50" onclick={chartClick} itemClass="h-1/5"></Listgroup>
+								<Listgroup
+									id="lgroup1"
+									active
+									items={buttons}
+									class="w-50"
+									onclick={chartClick}
+									itemClass="h-1/5"
+								></Listgroup>
 							</div>
 						{/await}
 					</div>
@@ -289,7 +339,7 @@
 		{/await}
 	</div>
 
-	<div class="w-1/3 ml-auto h-[calc(70vh))]">
+	<div class="w-1/3 ml-auto h-[calc(65vh))] sticky top-10">
 		<Heading tag="h4" class="mx-5 mt-5">Group repositories</Heading>
 		<TableSearch
 			placeholder="Search by name"
@@ -333,5 +383,10 @@
 		overflow: auto;
 		scrollbar-width: thin;
 		scrollbar-color: light-dark(black, white) light-dark(lightslategray, darkslategray);
+	}
+	:global(#lgroup1 > button[aria-current='true']) {
+		background-color: light-dark(#f3f4f6, #101828);
+		color: #ef562f;
+		/* #26a0fc */
 	}
 </style>

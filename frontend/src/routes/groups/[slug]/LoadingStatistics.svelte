@@ -2,7 +2,7 @@
 	import { Card, Heading, Skeleton, TabItem, Tabs, WidgetPlaceholder } from 'flowbite-svelte';
 </script>
 
-<Tabs style="underline" class="w-full" contentClass="bg-white dark:bg-gray-800">
+<Tabs style="underline" class="w-full" classes={{ content: "bg-white dark:bg-gray-800" }}>
 	<TabItem open class="">
 		{#snippet titleSlot()}
 			<div class="mb-2.5 h-2.5 w-32 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>

@@ -10,6 +10,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
+import { writable } from 'svelte/store';
 import { unified } from 'unified';
 
 // tailwindcss classes for the metric headings
@@ -77,3 +78,5 @@ export let bakGenericDataFn = (category: string, project_id: string | null = nul
     //     }
     };
 };
+
+export let theme = writable("light");
