@@ -2,6 +2,7 @@
 	import { chartOptions } from '$lib/chartOptions';
 	import { processMD, toFixed2 } from '$lib/util';
 	import {
+		A,
 		Card,
 		CardPlaceholder,
 		CloseButton,
@@ -39,6 +40,7 @@
 	import { draw } from 'svelte/transition';
 	import Details from './Details.svelte';
 	import Overview from './Overview.svelte';
+	import { GithubSolid } from 'flowbite-svelte-icons';
 
 	/** @type {import('./$types').PageData */
 	export let data: {
@@ -97,11 +99,12 @@
 			for (let i = 0; i < projects?.scans.length; i++) {
 				tmpdata[projects.scans[i]['issuedAt']] = projects.scans[i].metric[0];
 				tmpbak[projects.scans[i]['issuedAt']] = projects.scans[i].bak[0];
-				if(Object.keys(projects.scans[i].metric[0] ?? {}).length > 0 || projects.scans[i].bak[0]){
-				tmpsnapshots.push({
-					value: projects.scans[i]['issuedAt'].toString(),
-					name: new Date(projects.scans[i]['issuedAt'] * 1000).toUTCString()
-				});}
+				if (Object.keys(projects.scans[i].metric[0] ?? {}).length > 0 || projects.scans[i].bak[0]) {
+					tmpsnapshots.push({
+						value: projects.scans[i]['issuedAt'].toString(),
+						name: new Date(projects.scans[i]['issuedAt'] * 1000).toUTCString()
+					});
+				}
 			}
 			projectData = tmpdata;
 			bak = tmpbak;
@@ -221,7 +224,10 @@
 <div class="flex gap-10">
 	<div class="w-4/5">
 		{#await Promise.all([data.projects, data.avg])}
-			<Heading class="break-words max-w-[calc(100%-25rem)]" tag="h1">{data.title}</Heading>
+			<Heading class="flex break-words max-w-[calc(100%-25rem)]" tag="h1">{data.title} <A
+						class="text-black dark:text-white hover:text-primary-500 dark:hover:text-primary-500"
+						href="https://github.com/{data.title}"><GithubSolid class="ml-2 h-full w-10" /></A
+					></Heading>
 			<Hr />
 			<Tabs style="underline" class="w-full" classes={{ content: 'bg-white dark:bg-gray-800' }}>
 				<TabItem open class="">
@@ -253,7 +259,13 @@
 		{:then _}
 			<div class="flex flex-wrap justify-between">
 				<!-- max-w-sm is 24 rem, so make max heading width slightly smaller -->
-				<Heading class="break-words max-w-[calc(100%-25rem)]" tag="h1">{data.title}</Heading>
+				<Heading class="flex break-words max-w-[calc(100%-25rem)]" tag="h1"
+					>{data.title}
+					<A
+						class="text-black dark:text-white hover:text-primary-500 dark:hover:text-primary-500"
+						href="https://github.com/{data.title}"><GithubSolid class="ml-2 h-full w-10" /></A
+					></Heading
+				>
 				<!-- <Select underline items={snapshots} bind:value={selected} class="max-w-sm min-w-sm" /> -->
 			</div>
 			<Hr />
@@ -297,7 +309,9 @@
 							}}
 						>
 							<TableBodyCell
-								class="whitespace-normal {item.value == selected ? 'dark:bg-gray-900 bg-gray-100 text-primary-600' : ''}"
+								class="whitespace-normal {item.value == selected
+									? 'dark:bg-gray-900 bg-gray-100 text-primary-600'
+									: ''}"
 								data-value={item.value}>{item.name}</TableBodyCell
 							>
 						</TableBodyRow>
