@@ -14,6 +14,7 @@
 	// import '../app.pcss';
 	import '../app.css';
 	import { onMount } from 'svelte';
+	import { ArrowUpRightFromSquareOutline } from 'flowbite-svelte-icons';
 	// import { theme } from '$lib/util';
 
 	const btnClass =
@@ -111,7 +112,7 @@
 </script>
 
 <Navbar
-	class="bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-100 dark:border-gray-700 px-2 sm:px-4 py-2.5 w-full"
+	class="bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-100 dark:border-gray-700 px-2 sm:px-4 py-2.5 w-full"
 >
 	<!-- navContainerClass="border-gray-100 dark:border-gray-700 divide-gray-100 dark:divide-gray-700" class="text-gray-700 dark:text-gray-200 dark:bg-gray-900 bg-white"> -->
 	<NavBrand href="/">
@@ -123,8 +124,8 @@
 		<NavLi href="/">Search</NavLi>
 		<NavLi href="/groups">Groups</NavLi>
 		<NavLi href="/doc">Metrics</NavLi>
-		<NavLi href="https://fh-crossd.github.io/">Docs</NavLi>
-		<NavLi href="https://crossd.tech">Project & Blog</NavLi>
+		<NavLi href="https://fh-crossd.github.io/">Docs<ArrowUpRightFromSquareOutline class="inline h-4 mb-0.5" /></NavLi>
+		<NavLi href="https://crossd.tech">Project & Blog<ArrowUpRightFromSquareOutline class="inline h-4 mb-0.5" /></NavLi>
 	</NavUl>
 	<!-- <DarkMode {btnClass} onclick={toggleMode} /> -->
 	<DarkMode {btnClass}/>
