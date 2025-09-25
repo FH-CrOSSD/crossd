@@ -2,7 +2,7 @@
 	import MetricCard from './MetricCard.svelte';
 	import MetricRow from './MetricRow.svelte';
 	import { bakGenericDataFn as bgdFn, toFixed2 } from '$lib/util';
-	import { Heading, Listgroup, Tooltip } from 'flowbite-svelte';
+	import { Heading, Indicator, Listgroup, Tooltip } from 'flowbite-svelte';
 	import FloatMetricRow from './FloatMetricRow.svelte';
 	import MetricValue from './MetricValue.svelte';
 	import { chartOptions } from '$lib/chartOptions';
@@ -173,6 +173,21 @@
 			)}>Github community healh:</FloatMetricRow
 		>
 		<Tooltip color="gray">Average: {avg.github_community_health_percentage}</Tooltip>
+		{#snippet remainder()}
+			<div class="flex mt-auto text-gray-500 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border-l-4 border-gray-300 dark:border-gray-500 px-2 text-sm rounded">
+			<span class="mr-auto">&lt; than avg:</span>
+			<span class="flex items-center">
+				<Indicator size="sm" class="dark:bg-emerald-400 bg-emerald-500 me-1.5" />&lt;= 15%
+			</span>
+			<span class="flex items-center ml-2">
+				<Indicator size="sm" class="dark:bg-amber-400 bg-amber-500 me-1.5" />&lt;= 25%
+			</span>
+			<span class="flex items-center ml-2">
+				<Indicator size="sm" class="dark:bg-rose-400 bg-rose-500 me-1.5" />&gt; 25%
+			</span>
+		</div>
+		{/snippet}
+		
 	</MetricCard>
 
 	<div

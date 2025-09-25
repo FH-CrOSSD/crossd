@@ -213,6 +213,8 @@
 			project_id = Object.keys(bak[selected]?.elephant_factor ?? [])[0];
 		}
 	}
+let activeClass =
+		'inline-block text-sm font-medium text-center disabled:cursor-not-allowed active p-4 text-primary-600 bg-gray-100 rounded-t-lg dark:bg-gray-900 dark:text-primary-500';
 
 	// unsubscribe from the overlayStore when user leaves the page
 	onDestroy(() => {
@@ -230,7 +232,7 @@
 					></Heading>
 			<Hr />
 			<Tabs style="underline" class="w-full" classes={{ content: 'bg-white dark:bg-gray-800' }}>
-				<TabItem open class="">
+				<TabItem {activeClass} open class="">
 					{#snippet titleSlot()}
 						<div
 							class="mb-2.5 h-2.5 w-32 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"
@@ -244,7 +246,7 @@
 						<WidgetPlaceholder class="w-1/3" />
 					</div>
 				</TabItem>
-				<TabItem class="" disabled>
+				<TabItem {activeClass} class="" disabled>
 					{#snippet titleSlot()}
 						<div
 							class="mb-2.5 h-2.5 w-32 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"
@@ -270,7 +272,7 @@
 			</div>
 			<Hr />
 			<Tabs classes={{ content: 'bg-white dark:bg-gray-800 p-0' }}>
-				<TabItem open title="Overview">
+				<TabItem {activeClass} open title="Overview">
 					{#if !('version' in (projectData?.[selected] ?? {}))}
 						{#if Object.keys(bak?.[selected] ?? {}).length <= 0 && !bak[selected]}
 							<P size="lg">There is currently no overview data available for this snapshot.</P>
@@ -281,7 +283,7 @@
 						<Overview data={projectData} {avg} bind:selected {snapshots} />
 					{/if}
 				</TabItem>
-				<TabItem title="Details">
+				<TabItem {activeClass} title="Details">
 					<Details data={{ data: projectData, bak: bak, md: data.md }} bind:selected {snapshots} />
 				</TabItem>
 			</Tabs>

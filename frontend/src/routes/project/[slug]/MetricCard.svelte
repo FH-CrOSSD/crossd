@@ -8,4 +8,5 @@
 	<div class="grid gap-y-4 gap-x-8 max-w-xl grid-cols-[max-content_max-content]">
 		<slot />
 	</div>
+	<slot name="remainder"/>
 </Card>
