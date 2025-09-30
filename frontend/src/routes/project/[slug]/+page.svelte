@@ -311,7 +311,7 @@ let activeClass =
 							}}
 						>
 							<TableBodyCell
-								class="whitespace-normal {item.value == selected
+								class="whitespace-normal cursor-pointer {item.value == selected
 									? 'dark:bg-gray-900 bg-gray-100 text-primary-600'
 									: ''}"
 								data-value={item.value}>{item.name}</TableBodyCell

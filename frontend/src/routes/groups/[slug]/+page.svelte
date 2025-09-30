@@ -173,7 +173,7 @@
 									items={buttons}
 									class="w-50"
 									onclick={chartClick}
-									itemClass="h-1/5"
+									itemClass="h-1/5 cursor-pointer"
 								></Listgroup>
 							</div>
 						{/await}
@@ -212,7 +212,7 @@
 									items={buttons}
 									class="w-50"
 									onclick={chartClick}
-									itemClass="h-1/5"
+									itemClass="h-1/5 cursor-pointer"
 								></Listgroup>
 							</div>
 						{/await}
@@ -251,7 +251,7 @@
 									items={buttons}
 									class="w-50"
 									onclick={chartClick}
-									itemClass="h-1/5"
+									itemClass="h-1/5 cursor-pointer"
 								></Listgroup>
 							</div>
 						{/await}
@@ -289,7 +289,7 @@
 									items={buttons}
 									class="w-50"
 									onclick={chartClick}
-									itemClass="h-1/5"
+									itemClass="h-1/5 cursor-pointer"
 								></Listgroup>
 							</div>
 						{/await}
@@ -329,7 +329,7 @@
 									items={buttons}
 									class="w-50"
 									onclick={chartClick}
-									itemClass="h-1/5"
+									itemClass="h-1/5 cursor-pointer"
 								></Listgroup>
 							</div>
 						{/await}
