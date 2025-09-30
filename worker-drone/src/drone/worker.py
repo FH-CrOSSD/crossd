@@ -141,7 +141,7 @@ app.backend.connection.resetSession(
     bind=True,
     autoretry_for=(Exception,),
     retry_backoff=10 * 60,
-    max_retries=5,
+    max_retries=0,
     retry_backoff_max=3500 * 60,
     retry_jitter=True,
 )
@@ -328,6 +328,9 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     except TypeError:
         res["repository"]["defaultBranchRef"] = {"last_commit": {"history": {"edges": []}}}
 
+    chunk_size=10000
+    # chunk_size=5
+    
     # store new commits
     if not count_res["repository"]["isEmpty"]:
         if "commits" not in res:
@@ -342,20 +345,21 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         """
         vars = {
             "ident": res["repository"]["nameWithOwner"],
-            "clone": comms[-10000:],
+            "clone": comms[-chunk_size:],
             "gql": res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"][
-                -10000:
+                -chunk_size:
             ],
         }
         app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
-
+        
         query = """
             FOR c IN commits
             FILTER c.identifier == @ident
             UPDATE { _key: c._key, gql: APPEND(@gql , c.gql ) } IN commits
             """
         for chunk in self.chunks_reversed(
-            res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"][:-10000], 10000
+            res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"][:-chunk_size],
+            chunk_size,
         ):
             vars = {
                 "ident": res["repository"]["nameWithOwner"],
@@ -368,7 +372,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             FILTER c.identifier == @ident
             UPDATE { _key: c._key, clone: APPEND(@clone , c.clone ) } IN commits
             """
-        for chunk in self.chunks_reversed(comms[:-10000], 10000):
+        for chunk in self.chunks_reversed(comms[:-chunk_size], chunk_size):
             vars = {
                 "ident": res["repository"]["nameWithOwner"],
                 "clone": chunk,
@@ -516,7 +520,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     bind=True,
     autoretry_for=(Exception,),
     retry_backoff=10 * 60,
-    max_retries=5,
+    max_retries=0,
     retry_backoff_max=3500 * 60,
     retry_jitter=True,
 )
