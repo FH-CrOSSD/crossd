@@ -45,19 +45,34 @@ export async function POST({ request }) {
         FILTER group.name == ${name}
         FOR tag IN group.tags
 
-        LET scanIds = (
+        LET scanIds_all = (
             FOR scan IN ${scansColl}
             FILTER tag IN scan.tags
             RETURN DISTINCT scan._id
         )
         
         LET projects_ = (
-            FOR scanid IN scanIds
+            FOR scanid IN scanIds_all
             FOR m IN metrics
             FILTER m.scan_id==scanid
             SORT m.identity.name_with_owner
             RETURN DISTINCT m.identity.name_with_owner
         )
+
+        LET scanIds = (
+            FOR project IN projects_
+            FOR p IN projects
+            FILTER p.identifier == project
+            LET finished = (
+                FOR s IN REVERSE(p.scans)
+                FOR m IN metrics
+                FILTER m.scan_id == s
+                LIMIT 1
+                RETURN m
+            )
+            RETURN finished[0].scan_id
+        )
+
         LET data=(
             FOR s IN scanIds
             FOR m IN metrics
