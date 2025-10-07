@@ -41,26 +41,50 @@ export async function POST({ request }) {
     try {
         const res = await db.query(aql`
         FOR group IN groups
-            FILTER group.name == ${name}
-            FOR tag IN group.tags
-                LET scanIds = (
-                    FOR scan IN scans
-                    FILTER tag IN scan.tags
-                    RETURN DISTINCT scan._id
+        FILTER group.name == ${name}
+        FOR tag IN group.tags
+            LET scanIds = (
+                FOR scan IN scans
+                FILTER tag IN scan.tags
+                RETURN DISTINCT scan._id
+            )
+            LET aggr = (
+                FOR m IN metrics
+                FILTER m.scan_id IN scanIds
+                SORT m.timestamp DESC
+                LET ts = m.timestamp*1000
+                FILTER m.${parameter} != null
+                COLLECT month = DATE_MONTH(ts)<10 ? CONCAT_SEPARATOR("/", DATE_YEAR(ts), CONCAT(0, DATE_MONTH(ts))) : CONCAT_SEPARATOR("/", DATE_YEAR(ts), DATE_MONTH(ts)) into clustered = {scan_id:m.scan_id,identity:m.identity,timestamp:m.timestamp}
+                RETURN {"month": month, "objects": clustered}
+            )
+            LET aggr2 = (
+                FOR item IN aggr
+                LET tmp = (
+                    FOR obj IN item.objects
+                    COLLECT name = obj.identity.name_with_owner INTO elems = obj //otherwise each object is {obj: {scan_id: ..., ...}}
+                    RETURN {"name": name, "projects": elems}
                 )
-                
-                LET aggr = (
-                    FOR m IN metrics
-                    FILTER m.scan_id IN scanIds
-                    LET ts = m.timestamp*1000
-                    FILTER m.${parameter}
-                    COLLECT month = DATE_MONTH(ts)<10 ? CONCAT_SEPARATOR("/", DATE_YEAR(ts), CONCAT(0, DATE_MONTH(ts))) : CONCAT_SEPARATOR("/", DATE_YEAR(ts), DATE_MONTH(ts))
-                    AGGREGATE avg_ = AVG(m.${parameter}), min_ = MIN(m.${parameter}), max_ = MAX(m.${parameter}), agg_ = SUM(m.${parameter}), stddev_ = STDDEV(m.${parameter})
-                    RETURN {"month": month, "avg": ROUND(avg_*100)/100, "min": ROUND(min_*100)/100, "max": ROUND(max_*100)/100, "agg": ROUND(agg_*100)/100, "stddev": ROUND(stddev_*100)/100}
+                RETURN {"month": item.month, "month_project": tmp}
+            )
+            
+            FOR month IN aggr2
+            LET res = (
+                LET metrics_month = (
+                    FOR proj IN month.month_project
+                        LET finished = (
+                            FOR s IN proj.projects
+                            FOR m IN metrics
+                            FILTER m.scan_id == s.scan_id
+                            LIMIT 1
+                            RETURN m
+                        )
+                    RETURN finished[0]
                 )
-                FOR month IN aggr
-                    FILTER month.avg != null
-                    RETURN month
+                FOR m IN metrics_month
+                COLLECT AGGREGATE avg_ = AVG(m.${parameter}), min_ = MIN(m.${parameter}), max_ = MAX(m.${parameter}), agg_ = SUM(m.${parameter}), stddev_ = STDDEV(m.${parameter})
+                RETURN {"avg": ROUND(avg_*100)/100, "min": ROUND(min_*100)/100, "max": ROUND(max_*100)/100, "agg": ROUND(agg_*100)/100, "stddev": ROUND(stddev_*100)/100}
+            )
+            RETURN MERGE({month: month.month}, res[0])
         `);
         let all = (await res.all());
         // console.log(all);
