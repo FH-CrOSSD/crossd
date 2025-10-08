@@ -40,7 +40,7 @@
 		{ name: 'Maturity level', data: 'maturity_level' },
 		{ name: 'Criticality score', data: 'criticality_score' },
 		{ name: 'Support rate', data: 'support_rate' },
-		{ name: 'Github community health percentage', data: 'github_community_health_percentage' }
+		{ name: 'Github community health percentage', data: 'github_community_health_percentage.custom_health_score' }
 	];
 	let currentButton = $state('Elephant factor');
 	let buttons = $derived.by(() => {

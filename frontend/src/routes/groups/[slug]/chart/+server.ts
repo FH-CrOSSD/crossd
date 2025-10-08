@@ -2,13 +2,14 @@ import { db } from "$hook.server";
 import { repoRegex } from "$lib/util";
 import { error, json } from '@sveltejs/kit';
 import { aql } from "arangojs";
+import { literal } from "arangojs/aql";
 
 // const metricsColl = db.collection("metrics");
 // const bakColl = db.collection("bak_metrics");
 const scansColl = db.collection("scans");
 const groupsColl = db.collection("groups");
 const projectsColl = db.collection("projects");
-const choices = new Set(["elephant_factor", "maturity_level", "criticality_score", "support_rate", "github_community_health_percentage"]);
+const choices = new Set(["elephant_factor", "maturity_level", "criticality_score", "support_rate", "github_community_health_percentage.custom_health_score"]);
 
 /** @type {import('./$types').RequestHandler} */
 /**
@@ -29,7 +30,7 @@ export async function POST({ request }) {
             error(400, { message: "Body could not be parsed as json" });
         }
     }
-    const { parameter, name } = resp;
+    let { parameter, name } = resp;
 
     if (!parameter || !(choices.has(parameter))) {
         error(422, { message: "Body needs to contain valid parameter" });
@@ -37,57 +38,61 @@ export async function POST({ request }) {
     if (!name || !name.match(repoRegex)) {
         error(422, { message: "Body needs to contain group name of alphanumeric characters and -_./" });
     }
+    if (choices.has(parameter) && parameter.includes(".")) {
+        parameter = literal(parameter);
+    }
 
     try {
         const res = await db.query(aql`
-        FOR group IN groups
-        FILTER group.name == ${name}
-        FOR tag IN group.tags
-            LET scanIds = (
-                FOR scan IN scans
-                FILTER tag IN scan.tags
+        LET targetGroup = FIRST(
+            FOR g IN groups
+                FILTER g.name == ${name}
+                LIMIT 1
+                RETURN g
+        )
+
+        LET relevantTags = targetGroup.tags
+
+        LET scanIds = (
+            FOR scan IN scans
+            FILTER scan.tags != null
+                FILTER LENGTH(INTERSECTION(scan.tags, relevantTags)) > 0
                 RETURN DISTINCT scan._id
+        )
+
+        FOR m IN metrics
+            FILTER m.scan_id IN scanIds
+            FILTER m.${parameter} != null
+
+            LET month_ = DATE_MONTH(m.timestamp * 1000) < 10
+                ? CONCAT(DATE_YEAR(m.timestamp * 1000), "/0", DATE_MONTH(m.timestamp * 1000))
+                : CONCAT(DATE_YEAR(m.timestamp * 1000), "/", DATE_MONTH(m.timestamp * 1000))
+
+            COLLECT month__ = month_, project = m.identity.name_with_owner
+                INTO grouped = {scan_id: m.scan_id, timestamp: m.timestamp, value: m.${parameter}, identity: m.identity}
+
+            // Pick the newest scan for this project in the month
+            LET newestScan = FIRST(
+                FOR g IN grouped
+                SORT g.timestamp DESC
+                LIMIT 1
+                RETURN g
             )
-            LET aggr = (
-                FOR m IN metrics
-                FILTER m.scan_id IN scanIds
-                SORT m.timestamp DESC
-                LET ts = m.timestamp*1000
-                FILTER m.${parameter} != null
-                COLLECT month = DATE_MONTH(ts)<10 ? CONCAT_SEPARATOR("/", DATE_YEAR(ts), CONCAT(0, DATE_MONTH(ts))) : CONCAT_SEPARATOR("/", DATE_YEAR(ts), DATE_MONTH(ts)) into clustered = {scan_id:m.scan_id,identity:m.identity,timestamp:m.timestamp}
-                RETURN {"month": month, "objects": clustered}
-            )
-            LET aggr2 = (
-                FOR item IN aggr
-                LET tmp = (
-                    FOR obj IN item.objects
-                    COLLECT name = obj.identity.name_with_owner INTO elems = obj //otherwise each object is {obj: {scan_id: ..., ...}}
-                    RETURN {"name": name, "projects": elems}
-                )
-                RETURN {"month": item.month, "month_project": tmp}
-            )
-            
-            FOR month IN aggr2
-            LET res = (
-                LET metrics_month = (
-                    FOR proj IN month.month_project
-                        LET finished = (
-                            FOR s IN proj.projects
-                            FOR m IN metrics
-                            FILTER m.scan_id == s.scan_id
-                            LIMIT 1
-                            RETURN m
-                        )
-                    RETURN finished[0]
-                )
-                FOR m IN metrics_month
-                COLLECT AGGREGATE avg_ = AVG(m.${parameter}), min_ = MIN(m.${parameter}), max_ = MAX(m.${parameter}), agg_ = SUM(m.${parameter}), stddev_ = STDDEV(m.${parameter})
-                RETURN {"avg": ROUND(avg_*100)/100, "min": ROUND(min_*100)/100, "max": ROUND(max_*100)/100, "agg": ROUND(agg_*100)/100, "stddev": ROUND(stddev_*100)/100}
-            )
-            RETURN MERGE({month: month.month}, res[0])
+
+            COLLECT month = month__ INTO monthGroup = newestScan
+
+            // Aggregate across newest scans of all projects in the month
+            LET agg = {
+                avg: ROUND(AVG(monthGroup[*].value) * 100) / 100,
+                min: ROUND(MIN(monthGroup[*].value) * 100) / 100,
+                max: ROUND(MAX(monthGroup[*].value) * 100) / 100,
+                agg: ROUND(SUM(monthGroup[*].value) * 100) / 100,
+                stddev: ROUND(STDDEV(monthGroup[*].value) * 100) / 100
+            }
+
+            RETURN MERGE({month}, agg)
         `);
         let all = (await res.all());
-        // console.log(all);
         return json(all);
     } catch (err: any) {
         console.error(err.message);
