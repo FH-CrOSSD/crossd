@@ -175,6 +175,7 @@ $: {
 	size="lg"
 	autoclose
 	outsideclose={true}
+	class="ml-[calc(50%-428px-(320px/2))]"
 	classes={{ header: !showChart ? 'hidden' : '', body: !showChart ? 'p-0 md:p-0 border-0' : '' }}
 >
 	<div class="chart-container {!showChart ? 'hidden' : ''}">
