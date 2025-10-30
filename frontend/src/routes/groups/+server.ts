@@ -21,24 +21,29 @@ export async function POST({ request }) {
     try {
         const res = await db.query(aql`
         FOR group IN ${groupsColl}
-        FOR tag IN group.tags
 
+        // Get all scans that match any of the group's tags
         LET scanIds = (
             FOR scan IN ${scansColl}
-            FILTER tag IN scan.tags
-            RETURN DISTINCT scan._id
+            FILTER scan.tags != null
+            FILTER LENGTH(INTERSECTION(scan.tags, group.tags)) > 0
+            RETURN scan._id
         )
 
+        // Get all projects referencing those scans
         LET projects_ = (
             FOR project IN ${projectsColl}
-            FOR scanid IN project.scans
-            FILTER scanid IN scanIds
+            FILTER LENGTH(INTERSECTION(project.scans, scanIds)) > 0
             SORT project.identifier
-            RETURN distinct project.identifier
-        ) 
-        
-        RETURN {"group": UNSET(group, "_key", "_id", "_rev"), "scanIds":scanIds, "projects": projects_}
+            RETURN project.identifier
+        )
 
+        RETURN {
+            group: UNSET(group, "_key", "_id", "_rev"),
+            //scanIds: scanIds,
+            //projects: projects_
+            projects: LENGTH(projects_)
+        }
     `);
         let all = await res.all();
         return json({ "data": all });
