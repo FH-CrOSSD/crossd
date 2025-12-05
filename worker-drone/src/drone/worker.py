@@ -122,6 +122,7 @@ app.conf.task_routes = {
     "retrieve_github": {"queue": "collect", "routing_key": "collect"},
     "retrieve_github_url": {"queue": "collect", "routing_key": "collect"},
     "do_metrics": {"queue": "metric", "routing_key": "metric"},
+    "retrieve_github_with_comments": {"queue": "comments", "routing_key": "comments"},
 }
 
 # include eg. task arguments in results
@@ -277,7 +278,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             .ask_releases()
             # .ask_releases_crawl()
             .ask_security_advisories()
-            .ask_issues()
+            .ask_issues(comment_body=bool(os.environ.get("ISSUE_COMMENT_BODY", False)))
             .ask_forks()
             # .ask_workflow_runs()
             # .ask_dependabot_alerts()

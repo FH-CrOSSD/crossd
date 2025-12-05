@@ -7,23 +7,26 @@ import time
 import pyArango.connection
 from celery import Celery
 
-app = Celery(
+
+routes = {
+        "retrieve_github": {"queue": "collect", "routing_key": "collect"},
+        "retrieve_github_url": {"queue": "collect", "routing_key": "collect"},
+        "do_metrics": {"queue": "metric", "routing_key": "metric"}
+    }
+
+
+def main(args):
+
+    app = Celery(
     "collect",
     broker="rediss://:{}@redis-service:6379/0?ssl_cert_reqs=required".format(
         os.environ.get("RAUTH", "")
     ),
     broker_connection_retry_on_startup=True,
-)
+    )
 
-app.conf.task_routes = {
-    "retrieve_github": {"queue": "collect", "routing_key": "collect"},
-    "retrieve_github_url": {"queue": "collect", "routing_key": "collect"},
-    "do_metrics": {"queue": "metric", "routing_key": "metric"},
-    "bak_tasks": {"queue": "bak", "routing_key": "bak"},
-}
+    app.conf.task_routes = routes
 
-
-def main(args):
     conn = pyArango.connection.Connection(
         arangoURL="https://arangodb-cluster-internal:8529",
         username=args.user,
@@ -72,15 +75,12 @@ def main(args):
             bindVars={"identifier": owner + "/" + name, "scanid": doc._id},
         )
 
-        # issue worker tasks
-        if not args.only:
-            app.send_task("bak_tasks", (owner, name, doc._id))
-            app.send_task("retrieve_github", (owner, name, doc._id))
-        else:
-            if args.only == "bak":
-                app.send_task("bak_tasks", (owner, name, doc._id))
-            elif args.only == "metric":
-                app.send_task("retrieve_github", (owner, name, doc._id))
+        # issue worker tasks based on CLI options
+        for task in args.task:
+            if args.queue:
+                app.send_task(task, (owner, name, doc._id), queue=args.queue, routing_key=args.queue)
+            else:
+                app.send_task(task, (owner, name, doc._id))
 
 
 if __name__ == "__main__":
@@ -92,7 +92,15 @@ if __name__ == "__main__":
         nargs="+",
     )
     parser.add_argument(
-        "--only", choices=["bak", "metric"], help="limit execution to a single task"
+        "--task",
+        action="append",
+        choices=list(routes.keys()),
+        default=["retrieve_github"],
+        help="Specify which task(s) to run. Can be used multiple times. Defaults to retrieve_github.",
+    )
+    parser.add_argument(
+        "--queue",
+        help="Override the default queue for all tasks",
     )
     parser.add_argument("--user", help="arangodb username", default="worker")
     parser.add_argument("--password", help="arangodb password", default="worker")

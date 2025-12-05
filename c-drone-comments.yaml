@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: c-drone-comments
+    environment: prod
+    app.kubernetes.io/name: crossd
+    app.kubernetes.io/instance: crossd-alpha
+    app.kubernetes.io/version: "0.1"
+    app.kubernetes.io/component: c-drone-comments
+    app.kubernetes.io/part-of: crossd
+  annotations:
+    reloader.stakater.com/auto: "true"
+  name: c-drone-comments
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: c-drone-comments
+  strategy: { type: RollingUpdate }
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: c-drone-comments
+        pod: c-drone-comments
+    spec:
+      restartPolicy: Always
+      securityContext:
+        runAsUser: 1337
+        runAsGroup: 1337
+      containers:
+        - image: ghcr.io/fh-crossd/worker-drone:latest
+          #- image: localhost:32000/worker-drone:latest
+          imagePullPolicy: Always
+          name: c-drone-comments
+          args: ["-Q", "comments", "-c", "1"]
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          env:
+            - name: REQUESTS_CA_BUNDLE
+              value: /etc/ssl/certs/ca-certificates.crt
+            - name: PDM_LOG_DIR
+              value: /tmp
+            - name: RAUTH
+              valueFrom:
+                secretKeyRef:
+                  name: redis-auth
+                  key: RAUTH
+            - name: GH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ghtoken
+                  key: GH_TOKEN
+            - name: WORKER_USER
+              valueFrom:
+                secretKeyRef:
+                  name: arango-worker-pwd
+                  key: username
+            - name: WORKER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: arango-worker-pwd
+                  key: password
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: ISSUE_COMMENT_BODY
+              value: "True"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: ca-certificates
+              mountPath: /etc/ssl/certs/
+              readOnly: true
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 10Gi
+            # medium: Memory
+        - name: ca-certificates
+          configMap:
+            name: cert-bundle
+            defaultMode: 0644
+            optional: false
+            items:
+              - key: ca-certificates.crt
+                path: ca-certificates.crt
+status: {}
