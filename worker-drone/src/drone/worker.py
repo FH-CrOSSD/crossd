@@ -278,7 +278,10 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             .ask_releases()
             # .ask_releases_crawl()
             .ask_security_advisories()
-            .ask_issues(comment_body=bool(os.environ.get("ISSUE_COMMENT_BODY", False)))
+            .ask_issues(
+                comment_body=bool(os.environ.get("ISSUE_COMMENT_BODY", False)),
+                issue_body=bool(os.environ.get("ISSUE_BODY", False))
+            )
             .ask_forks()
             # .ask_workflow_runs()
             # .ask_dependabot_alerts()

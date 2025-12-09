@@ -69,6 +69,8 @@ spec:
               value: "1"
             - name: ISSUE_COMMENT_BODY
               value: "True"
+            - name: ISSUE_BODY
+              value: "True"
           volumeMounts:
             - name: tmp
               mountPath: /tmp
