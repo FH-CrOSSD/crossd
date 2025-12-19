@@ -62,5 +62,5 @@ spec:
                     path: ca-certificates.crt
             - name: "netidee"
               configMap:
-                name: "netidee-configmaps"
+                name: "netidee-configmap"
       backoffLimit: 4
