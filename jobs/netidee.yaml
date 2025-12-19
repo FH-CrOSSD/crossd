@@ -19,7 +19,7 @@ spec:
           command: ["sh", "-c"]
           args:
             - >
-              python3 add_task.py --user $USER --password $PASSWORD -t netidee-03-06-2025 -t $(date -uI) -t netidee --only metric
+              python3 add_task.py --user $USER --password $PASSWORD -t netidee-03-06-2025 -t $(date -uI) -t netidee
               $(cat /netidee.txt)
           env:
             - name: REQUESTS_CA_BUNDLE
