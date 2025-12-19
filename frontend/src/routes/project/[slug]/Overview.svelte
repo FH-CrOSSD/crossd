@@ -203,15 +203,8 @@
 			items={buttons}
 			class="w-50"
 			onclick={chartClick}
-			itemClass="h-1/5 cursor-pointer"
-		></Listgroup>
+			itemClass='h-1/5 cursor-pointer aria-[current=true]:bg-[#f3f4f6] aria-[current=true]:dark:bg-[#101828] aria-[current=true]:text-[#ef562f] aria-[current=true]:dark:text-[#ef562f]'
+			></Listgroup>
 	</div>
 </div>
 
-<style>
-	:global(#lgroup1 > button[aria-current='true']) {
-		background-color: light-dark(#f3f4f6, #101828);
-		color: #ef562f;
-		/* #26a0fc */
-	}
-</style>

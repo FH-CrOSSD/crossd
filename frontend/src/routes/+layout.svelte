@@ -89,9 +89,9 @@
 </Footer>
 
 <style>
-	:global(:root) {
-		color-scheme: light dark;
-	}
+		/* :global(:root) {
+			color-scheme: light dark;
+		} */
 	:global(nav) {
 		border-bottom-width: 2px;
 		margin-bottom: 1em;
