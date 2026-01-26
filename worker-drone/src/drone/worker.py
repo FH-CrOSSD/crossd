@@ -332,7 +332,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     except TypeError:
         res["repository"]["defaultBranchRef"] = {"last_commit": {"history": {"edges": []}}}
 
-    chunk_size=10000
+    chunk_size=5000
     # chunk_size=5
     
     # store new commits
