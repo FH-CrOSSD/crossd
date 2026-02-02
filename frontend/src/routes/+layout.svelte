@@ -64,7 +64,7 @@
 </div>
 </div>
 <Footer class="my-10 container mx-auto" footerType="undefined">
-	<FooterCopyright href="/" by="St. Pölten University of Applied Sciences" year={2025} />
+	<FooterCopyright href="/" by="University of Applied Sciences St. Pölten" year={2026} />
 	<FooterLinkGroup
 		class="flex flex-wrap items-center mt-3 text-sm text-gray-500 dark:text-gray-400 sm:mt-0"
 	>

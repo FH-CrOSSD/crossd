@@ -5,11 +5,11 @@
 <div class="px-6 relative flex flex-col">
 	<Heading tag="h2" class="">Data protection</Heading>
 	<P class="my-5">
-		Controller:<br />St. Pölten University of Applied Sciences<br />Campus-Platz 1<br />3100 St.
-		Pölten<br /><A href="mailto:datenschutz@fhstp.ac.at">datenschutz@fhstp.ac.at</A>
+		Controller:<br />Hochschule für Angewandte Wissenschaften St. Pölten GmbH<br />Campus-Platz 1<br />3100 St.
+		Pölten<br /><A href="mailto:datenschutz@ustp.at">datenschutz@ustp.at</A>
 	</P>
 	<P class="mb-5">
-		Data protection officer of the St. Pölten University of Applied Sciences:<br />Urbanek Lind
+		Data protection officer of Hochschule für Angewandte Wissenschaften St. Pölten GmbH:<br />Urbanek Lind
 		Schmid Reisch Rechtsanwälte OG<br />Domgasse 2<br />3100 St. Pölten <br /><A
 			href="mailto:office.st.poelten@ulsr.at">office.st.poelten@ulsr.at</A
 		>
@@ -64,28 +64,27 @@
 		<Li>The right of opposition</Li>
 	</List>
 	<P class="my-5">
-		You can assert these rights by responding to the responsible data security staff at the St.
-		Pölten UAS. Please use this contact form.
+		You can assert these rights by contacting Hochschule für Angewandte Wissenschaften St. Pölten GmbH as the controller.
 	</P>
 	<List tag="ul" class="space-y-1 text-gray-900 dark:text-white">
 		<Li>The right of complaint</Li>
 	</List>
 	<P class="my-5">
-		You can assert this right by filing a complaint with the Austrian Data Protection Authority at <A
+		You can assert this right by lodging a complaint with the Austrian Data Protection Authority at <A
 			href="mailto:dsb@dsb.gv.at">dsb@dsb.gv.at</A
 		> as the competent supervisory authority.
 	</P>
 	<P class="mb-5">
 		In case you have any further questions or suggestions, please contact us by e-mail at any time: <A
-			href="mailto:datenschutz@fhstp.ac.at">datenschutz@fhstp.ac.at</A
+			href="mailto:datenschutz@ustp.at">datenschutz@ustp.at</A
 		>
 	</P>
 	<P>
-		As part of the teaching and research activities of the University of Applied Sciences St.
-		Pölten, projects and scientific work within the meaning of Section 2d of the Research
-		Organization Act are carried out by the University of Applied Sciences St. Pölten as the
-		responsible body and for predominant legitimate interests in scientific research. All concerned
-		parties will be informed with the details of the associated data processing and the associated
+		As part of the teaching and research activities of the USTP, 
+		projects and scientific work within the meaning of section 2d of the Research Organisation Act (FOG) 
+		are carried out by Angewandte Wissenschaften St. Pölten GmbH as the controller 
+		and for predominant legitimate interests in scientific research. 
+		Data subjects will be informed of the details of the associated data processing and the associated 
 		data protection rights in connection with the concrete projects and scientific work.
 	</P>
 </div>
