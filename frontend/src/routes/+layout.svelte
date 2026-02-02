@@ -14,7 +14,7 @@
 	// import '../app.pcss';
 	import '../app.css';
 	import { onMount } from 'svelte';
-	import { ArrowUpRightFromSquareOutline } from 'flowbite-svelte-icons';
+	import { ArrowUpRightFromSquareOutline, GithubSolid } from 'flowbite-svelte-icons';
 	// import { theme } from '$lib/util';
 
 	const btnClass =
@@ -71,20 +71,25 @@
 		<FooterLink href="/about">About Project</FooterLink>
 		<FooterLink href="/privacy">Privacy Policy</FooterLink>
 		<FooterLink href="/legal-information">Legal Information</FooterLink>
-		<div class="ml-auto w-[10%]">
-			<FooterIcon href="">
+		<div class="ml-auto w-32 flex h-full">
+			<FooterIcon href="https://www.netidee.at/crossd2" class="flex">
 				<img
 					class="visible dark:invisible dark:w-0 dark:h-0 pb-3"
 					src="/netidee-logo-light.svg"
 					alt="netidee logo"
 				/>
+				
 				<img
 					class="invisible w-0 h-0 dark:visible dark:w-auto dark:h-auto pb-3"
 					src="/netidee-logo-dark.svg"
 					alt="netidee logo"
 				/>
 			</FooterIcon>
+			
 		</div>
+		<FooterIcon href="https://github.com/FH-CrOSSD/crossd" class="h-full ml-3 pb-3">
+				<GithubSolid class="h-auto w-8" />
+		</FooterIcon>
 	</FooterLinkGroup>
 </Footer>
 
