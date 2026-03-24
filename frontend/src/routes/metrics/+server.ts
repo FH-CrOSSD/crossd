@@ -43,9 +43,15 @@ export async function POST({ request }) {
                 LIMIT 1
                 RETURN UNSET(bak, "_key", "_id", "_rev")
             )
+            LET ai_metric = (
+                FOR ai in ai_metrics
+                FILTER elem == ai.scan_id && LOWER(ai.identifier) == LOWER(doc.identifier)
+                LIMIT 1
+                RETURN UNSET(ai, "_key", "_id", "_rev")
+            )
             FOR scan IN ${scansColl}
             FILTER elem == scan._id
-            RETURN MERGE(UNSET(scan, "_key", "_id", "_rev"),{metric: metric,bak: bak})
+            RETURN MERGE(UNSET(scan, "_key", "_id", "_rev"),{metric: metric, bak: bak, ai_metric:ai_metric})
         )
         RETURN MERGE(UNSET(doc, "_key", "_id", "_rev"), {scans: scans})
     `);

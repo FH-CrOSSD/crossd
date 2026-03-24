@@ -50,6 +50,5 @@ export async function load({ fetch, params, url }) {
     const md = await getMetricsMD();
     // const avg_response = await fetch(`/metrics/avg`, { method: "POST", body: JSON.stringify({}) });
     // const avg = (await avg_response.json())["avg"];
-
     return { title: params.slug, projects: getProject(fetch, path), md: md, avg: getAvg(fetch) };
 }

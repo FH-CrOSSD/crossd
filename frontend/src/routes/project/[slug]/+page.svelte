@@ -41,6 +41,7 @@
 	import Details from './Details.svelte';
 	import Overview from './Overview.svelte';
 	import { GithubSolid } from 'flowbite-svelte-icons';
+	import AIAssessment from './AIAssessment.svelte';
 
 	/** @type {import('./$types').PageData */
 	export let data: {
@@ -63,6 +64,7 @@
 	// store data retrieved from metrics collections
 	let projects = {};
 	let projectData: { [key: string]: any } = {};
+	let ai: { [key: string]: any } = {};
 	// store data retrieved from bak_metrics collections
 	let bak: { [key: string]: any } = {};
 	let avg;
@@ -94,11 +96,14 @@
 		if (projects?.scans) {
 			let tmpdata = {};
 			let tmpbak = {};
+			let tmpai = {};
 			let tmpsnapshots = [];
+			console.log(projects.scans);
 
 			for (let i = 0; i < projects?.scans.length; i++) {
 				tmpdata[projects.scans[i]['issuedAt']] = projects.scans[i].metric[0];
 				tmpbak[projects.scans[i]['issuedAt']] = projects.scans[i].bak[0];
+				tmpai[projects.scans[i]['issuedAt']] = projects.scans[i].ai_metric?.[0];
 				if (Object.keys(projects.scans[i].metric[0] ?? {}).length > 0 || projects.scans[i].bak[0]) {
 					tmpsnapshots.push({
 						value: projects.scans[i]['issuedAt'].toString(),
@@ -108,6 +113,7 @@
 			}
 			projectData = tmpdata;
 			bak = tmpbak;
+			ai = tmpai;
 			snapshots = tmpsnapshots;
 			updateSelected();
 		}
@@ -213,7 +219,7 @@
 			project_id = Object.keys(bak[selected]?.elephant_factor ?? [])[0];
 		}
 	}
-let activeClass =
+	let activeClass =
 		'inline-block text-sm font-medium text-center disabled:cursor-not-allowed active p-4 text-primary-600 bg-gray-100 rounded-t-lg dark:bg-gray-900 dark:text-primary-500';
 
 	// unsubscribe from the overlayStore when user leaves the page
@@ -226,10 +232,13 @@ let activeClass =
 <div class="flex gap-10">
 	<div class="w-4/5">
 		{#await Promise.all([data.projects, data.avg])}
-			<Heading class="flex break-words max-w-[calc(100%-25rem)]" tag="h1">{data.title} <A
-						class="text-black dark:text-white hover:text-primary-500 dark:hover:text-primary-500"
-						href="https://github.com/{data.title}"><GithubSolid class="ml-2 h-full w-10" /></A
-					></Heading>
+			<Heading class="flex break-words max-w-[calc(100%-25rem)]" tag="h1"
+				>{data.title}
+				<A
+					class="text-black dark:text-white hover:text-primary-500 dark:hover:text-primary-500"
+					href="https://github.com/{data.title}"><GithubSolid class="ml-2 h-full w-10" /></A
+				></Heading
+			>
 			<Hr />
 			<Tabs style="underline" class="w-full" classes={{ content: 'bg-white dark:bg-gray-800' }}>
 				<TabItem {activeClass} open class="">
@@ -285,6 +294,13 @@ let activeClass =
 				</TabItem>
 				<TabItem {activeClass} title="Details">
 					<Details data={{ data: projectData, bak: bak, md: data.md }} bind:selected {snapshots} />
+				</TabItem>
+				<TabItem {activeClass} title="AI Assessment">
+					{#if !ai[selected]}
+						<P size="lg">There is currently no AI assessment available for this snapshot.</P>
+					{:else}
+						<AIAssessment data={projectData} {ai} bind:selected {snapshots} />
+					{/if}
 				</TabItem>
 			</Tabs>
 		{/await}
