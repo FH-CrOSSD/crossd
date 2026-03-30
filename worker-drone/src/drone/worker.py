@@ -99,6 +99,9 @@ class CollectTask(BaseTask):
         super().on_success(retval, task_id, args, kwargs)
         console.print("launched task [dodger_blue1]do_metrics[/]")
         app.send_task("do_metrics", (retval,))
+        if bool(os.environ.get("ISSUE_BODY", False)):
+            console.print("launched task [dodger_blue1]do_llm_metrics[/]")
+            app.send_task("do_llm_metrics", (retval,))
 
 
 app = Celery(
@@ -122,6 +125,7 @@ app.conf.task_routes = {
     "retrieve_github": {"queue": "collect", "routing_key": "collect"},
     "retrieve_github_url": {"queue": "collect", "routing_key": "collect"},
     "do_metrics": {"queue": "metric", "routing_key": "metric"},
+    "do_llm_metrics": {"queue": "llm_metrics", "routing_key": "llm_metrics"},
     "retrieve_github_with_comments": {"queue": "comments", "routing_key": "comments"},
 }
 
