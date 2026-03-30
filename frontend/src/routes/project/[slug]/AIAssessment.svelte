@@ -121,9 +121,10 @@
 		};
 	};
 </script>
-<Alert color="amber" class="mb-4">
+<Alert color="amber" class="mb-4 py-2">
 {#snippet icon()}<ExclamationCircleOutline class="h-5 w-5" />{/snippet}
-	These metrics are generated using artificial intelligence and may contain errors or inaccuracies. We do not guarantee its completeness or reliability.
+	These metrics are generated using artificial intelligence operating on repository data and may contain errors or inaccuracies.
+	<br>We do not guarantee its completeness or reliability.
 </Alert>
 <div class="flex flex-wrap gap-10">
 	<!-- {JSON.stringify(ai,null,4)} -->
