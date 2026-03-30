@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: llm-drone
+    environment: prod
+    app.kubernetes.io/name: crossd
+    app.kubernetes.io/instance: crossd-alpha
+    app.kubernetes.io/version: "0.1"
+    app.kubernetes.io/component: llm-drone
+    app.kubernetes.io/part-of: crossd
+  annotations:
+    reloader.stakater.com/auto: "true"
+  name: llm-drone
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm-drone
+  strategy: { type: RollingUpdate }
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: llm-drone
+        pod: llm-drone
+    spec:
+      restartPolicy: Always
+      securityContext:
+        runAsUser: 1337
+        runAsGroup: 1337
+      containers:
+        - image: ghcr.io/fh-crossd/llm-drone:latest
+        # - image: llm-drone:latest
+          # imagePullPolicy: Never
+        # - image: localhost:32000/llm-drone:latest
+          imagePullPolicy: Always
+          name: llm-drone
+          args: ["-Q", "llm_metrics", "-c", "1"]
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          env:
+            - name: REQUESTS_CA_BUNDLE
+              value: /etc/ssl/certs/ca-certificates.crt
+            - name: PDM_LOG_DIR
+              value: /tmp
+            - name: RAUTH
+              valueFrom:
+                secretKeyRef:
+                  name: redis-auth
+                  key: RAUTH
+            - name: WORKER_USER
+              valueFrom:
+                secretKeyRef:
+                  name: arango-worker-pwd
+                  key: username
+            - name: WORKER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: arango-worker-pwd
+                  key: password
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: LLM_MODEL
+              value: "gemma3:27b"
+            - name: LLM_HOST
+              value: "https://openwebui.ai.ustp.at/ollama"
+            - name: LOG_DIR
+              value: "/tmp"
+            - name: LLM_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: llm-auth
+                  key: LLM_AUTH_TOKEN
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: ca-certificates
+              mountPath: /etc/ssl/certs/
+              readOnly: true
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 2Gi
+            # medium: Memory
+        - name: ca-certificates
+          configMap:
+            name: cert-bundle
+            defaultMode: 0644
+            optional: false
+            items:
+              - key: ca-certificates.crt
+                path: ca-certificates.crt
+status: {}
