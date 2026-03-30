@@ -336,9 +336,10 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     except TypeError:
         res["repository"]["defaultBranchRef"] = {"last_commit": {"history": {"edges": []}}}
 
-    chunk_size=5000
-    # chunk_size=5
-    
+    chunk_size = 5000
+    batch_gql = 0
+    batch_clone = 0
+
     # store new commits
     if not count_res["repository"]["isEmpty"]:
         if "commits" not in res:
@@ -359,7 +360,11 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             ],
         }
         app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
-        
+        console.log(f"inserted batch {batch_gql}")
+        console.log(f"inserted batch {batch_clone}")
+        batch_gql += 1
+        batch_clone += 1
+
         query = """
             FOR c IN commits
             FILTER c.identifier == @ident
@@ -374,6 +379,8 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
                 "gql": chunk,
             }
             app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
+            console.log(f"inserted batch {batch_gql}")
+            batch_gql += 1
 
         query = """
             FOR c IN commits
@@ -386,6 +393,8 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
                 "clone": chunk,
             }
             app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
+            console.log(f"inserted batch {batch_clone}")
+            batch_clone += 1
 
     if not c_available:
         query = """
