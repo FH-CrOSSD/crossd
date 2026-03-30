@@ -226,7 +226,7 @@ def do_llm_metrics(self, retval: str):
 
     repo_data = res
     repo_slug = repo_data.get("repository", {}).get("nameWithOwner")
-    
+
     snapshot_timestamp = None  # may still be None if auto-selected
     # If auto-selected, recover the timestamp from the returned data
     if snapshot_timestamp is None:
@@ -253,13 +253,14 @@ def do_llm_metrics(self, retval: str):
 
     llm_res = {elem["name"]: elem for elem in results}
 
-    res["task_id"] = self.request.id
-    res["timestamp"] = time.time()
-    res["scan_id"] = retval["scan_id"]
-    res["result"] = llm_res
-    res["identifier"] = res["repository"]["nameWithOwner"]
+    ai_res = {}
+    ai_res["task_id"] = self.request.id
+    ai_res["timestamp"] = time.time()
+    ai_res["scan_id"] = retval["scan_id"]
+    ai_res["result"] = llm_res
+    ai_res["identifier"] = res["repository"]["nameWithOwner"]
 
-    console.print("storing metric data in database")
-    self.ai_metrics.createDocument(initDict=res).save()
+    console.print("storing ai metric data in database")
+    self.ai_metrics.createDocument(initDict=ai_res).save()
     self.ai_metrics.ensurePersistentIndex(["scan_id"], unique=False)
-    return res
+    return ai_res
