@@ -19,8 +19,6 @@ own codebase and which projects might benefit from their involvement and assista
 funding agencies or companies to allocate funding or support to critically important OSS
 projects in need of help.
 
-![cluster_crossd2](https://github.com/user-attachments/assets/8cd09c54-0c60-4e94-b8b7-287f68969988)
-
 ### Features
 
 - Different crawlers for retrieving data about repositories and calculating our metrics
