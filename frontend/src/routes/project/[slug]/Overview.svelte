@@ -109,9 +109,9 @@
 		return c;
 	});
 	async function chartClick(e) {
-		currentButton = e?.detail['name'];
-		prepareSelector(e?.detail['data']);
-		prepareChart(e?.detail['name']);
+		currentButton = e?.target.innerText;
+		prepareSelector(e?.target.attributes.data.value);
+		prepareChart(e?.target.innerText);
 		// console.log(chartOpts);
 	}
 </script>

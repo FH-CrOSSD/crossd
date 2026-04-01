@@ -107,12 +107,12 @@
 		}
 	});
 	async function chartClick(e) {
-		currentButton = e?.detail['name'];
+		currentButton = e?.target.innerText;
 		const res = await fetch(page.url + '/chart', {
 			method: 'POST',
 			body: JSON.stringify({
 				name: decodeURIComponent(page.params.slug),
-				parameter: e?.detail['data']
+				parameter: e?.target.attributes.data.value
 			}),
 			headers: {
 				'Content-Type': 'application/json'
