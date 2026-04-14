@@ -87,7 +87,7 @@
 							color="gray"
 							class="rounded p-2 hover:bg-gray-100 dark:hover:bg-gray-500"
 							checked={!Boolean(localStorage.getItem('futuristic-font'))}
-							onclick={toggleFont}>Futuristic Font</Toggle
+							onclick={toggleFont}>Modern Font</Toggle
 						>
 						<Toggle
 							onclick={toggleMode}
