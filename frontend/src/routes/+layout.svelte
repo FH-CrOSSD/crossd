@@ -65,7 +65,7 @@
 
 <main class={!futureFont ? 'future-font' : 'normal-font'}>
 <Navbar
-	class="bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-100 dark:border-gray-700 px-2 sm:px-4 py-2.5 w-full"
+	class="bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-100 dark:border-gray-700 px-2 sm:px-4 py-2.5 w-full" fluid="true"
 >
 	<!-- navContainerClass="border-gray-100 dark:border-gray-700 divide-gray-100 dark:divide-gray-700" class="text-gray-700 dark:text-gray-200 dark:bg-gray-900 bg-white"> -->
 	<NavBrand href="/">
@@ -97,12 +97,15 @@
 						>
 				</Dropdown>
 </Navbar>
-<div class="overflow-y-auto p-0 m-0 h-[calc(76vh))] min-h-fit">
+<div class="overflow-y-auto p-0 m-0 min-h-fit px-5 pb-[113px]">
+<!-- <div class="overflow-y-auto p-0 m-0 h-[calc(76vh))] min-h-fit px-5"> -->
 <div class="container mx-auto my-10 ">
 	<slot />
 </div>
 </div>
-<Footer class="my-10 container mx-auto" footerType="undefined">
+<!-- <Footer class="my-10 container mx-auto" footerType="none"> -->
+<Footer footerType="sticky">
+	<!-- <span class="container mx-auto"> -->
 	<FooterCopyright href="/" by="University of Applied Sciences St. Pölten" year={2026} />
 	<FooterLinkGroup
 		class="flex flex-wrap items-center mt-3 text-sm text-gray-500 dark:text-gray-400 sm:mt-0"
@@ -113,23 +116,24 @@
 		<div class="ml-auto w-32 flex h-full">
 			<FooterIcon href="https://www.netidee.at/crossd2" class="flex">
 				<img
-					class="visible dark:invisible dark:w-0 dark:h-0 pb-3"
+					class="visible dark:invisible dark:w-0 dark:h-0"
 					src="/netidee-logo-light.svg"
 					alt="netidee logo"
 				/>
 				
 				<img
-					class="invisible w-0 h-0 dark:visible dark:w-auto dark:h-auto pb-3"
+					class="invisible w-0 h-0 dark:visible dark:w-auto dark:h-auto"
 					src="/netidee-logo-dark.svg"
 					alt="netidee logo"
 				/>
 			</FooterIcon>
 			
 		</div>
-		<FooterIcon href="https://github.com/FH-CrOSSD/crossd" class="h-full ml-3 pb-3">
+		<FooterIcon href="https://github.com/FH-CrOSSD/crossd" class="h-full ml-3 pb-1">
 				<GithubSolid class="h-auto w-8" />
 		</FooterIcon>
 	</FooterLinkGroup>
+	<!-- </span> -->
 </Footer>
 </main>
 
