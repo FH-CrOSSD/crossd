@@ -2,13 +2,13 @@
 	import MetricCard from './MetricCard.svelte';
 	import MetricRow from './MetricRow.svelte';
 	import { bakGenericDataFn as bgdFn, toFixed2 } from '$lib/util';
-	import { Alert, Heading, Indicator, Listgroup, P, Tooltip } from 'flowbite-svelte';
+	import { Alert, Heading, Hr, Indicator, List, Listgroup, P, Tooltip, Li } from 'flowbite-svelte';
 	import FloatMetricRow from './FloatMetricRow.svelte';
 	import MetricValue from './MetricValue.svelte';
 	import { chartOptions } from '$lib/chartOptions';
 	import { clickedSelector, overlayStore } from './Row.svelte';
 	import { Chart } from '@flowbite-svelte-plugins/chart';
-	import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
+	import { ExclamationCircleOutline, InfoCircleSolid } from 'flowbite-svelte-icons';
 
 	let { data, ai, selected, project_id = null, snapshots } = $props();
 
@@ -115,139 +115,142 @@
 		prepareChart(e?.detail['name']);
 		// console.log(chartOpts);
 	}
-	let val = (key:string, value:string) => {
+	let val = (key: string, value: string) => {
 		return (selected: number) => {
-			return ai[selected]["result"]?.[key]?.[value] ?? null;
+			return ai[selected]['result']?.[key]?.[value] ?? null;
 		};
 	};
 </script>
+
 <Alert color="amber" class="mb-4 py-2">
-{#snippet icon()}<ExclamationCircleOutline class="h-5 w-5" />{/snippet}
-	These metrics are generated using artificial intelligence operating on repository data and may contain errors or inaccuracies.
-	<br>We do not guarantee its completeness or reliability.
+	{#snippet icon()}<ExclamationCircleOutline class="h-5 w-5" />{/snippet}
+	These metrics are generated using artificial intelligence operating on repository data and may contain
+	errors or inaccuracies.
+	<br />We do not guarantee its completeness or reliability.
 </Alert>
 <div class="flex flex-wrap gap-10">
 	<!-- {JSON.stringify(ai,null,4)} -->
 	<MetricCard cardClass="min-w-[48%]">
-		<svelte:fragment slot="heading">{ai[selected]["result"]["friendliness"]["display_name"]}</svelte:fragment>
-		<MetricRow bind:selected selector={val("friendliness","metric")}>Metric:</MetricRow>
-		<br>
+		<svelte:fragment slot="heading">
+			<div class="place-content-between grid grid-cols-2">
+				{ai[selected]['result']['friendliness']['display_name']}
+				<InfoCircleSolid class="shrink-0 h-6 w-6 ml-auto text-gray-400" />
+				<Tooltip
+					class="max-w-md bg-gray-200 border-gray-300 dark:bg-gray-600 dark:border-gray-500"
+					trigger="click"
+				>
+					<P class="text-base font-bold mb-2">LLM instructions (w/o data)</P>
+					<P class="leading-normal">
+						Evaluate how friendly and welcoming the repository developers are when interacting with
+						contributors and users in issues and comments. Consider tone, responsiveness,
+						helpfulness, and encouragement. Give a score from 1 to 10 where 1 is hostile/unwelcoming
+						and 10 is exceptionally friendly and supportive.
+					</P>
+				</Tooltip>
+			</div>
+		</svelte:fragment>
+		<MetricRow bind:selected selector={val('friendliness', 'metric')}>Metric:</MetricRow>
+		<br />
 		<!-- <MetricRow bind:selected selector={val("friendliness","explanation")}>Explanation:</MetricRow> -->
-		<svelte:fragment slot="remainder"><P>Explanation:</P><P><br>{ai[selected]["result"]["friendliness"]["explanation"]}</P></svelte:fragment>
+		<svelte:fragment slot="remainder"
+			><P>Explanation:</P><P><br />{ai[selected]['result']['friendliness']['explanation']}</P>
+		</svelte:fragment>
 	</MetricCard>
 	<MetricCard cardClass="min-w-[48%]">
-		<svelte:fragment slot="heading">{ai[selected]["result"]["documentation_quality"]["display_name"]}</svelte:fragment>
-		<MetricRow bind:selected selector={val("documentation_quality","metric")}>Metric:</MetricRow>
-		<br>
+		<svelte:fragment slot="heading">
+			<div class="place-content-between grid grid-cols-2">
+				{ai[selected]['result']['documentation_quality']['display_name']}
+				<InfoCircleSolid class="shrink-0 h-6 w-6 ml-auto text-gray-400" />
+				<Tooltip
+					class="max-w-md bg-gray-200 border-gray-300 dark:bg-gray-600 dark:border-gray-500"
+					trigger="click"
+				>
+					<P class="text-base font-bold mb-2">LLM instructions (w/o data)</P>
+					<P class="leading-normal">
+						Analyse the quality of documentation in this repository. Consider the README structure,
+						whether there are contributing guides, code of conduct, issue/PR templates, and external
+						docs links. Give a score from 1 to 10 where 1 is poor and 10 is excellent.
+					</P>
+				</Tooltip>
+			</div>
+		</svelte:fragment>
+		<MetricRow bind:selected selector={val('documentation_quality', 'metric')}>Metric:</MetricRow>
+		<br />
 		<!-- <MetricRow bind:selected selector={val("documentation_quality","explanation")}>Explanation:</MetricRow> -->
-		<svelte:fragment slot="remainder"><P>Explanation:</P><P><br>{ai[selected]["result"]["documentation_quality"]["explanation"]}</P></svelte:fragment>
+		<svelte:fragment slot="remainder"
+			><P>Explanation:</P><P
+				><br />{ai[selected]['result']['documentation_quality']['explanation']}</P
+			></svelte:fragment
+		>
 	</MetricCard>
 	<MetricCard cardClass="min-w-[48%]">
-		<svelte:fragment slot="heading">{ai[selected]["result"]["development_efficiency"]["display_name"]}</svelte:fragment>
-		<MetricRow bind:selected selector={val("development_efficiency","metric")}>Metric:</MetricRow>
-		<br>
+		<svelte:fragment slot="heading">
+			<div class="place-content-between grid grid-cols-2">
+				{ai[selected]['result']['development_efficiency']['display_name']}
+				<InfoCircleSolid class="shrink-0 h-6 w-6 ml-auto text-gray-400" />
+				<Tooltip
+					class="max-w-md bg-gray-200 border-gray-300 dark:bg-gray-600 dark:border-gray-500"
+					trigger="click"
+				>
+					<P class="text-base font-bold mb-2">LLM instructions (w/o data)</P>
+					<P class="leading-normal">
+						Evaluate how efficiently development is conducted in this repository. Consider issue
+						resolution time, PR turnaround, branching strategy, release cadence, commit activity,
+						and contributor productivity. Give a score from 1 to 10 where 1 is very inefficient and
+						10 is highly efficient.
+					</P>
+				</Tooltip>
+			</div></svelte:fragment
+		>
+		<MetricRow bind:selected selector={val('development_efficiency', 'metric')}>Metric:</MetricRow>
+		<br />
 		<!-- <MetricRow bind:selected selector={val("development_efficiency","explanation")}>Explanation:</MetricRow> -->
-		<svelte:fragment slot="remainder"><P>Explanation:</P><P><br>{ai[selected]["result"]["development_efficiency"]["explanation"]}</P></svelte:fragment>
+		<svelte:fragment slot="remainder"
+			><P>Explanation:</P><P
+				><br />{ai[selected]['result']['development_efficiency']['explanation']}</P
+			></svelte:fragment
+		>
 	</MetricCard>
 	<MetricCard cardClass="min-w-[48%]">
-		<svelte:fragment slot="heading">{ai[selected]["result"]["project_maturity"]["display_name"]}</svelte:fragment>
-		<MetricRow bind:selected selector={val("project_maturity","metric")}>Metric:</MetricRow>
-		<FloatMetricRow
-			{selected}
-			selector={bakGenericDataFn('maturity_level', project_id)}
-			>Maturity level: <br> <span class="text-amber-600">(non-AI metric)</span></FloatMetricRow
+		<svelte:fragment slot="heading">
+			<div class="place-content-between grid grid-cols-2">
+				{ai[selected]['result']['project_maturity']['display_name']}
+				<InfoCircleSolid class="shrink-0 h-6 w-6 ml-auto text-gray-400" />
+				<Tooltip
+					class="max-w-md bg-gray-200 border-gray-300 dark:bg-gray-600 dark:border-gray-500"
+					trigger="click"
+				>
+					<P class="text-base font-bold mb-2">LLM instructions (w/o data)</P>
+					<P class="leading-normal">
+						Evaluate the overall maturity of this open-source project. Score holistically across ALL
+						of the following dimensions — no single dimension should dominate:
+						<List class="my-2">
+							<Li>Governance: code of conduct, contributing guide, issue/PR templates</Li>
+							<Li>Community: contributor count, bus-factor, PR activity, issue responsiveness</Li>
+							<Li>Release & versioning: release history, cadence, tagging</Li>
+							<Li>Documentation: README quality, external docs, changelogs</Li>
+							<Li>CI/CD & automation: automated tests, build pipelines</Li>
+							<Li
+								>Security posture: security policy presence, advisory count/severity, patch
+								responsiveness — treat this as ONE of the six dimensions above, not a veto over the
+								others.</Li
+							>
+						</List>
+						Give a score from 1 to 100 in increments of 0.1 where 1 is very immature and 100 is a fully
+						mature project.
+					</P>
+				</Tooltip>
+			</div>
+		</svelte:fragment>
+		<MetricRow bind:selected selector={val('project_maturity', 'metric')}>Metric:</MetricRow>
+		<FloatMetricRow {selected} selector={bakGenericDataFn('maturity_level', project_id)}
+			>Maturity level: <br /> <span class="text-amber-600">(non-AI metric)</span></FloatMetricRow
 		>
-		<br>
+		<br />
 		<!-- <MetricRow bind:selected selector={val("project_maturity","explanation")}>Explanation:</MetricRow> -->
-		<svelte:fragment slot="remainder"><P>Explanation:</P><P><br>{ai[selected]["result"]["project_maturity"]["explanation"]}</P></svelte:fragment>
+		<svelte:fragment slot="remainder"
+			><P>Explanation:</P><P><br />{ai[selected]['result']['project_maturity']['explanation']}</P
+			></svelte:fragment
+		>
 	</MetricCard>
-	<!-- <MetricCard>
-		<Heading tag="h4">Stats</Heading>
-		<div></div>
-		<MetricRow
-			{selected}
-			selector={bakGenericDataFn('elephant_factor', project_id)}
-			valueClass={getColorClasses(
-				bakGenericDataFn('elephant_factor', project_id)(selected),
-				avg.elephant_factor
-			)}>Elephant factor:</MetricRow
-		>
-		<Tooltip color="gray">Average: {avg.elephant_factor}</Tooltip>
-		<FloatMetricRow
-			{selected}
-			selector={bakGenericDataFn('maturity_level', project_id)}
-			valueClass={getColorClasses(
-				bakGenericDataFn('maturity_level', project_id)(selected),
-				avg.maturity_level
-			)}>Maturity level:</FloatMetricRow
-		>
-		<Tooltip color="gray">Average: {avg.maturity_level}</Tooltip>
-		<FloatMetricRow
-			{selected}
-			selector={bakGenericDataFn('criticality_score', project_id)}
-			valueClass={getColorClasses(
-				bakGenericDataFn('criticality_score', project_id)(selected),
-				avg.criticality_score
-			)}>Criticality score:</FloatMetricRow
-		>
-		<Tooltip color="gray">Average: {avg.criticality_score}</Tooltip>
-		<FloatMetricRow
-			{selected}
-			selector={bakGenericDataFn('support_rate', project_id)}
-			valueClass={getColorClasses(
-				bakGenericDataFn('support_rate', project_id)(selected),
-				avg.support_rate
-			)}>Support rate:</FloatMetricRow
-		>
-		<Tooltip color="gray">Average: {avg.support_rate}</Tooltip>
-		<FloatMetricRow
-			{selected}
-			selector={bakGenericDataFn(
-				'github_community_health_percentage',
-				project_id,
-				'custom_health_score'
-			)}
-			valueClass={getColorClasses(
-				bakGenericDataFn(
-					'github_community_health_percentage',
-					project_id,
-					'custom_health_score'
-				)(selected),
-				avg.github_community_health_percentage
-			)}>Github community healh:</FloatMetricRow
-		>
-		<Tooltip color="gray">Average: {avg.github_community_health_percentage}</Tooltip>
-		{#snippet remainder()}
-			<div class="flex mt-auto text-gray-500 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border-l-4 border-gray-300 dark:border-gray-500 px-2 text-sm rounded">
-			<span class="mr-auto">&lt; than avg:</span>
-			<span class="flex items-center">
-				<Indicator size="sm" class="dark:bg-emerald-400 bg-emerald-500 me-1.5" />&lt;= 15%
-			</span>
-			<span class="flex items-center ml-2">
-				<Indicator size="sm" class="dark:bg-amber-400 bg-amber-500 me-1.5" />&lt;= 25%
-			</span>
-			<span class="flex items-center ml-2">
-				<Indicator size="sm" class="dark:bg-rose-400 bg-rose-500 me-1.5" />&gt; 25%
-			</span>
-		</div>
-		{/snippet}
-		
-	</MetricCard> -->
-<!-- 
-	<div
-		class="flex gap-5 p-5 border border-solid border-gray-200 dark:border-gray-700 shadow-md rounded-md"
-	>
-		<div class="chart-container ml-10">
-			<Chart options={chartOpts} class="w-fill min-w-96" />
-		</div>
-		<Listgroup
-			id="lgroup1"
-			active
-			items={buttons}
-			class="w-50"
-			onclick={chartClick}
-			itemClass='h-1/5 cursor-pointer aria-[current=true]:bg-[#f3f4f6] aria-[current=true]:dark:bg-[#101828] aria-[current=true]:text-[#ef562f] aria-[current=true]:dark:text-[#ef562f]'
-			></Listgroup>
-	</div> -->
 </div>
-
