@@ -55,17 +55,21 @@ export let chartOptions = {
             style: {
                 fontFamily: 'Inter, sans-serif',
                 cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
-            }
+            },
+            offsetY: 20
+
         },
         axisBorder: {
             show: false
         },
         axisTicks: {
-            show: false
-        }
+            show: false,
+        },
     },
     yaxis: {
+        offsetX: 1000,
         labels: {
+            offsetX: -20,
             show: true,
             style: {
                 fontFamily: 'Inter, sans-serif',
