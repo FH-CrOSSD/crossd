@@ -13,6 +13,7 @@
 		Modal,
 		P,
 		Select,
+		Sidebar,
 		Skeleton,
 		TabItem,
 		Table,
@@ -228,9 +229,8 @@
 		unsubscribe();
 	});
 </script>
-
-<div class="flex gap-10">
-	<div class="w-4/5">
+<div class="flex gap-2">
+<main class="w-4/5">
 		{#await Promise.all([data.projects, data.avg])}
 			<Heading class="flex break-words max-w-[calc(100%-25rem)]" tag="h1"
 				>{data.title}
@@ -304,9 +304,13 @@
 				</TabItem>
 			</Tabs>
 		{/await}
-	</div>
+	<!-- </div> -->
 	<!-- h-[calc(65vh))] -->
-	<div class="w-1/5 ml-auto h-[calc(65vh))] sticky top-10">
+
+</main>
+
+	
+	<div class="w-1/5 2xl:h-[calc(65vh)] sm:h-[calc(50vh)] sticky top-35 self-start" id="sidebar">
 		<Heading tag="h4" class="mx-5 mb-5">Snapshots</Heading>
 		<Table hoverable divClass="shadow-none overflow-y-visible h-full scrollbar" striped={true}>
 			<!-- <Table shadow={false} border={false}> -->
@@ -320,7 +324,7 @@
 					</TableBodyRow>
 				{:then _}
 					{#each snapshots.toReversed() as item}
-						<TableBodyRow
+						<TableBodyRow class="border-b-1"
 							onclick={(e) => {
 								selected = e.target.dataset.value;
 								console.log(e.target);
@@ -339,8 +343,7 @@
 			<!-- </Table> -->
 		</Table>
 	</div>
-</div>
-
+	</div>
 <!-- modal for displaying the charts -->
 <!-- <Modal
 	title={chartOptions.series[0].name}
