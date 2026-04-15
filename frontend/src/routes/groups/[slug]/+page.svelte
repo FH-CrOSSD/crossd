@@ -129,8 +129,8 @@
 	// );
 </script>
 
-<div class="flex">
-	<div class="w-full pr-8">
+<div class="flex flex-wrap">
+	<div class="pr-8 w-3/4">
 		<Heading tag="h1" class="mb-4"
 			>Group <span class="bg-gray-200 dark:bg-gray-600 px-1 rounded-md">{data.name}</span></Heading
 		>
@@ -147,7 +147,7 @@
 						activeTab = 'avg';
 					}}
 				>
-					<div class="flex gap-10">
+					<div class="flex gap-10 flex-wrap overflow-x-hidden">
 						<Statistics
 							{...{
 								name: data.name,
@@ -186,7 +186,7 @@
 						activeTab = 'min';
 					}}
 				>
-					<div class="flex gap-10">
+					<div class="flex gap-10 flex-wrap overflow-x-hidden">
 						<Statistics
 							{...{
 								name: data.name,
@@ -225,7 +225,7 @@
 						activeTab = 'max';
 					}}
 				>
-					<div class="flex gap-10">
+					<div class="flex gap-10 flex-wrap overflow-x-hidden">
 						<Statistics
 							{...{
 								name: data.name,
@@ -264,7 +264,7 @@
 						activeTab = 'agg';
 					}}
 				>
-					<div class="flex gap-10">
+					<div class="flex gap-10 flex-wrap overflow-x-hidden">
 						<Statistics
 							{...{
 								name: data.name,
@@ -303,7 +303,7 @@
 						activeTab = 'stddev';
 					}}
 				>
-					<div class="flex gap-10">
+					<div class="flex gap-10 flex-wrap overflow-x-hidden">
 						<Statistics
 							{...{
 								name: data.name,
@@ -339,8 +339,8 @@
 		{/await}
 	</div>
 
-	<div class="w-1/3 ml-auto h-[calc(65vh))] sticky top-10">
-		<Heading tag="h4" class="mx-5 mt-5">Group repositories</Heading>
+	<div class="w-1/4 ml-auto sticky top-23 2xl:h-[calc(65vh)] sm:h-[calc(50vh)] self-start">
+		<Heading tag="h4" class="mx-5">Group repositories</Heading>
 		<TableSearch
 			placeholder="Search by name"
 			hoverable
