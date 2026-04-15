@@ -20,7 +20,7 @@
 
 <!-- processMD converts the markdown to html -->
 {#await processMD(fullText) then doc}
-	<div class="relative max-w-full">
+	<div class="relative max-w-full flex">
 		<div class="w-3/4">
 			<!-- replaceAll fixes a remark/rehype plugin bug -->
 			{@html doc.toString().replaceAll('user-content-user-content', 'user-content')}
@@ -29,7 +29,7 @@
 		{#await tick() then}
 			<!-- top-[118px] -->
 			<div
-				class="w-1/4 fixed right-0 top-[12.5%] flex justify-end overflow-y-auto h-3/4 md:flex"
+				class="w-1/4 sticky ml-5 right-0 top-24 flex justify-end overflow-y-auto 2xl:h-[calc(75vh)] sm:h-[calc(55vh)] lg:h-[calc(65vh)] self-start md:flex"
 			>
 				<Sidebar {activeUrl} position="static" class="w-full scrollbar">
 					<SidebarWrapper>
