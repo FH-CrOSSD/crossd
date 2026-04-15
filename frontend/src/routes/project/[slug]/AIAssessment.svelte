@@ -130,7 +130,7 @@
 </Alert>
 <div class="flex flex-wrap gap-10">
 	<!-- {JSON.stringify(ai,null,4)} -->
-	<MetricCard cardClass="min-w-[48%]">
+	<MetricCard cardClass="min-w-[48%]" gridColClass="grid-cols-[1fr_2fr]">
 		<svelte:fragment slot="heading">
 			<div class="place-content-between grid grid-cols-2">
 				{ai[selected]['result']['friendliness']['display_name']}
@@ -156,7 +156,7 @@
 			><P>Explanation:</P><P><br />{ai[selected]['result']['friendliness']['explanation']}</P>
 		</svelte:fragment>
 	</MetricCard>
-	<MetricCard cardClass="min-w-[48%]">
+	<MetricCard cardClass="min-w-[48%]" gridColClass="grid-cols-[1fr_2fr]">
 		<svelte:fragment slot="heading">
 			<div class="place-content-between grid grid-cols-2">
 				{ai[selected]['result']['documentation_quality']['display_name']}
@@ -183,7 +183,7 @@
 			></svelte:fragment
 		>
 	</MetricCard>
-	<MetricCard cardClass="min-w-[48%]">
+	<MetricCard cardClass="min-w-[48%]" gridColClass="grid-cols-[1fr_2fr]">
 		<svelte:fragment slot="heading">
 			<div class="place-content-between grid grid-cols-2">
 				{ai[selected]['result']['development_efficiency']['display_name']}
@@ -211,7 +211,7 @@
 			></svelte:fragment
 		>
 	</MetricCard>
-	<MetricCard cardClass="min-w-[48%]">
+	<MetricCard cardClass="min-w-[48%]" gridColClass="grid-cols-[1fr_2fr]">
 		<svelte:fragment slot="heading">
 			<div class="place-content-between grid grid-cols-2">
 				{ai[selected]['result']['project_maturity']['display_name']}
