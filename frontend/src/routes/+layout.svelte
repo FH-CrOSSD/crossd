@@ -63,7 +63,8 @@
 	let futureFont = null;
 </script>
 
-<main class={!futureFont ? 'future-font' : 'normal-font'}>
+<div class="{!futureFont ? 'future-font' : 'normal-font'} relative w-full">
+<div class="sticky top-0 z-50">
 <Navbar
 	class="bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-100 dark:border-gray-700 px-2 sm:px-4 py-2.5 w-full" fluid="true"
 >
@@ -97,9 +98,10 @@
 						>
 				</Dropdown>
 </Navbar>
-<div class="overflow-y-auto p-0 m-0 min-h-fit px-5 pb-[113px]">
+</div>
+<div class="p-0 m-0 min-h-fit px-5 pb-[113px]">
 <!-- <div class="overflow-y-auto p-0 m-0 h-[calc(76vh))] min-h-fit px-5"> -->
-<div class="container mx-auto my-10 ">
+<div class="container mx-auto my-10">
 	<slot />
 </div>
 </div>
@@ -135,7 +137,7 @@
 	</FooterLinkGroup>
 	<!-- </span> -->
 </Footer>
-</main>
+</div>
 
 <style>
 		/* :global(:root) {
