@@ -9,7 +9,8 @@ dependencies = [
     "celery[arangodb,auth,brotli,msgpack,redis]==5.5.3",
     "requests-toolbelt>=1.0.0",
     "rich>=14.0.0",
-    "git+https://github.com/FH-CrOSSD/llm-metrics.git@v0.3.0",
+    "git+https://github.com/FH-CrOSSD/llm-metrics.git@v0.4.0",
+    "python-dateutil>=2.9.0.post0",
 ]
 requires-python = ">=3.13"
 readme = "README.md"

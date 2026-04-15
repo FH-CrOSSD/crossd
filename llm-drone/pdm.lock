@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:0de6e6fac3b207ae5a89789b70d170dfaa479139cfc44d686e79b19797e46c38"
+content_hash = "sha256:9bb839277fa1c963680113263485ab9a1952747d054a51f5f1bc0f20ad21e8b4"
 
 [[metadata.targets]]
 requires_python = ">=3.13"
@@ -580,15 +580,16 @@ files = [
 
 [[package]]
 name = "llm-metrics"
-version = "0.1.0"
+version = "0.4.0"
 requires_python = ">=3.10"
 git = "https://github.com/FH-CrOSSD/llm-metrics.git"
-ref = "v0.2.0"
-revision = "3e8c8f3d72c4b69a8eb7ad449b6843595193a624"
+ref = "v0.4.0"
+revision = "7c5cf1f2210edf4c88d13fd88527a69f0737428a"
 summary = "Default template for PDM package"
 groups = ["default"]
 dependencies = [
     "langgraph",
+    "python-dateutil>=2.9.0.post0",
     "requests",
 ]
 

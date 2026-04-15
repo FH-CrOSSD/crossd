@@ -2,7 +2,7 @@ FROM python:3.13-alpine as build
 
 WORKDIR /home/collector-drone
 # RUN wget https://github.com/FH-CrOSSD/metrics/archive/refs/heads/main.zip -O - | unzip -
-ARG VERSION=0.3.0
+ARG VERSION=0.4.0
 RUN wget https://github.com/FH-CrOSSD/llm-metrics/archive/refs/tags/v${VERSION}.zip -O - \
     | unzip - && mv llm-metrics-${VERSION} llm_metrics
 # install PDM
