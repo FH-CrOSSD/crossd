@@ -365,9 +365,9 @@
 					</TableBodyRow>
 				{:then group}
 					{#each filteredItems as item}
-						<TableBodyRow>
+						<TableBodyRow class="border-b-1">
 							<A class="w-full wrap-anywhere" href="/project/{encodeURIComponent(item)}">
-								<TableBodyCell class="whitespace-normal">{item}</TableBodyCell>
+								<TableBodyCell class="whitespace-normal cursor-pointer">{item}</TableBodyCell>
 							</A>
 						</TableBodyRow>
 					{/each}

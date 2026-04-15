@@ -99,7 +99,6 @@ export async function POST({ request }) {
         RETURN {"group": UNSET(group, "_key", "_id", "_rev"), "scanIds":scanIds, "projects": projects_, data:data[0]}
         `);
         let all = (await res.all())[0];
-        console.log(all);
         return json(all);
     } catch (err: any) {
         console.error(err.message);
