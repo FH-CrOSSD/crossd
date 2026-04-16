@@ -22,5 +22,7 @@ try {
     db._createDocumentCollection("metrics");
     db._createDocumentCollection("repositories");
     db._createDocumentCollection("commits");
+    db._createDocumentCollection("groups");
+    db._createDocumentCollection("ai_metrics");
 }
 catch (ArangoError) { };
