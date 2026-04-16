@@ -326,6 +326,12 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
                         # ask_stuff()
                         # res = repo.execute(rate_limit=True, verbose=True)
             raise rre
+        except gql.transport.exceptions.TransportQueryError as tqe:
+            if tqe.errors and tqe.errors[0]["type"] == "RESOURCE_LIMITS_EXCEEDED":
+                console.log("RESOURCE_LIMITS_EXCEEDED - trying with smaller page size")
+                continue
+            else:
+                raise tqe
     else:
         console.log("attempts with reduced page sizes failed")
         console.log("aborting")
