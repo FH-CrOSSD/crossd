@@ -47,6 +47,9 @@ var secretTemplates = []TemplateFile{
 	{filepath.FromSlash("secret_templates/arango-root-pwd.yaml"), []TemplateItem{{"<username>", "Username for ArangoDB admin user", false}, {"<password>", "Password for ArangoDB admin user", true}}},
 }
 
+// kubernetesRuntime holds the selected runtime: "microk8s" or "minikube"
+var kubernetesRuntime = "microk8s"
+
 var ingressTemplates = []TemplateFile{
 	{filepath.FromSlash("ingress_templates/arangodb-ingress.yaml"), []TemplateItem{{"<domain>", "Domain name for the ArangoDB webinterface", false}}},
 	{filepath.FromSlash("ingress_templates/flower-ingress.yaml"), []TemplateItem{{"<domain>", "Domain name for the ArangoDB webinterface", false}}},
@@ -59,6 +62,7 @@ var frontendTemplates = []TemplateFile{
 }
 
 func main() {
+	var result bool
 	uid, _ := getEnvInt("SUDO_UID")
 	gid, _ := getEnvInt("SUDO_GID")
 
@@ -69,45 +73,58 @@ func main() {
 	pterm.DefaultCenter.Println(title)
 	pterm.DefaultCenter.Println("=== Set up your CrOSSD Microk8s Cluster ===")
 
-	if os.Getuid() != 0 {
-		pterm.Error.Println("program was not run as root")
-		os.Exit(1)
+	// Ask user early which runtime they are using
+	runtimeChoice, _ := pterm.DefaultInteractiveSelect.WithOptions([]string{"microk8s", "minikube"}).WithDefaultText("Which Kubernetes runtime are you using?").Show()
+	if runtimeChoice != "" {
+		kubernetesRuntime = runtimeChoice
 	}
 
-	pterm.DefaultSection.Println("Requirements")
-	pterm.Println("CrOSSD needs the following requirements:")
-	putils.BulletListFromStrings([]string{"buildah (via apt)", "microk8s (via snap)"}, "").Render()
-
-	result, _ := pterm.DefaultInteractiveConfirm.WithDefaultText("Install requirements?").Show()
-	if result {
-		buildahSP, _ := pterm.DefaultSpinner.Start("Installing buildah")
-		cmd := exec.Command("apt", "install", "--yes", "buildah")
-		stdout, err := cmd.Output()
-
-		if err != nil {
-			pterm.Println()
-			pterm.Error.Println(err.Error())
-			buildahSP.Fail()
-			return
+	if kubernetesRuntime == "microk8s" {
+		if os.Getuid() != 0 {
+			pterm.Error.Println("program was not run as root")
+			os.Exit(1)
 		}
-		pterm.Println()
-		pterm.Println(string(stdout))
-		buildahSP.Success()
+		pterm.DefaultSection.Println("Requirements")
+		pterm.Println("CrOSSD needs the following requirements:")
+		putils.BulletListFromStrings([]string{"buildah (via apt)", "microk8s (via snap)"}, "").Render()
 
-		pterm.Println()
-		mk8SP, _ := pterm.DefaultSpinner.Start("Installing microk8s")
-		cmd = exec.Command("/usr/bin/snap", "install", "microk8s", "--classic")
-		stdout, err = cmd.CombinedOutput()
-		if err != nil {
+		result, _ := pterm.DefaultInteractiveConfirm.WithDefaultText("Install requirements?").Show()
+		if result {
+			buildahSP, _ := pterm.DefaultSpinner.Start("Installing buildah")
+			cmd := exec.Command("apt", "install", "--yes", "buildah")
+			stdout, err := cmd.Output()
+
+			if err != nil {
+				pterm.Println()
+				pterm.Error.Println(err.Error())
+				buildahSP.Fail()
+				return
+			}
 			pterm.Println()
-			pterm.Error.Println(err.Error())
-			mk8SP.Fail()
-			return
+			pterm.Println(string(stdout))
+			buildahSP.Success()
+
+			pterm.Println()
+			mk8SP, _ := pterm.DefaultSpinner.Start("Installing microk8s")
+			// still attempt microk8s install when chosen, otherwise skip
+			if kubernetesRuntime == "microk8s" {
+				cmd = exec.Command("/usr/bin/snap", "install", "microk8s", "--classic")
+			} else {
+				// for minikube we won't attempt snap install here
+				cmd = exec.Command("echo", "skipping microk8s install for minikube selection")
+			}
+			stdout, err = cmd.CombinedOutput()
+			if err != nil {
+				pterm.Println()
+				pterm.Error.Println(err.Error())
+				mk8SP.Fail()
+				return
+			}
+			pterm.Println()
+			pterm.Println(string(stdout))
+			mk8SP.Success()
+			pterm.Success.Println("Finished installing/checking requirements")
 		}
-		pterm.Println()
-		pterm.Println(string(stdout))
-		mk8SP.Success()
-		pterm.Success.Println("Finished installing/checking requirements")
 	}
 	pterm.DefaultSection.Println("Secrets")
 	pterm.Println("CrOSSD needs following secrets:")
@@ -196,7 +213,7 @@ func main() {
 	syscall.Setegid(0)
 	pterm.DefaultSection.Println("Cluster setup")
 	pterm.Println("Setting up the cluster comprises:")
-	steps := []string{"Enabling microk8s plugins",
+	steps := []string{"Enabling kubernetes plugins",
 		"Downloading and installing requirements via helm",
 		"Loading cluster configuration",
 		"Starting pods and services",
@@ -204,8 +221,13 @@ func main() {
 	putils.BulletListFromStrings(steps, "").Render()
 	result, _ = pterm.DefaultInteractiveConfirm.WithDefaultText("Set up cluster?").Show()
 	if result {
-		pterm.Info.Println("Enabling microk8s plugins")
-		addons := []string{"registry", "dns", "hostpath-storage", "ingress", "cert-manager", "rbac"}
+		pterm.Info.Println("Enabling cluster addons")
+		var addons []string
+		if kubernetesRuntime == "minikube" {
+			addons = []string{"registry", "ingress", "ingress-dns"}
+		} else {
+			addons = []string{"registry", "dns", "hostpath-storage", "ingress", "cert-manager", "rbac"}
+		}
 		for _, v := range addons {
 			doCommand("microk8s", "enable", v)
 		}
@@ -214,7 +236,7 @@ func main() {
 		doCommand("microk8s", "helm", "repo", "add", "cert-manager", "https://charts.jetstack.io")
 		doCommand("microk8s", "helm", "repo", "add", "stakater", "https://stakater.github.io/stakater-charts")
 		doCommand("microk8s", "helm", "repo", "update")
-		cmd := exec.Command("microk8s", "kubectl", "get", "deployment", "crossd-reloader")
+		cmd := mkCmd("microk8s", "kubectl", "get", "deployment", "crossd-reloader")
 		_, err := cmd.CombinedOutput()
 
 		if err == nil {
@@ -223,7 +245,18 @@ func main() {
 			doCommand("microk8s", "helm", "install", "crossd", "stakater/reloader")
 		}
 
-		cmd = exec.Command("microk8s", "kubectl", "get", "deployment", "trust-manager")
+		if kubernetesRuntime == "minikube" {
+			cmd = mkCmd("microk8s", "kubectl", "-n", "cert-manager", "get", "deployment", "crossd-cert-manager")
+			_, err = cmd.CombinedOutput()
+
+			if err == nil {
+				pterm.Info.Println("Cert-Manager Deployment already exists")
+			} else {
+				doCommand("microk8s", "helm", "install", "crossd", "cert-manager/cert-manager", "--namespace", "cert-manager", "--create-namespace", "--set", "crds.enabled=true")
+			}
+		}
+
+		cmd = mkCmd("microk8s", "kubectl", "get", "deployment", "trust-manager")
 		_, err = cmd.CombinedOutput()
 
 		if err == nil {
@@ -240,13 +273,13 @@ func main() {
 
 		pterm.Info.Println("Setting up ArangoDB")
 
-		cmd = exec.Command("microk8s", "kubectl", "get", "secret", "arango-ca")
+		cmd = mkCmd("microk8s", "kubectl", "get", "secret", "arango-ca")
 		_, err = cmd.CombinedOutput()
 
 		if err == nil {
 			pterm.Info.Println("secret arango-ca already exists")
 		} else {
-			crtCmd := exec.Command("microk8s", "kubectl", "get", "secret", "root-secret", "--namespace=cert-manager", "-o", "jsonpath={.data['ca\\.crt']}")
+			crtCmd := mkCmd("microk8s", "kubectl", "get", "secret", "root-secret", "--namespace=cert-manager", "-o", "jsonpath={.data['ca\\.crt']}")
 			crt, err := crtCmd.Output()
 			if err != nil {
 				pterm.Println()
@@ -254,7 +287,7 @@ func main() {
 				os.Exit(2)
 			}
 
-			keyCmd := exec.Command("microk8s", "kubectl", "get", "secret", "root-secret", "--namespace=cert-manager", "-o", "jsonpath={.data['tls\\.key']}")
+			keyCmd := mkCmd("microk8s", "kubectl", "get", "secret", "root-secret", "--namespace=cert-manager", "-o", "jsonpath={.data['tls\\.key']}")
 			key, err := keyCmd.Output()
 			if err != nil {
 				pterm.Println()
@@ -274,7 +307,7 @@ func main() {
 		pterm.Info.Println("Loading configs for the cluster")
 		doCommand("microk8s", "kubectl", "apply", "-f", "secrets")
 
-		cmd = exec.Command("microk8s", "kubectl", "get", "configmap", "arango-init")
+		cmd = mkCmd("microk8s", "kubectl", "get", "configmap", "arango-init")
 		_, err = cmd.CombinedOutput()
 
 		if err == nil {
@@ -289,12 +322,16 @@ func main() {
 		pterm.Success.Println("Instructed microk8s to start up cluster")
 		pterm.Info.Println("It might take a while until everthing is up and running")
 		pterm.Info.Println("You can check the status of the cluster pods via:")
-		pterm.Info.WithMessageStyle(pterm.NewStyle(pterm.Italic, pterm.FgDarkGray)).Println("microk8s kubectl get pods")
+		if kubernetesRuntime == "minikube" {
+			pterm.Info.WithMessageStyle(pterm.NewStyle(pterm.Italic, pterm.FgDarkGray)).Println("kubectl get pods")
+		} else {
+			pterm.Info.WithMessageStyle(pterm.NewStyle(pterm.Italic, pterm.FgDarkGray)).Println("microk8s kubectl get pods")
+		}
 	}
 }
 
 func doCommand(name string, args ...string) {
-	cmd := exec.Command(name, args...)
+	cmd := mkCmd(name, args...)
 	stdout, err := cmd.CombinedOutput()
 
 	if err != nil {
@@ -305,6 +342,38 @@ func doCommand(name string, args ...string) {
 	}
 	pterm.Println()
 	pterm.Println(string(stdout))
+}
+
+// mkCmd maps invocations that use the "microk8s" wrapper to appropriate
+// commands when the user selected "minikube". For microk8s runtime it
+// returns exec.Command(name, args...). For minikube it translates
+// common subcommands (enable, helm, kubectl) to their minikube/helm/kubectl
+// equivalents.
+func mkCmd(name string, args ...string) *exec.Cmd {
+	if name != "microk8s" || kubernetesRuntime == "microk8s" {
+		return exec.Command(name, args...)
+	}
+
+	// name == "microk8s" and runtime == "minikube"
+	if len(args) == 0 {
+		return exec.Command("minikube")
+	}
+
+	switch args[0] {
+	case "enable":
+		// microk8s enable <addon>  -> minikube addons enable <addon>
+		newArgs := append([]string{"addons", "enable"}, args[1:]...)
+		return exec.Command("minikube", newArgs...)
+	case "helm":
+		// microk8s helm <...> -> helm <...>
+		return exec.Command("helm", args[1:]...)
+	case "kubectl":
+		// microk8s kubectl <...> -> kubectl <...>
+		return exec.Command("kubectl", args[1:]...)
+	default:
+		// fallback: try to run the subcommand directly
+		return exec.Command(args[0], args[1:]...)
+	}
 }
 
 type fn func(string) string
