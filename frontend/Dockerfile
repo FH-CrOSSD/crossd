@@ -20,6 +20,8 @@ COPY --from=build /usr/src/app/build ./
 
 COPY package.json package-lock.json ./
 
+RUN npm install --only=production
+
 USER 1337:1337
 ENV NODE_ENV=production
 ENTRYPOINT [ "node", "/usr/src/app/index.js" ]

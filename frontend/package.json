@@ -11,6 +11,9 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write ."
 	},
+	"dependencies": {
+		"undici": "^7.24.7"
+	},
 	"devDependencies": {
 		"@adobe/remark-gridtables": "^3.0.19",
 		"@eslint/compat": "^2.0.3",
@@ -67,8 +70,5 @@
 		"unified": "^11.0.5",
 		"vite": "^8.0.3"
 	},
-	"type": "module",
-	"dependencies": {
-		"undici": "^7.24.7"
-	}
+	"type": "module"
 }
