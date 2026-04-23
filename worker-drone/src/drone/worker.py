@@ -32,7 +32,8 @@ class BaseTask(Task):
 
     _repos = None
     _metrics = None
-    _commits = None
+    _commits_clone = None
+    _commits_gql = None
 
     @staticmethod
     def chunks(lst, size):
@@ -80,10 +81,18 @@ class BaseTask(Task):
         return self._metrics
 
     @property
-    def commits(self):
-        if self._commits is None:
-            self._commits = self._get_collection("commits")
-        return self._commits
+    def commits_clone(self):
+        if self._commits_clone is None:
+            self._commits_clone = self._get_collection("commits_clone")
+        self._commits_clone.ensurePersistentIndex(["identifier", "date"], unique=False)
+        return self._commits_clone
+
+    @property
+    def commits_gql(self):
+        if self._commits_gql is None:
+            self._commits_gql = self._get_collection("commits_gql")
+        self._commits_gql.ensurePersistentIndex(["identifier", "date"], unique=False)
+        return self._commits_gql
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         err_console.print(f"failed to execute task {task_id}")
@@ -164,6 +173,10 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
         console.print("starting task [dodger_blue1]retrieve_github[/]")
     console.print("collecting repository data from github")
 
+    # ensure collections exist
+    _ = self.commits_clone
+    _ = self.commits_gql
+
     commits_since = None
     commits_since_clone = None
     # commits = None
@@ -175,10 +188,21 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
 
     # get datetimes of last commits
     query = """
-        FOR c IN commits
-        FILTER c.identifier == @ident
-        LIMIT 1
-        RETURN {identifier: c.identifier, gql: c.gql[0].node.committedDate, clone: c.clone[0].committed_iso}
+        LET gql = FIRST(
+            FOR c IN commits_gql
+            FILTER c.identifier == @ident
+            SORT c.date DESC
+            LIMIT 1
+            RETURN c.date
+        )
+        LET clone = FIRST(
+            FOR c IN commits_clone
+            FILTER c.identifier == @ident
+            SORT c.date DESC
+            LIMIT 1
+            RETURN c.date
+        )
+        RETURN {gql: gql, clone: clone}
         """
     vars = {
         "ident": res["repository"]["nameWithOwner"],
@@ -187,7 +211,10 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     if qres:
         if qres[0]["gql"]:
             commits_since = (
-                (datetime.datetime.fromisoformat(qres[0]["gql"]) + datetime.timedelta(seconds=1))
+                (
+                    datetime.datetime.fromisoformat(qres[0]["gql"])
+                    + datetime.timedelta(seconds=1)
+                )
                 # .replace(hour=0, minute=0, second=0, microsecond=0)
                 .isoformat()
             )
@@ -212,7 +239,9 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     # print(f"count_res {count_res}")
 
     try:
-        count = count_res["repository"]["defaultBranchRef"]["last_commit"]["history"]["totalCount"]
+        count = count_res["repository"]["defaultBranchRef"]["last_commit"]["history"][
+            "totalCount"
+        ]
     except TypeError:
         # in case of an empty repository
         count = 0
@@ -284,7 +313,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
             .ask_security_advisories()
             .ask_issues(
                 comment_body=bool(os.environ.get("ISSUE_COMMENT_BODY", False)),
-                issue_body=bool(os.environ.get("ISSUE_BODY", False))
+                issue_body=bool(os.environ.get("ISSUE_BODY", False)),
             )
             .ask_forks()
             # .ask_workflow_runs()
@@ -340,74 +369,55 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     try:
         res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"]
     except TypeError:
-        res["repository"]["defaultBranchRef"] = {"last_commit": {"history": {"edges": []}}}
+        res["repository"]["defaultBranchRef"] = {
+            "last_commit": {"history": {"edges": []}}
+        }
 
     chunk_size = 5000
-    batch_gql = 0
-    batch_clone = 0
 
     # store new commits
     if not count_res["repository"]["isEmpty"]:
         if "commits" not in res:
             res["commits"] = []
         comms = res["commits"]
+        ident = res["repository"]["nameWithOwner"]
 
-        query = """
-        UPSERT {identifier: @ident}
-        INSERT {identifier: @ident, clone: @clone, gql: @gql}
-        UPDATE {clone: APPEND(@clone, OLD.clone), gql: APPEND(@gql, OLD.gql)}
-        IN commits
-        """
-        vars = {
-            "ident": res["repository"]["nameWithOwner"],
-            "clone": comms[-chunk_size:],
-            "gql": res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"][
-                -chunk_size:
-            ],
-        }
-        app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
-        console.log(f"inserted batch {batch_gql}")
-        console.log(f"inserted batch {batch_clone}")
-        batch_gql += 1
-        batch_clone += 1
+        for batch_num, chunk in enumerate(self.chunks(comms, chunk_size)):
+            clone_docs = [
+                {
+                    "_key": c["sha"],
+                    "identifier": ident,
+                    "hash": c["sha"],
+                    "date": c["committed_iso"],
+                    "data": c,
+                }
+                for c in chunk
+            ]
+            self.commits_clone.bulkSave(clone_docs, onDuplicate="ignore")
+            console.log(f"inserted clone batch {batch_num}")
 
-        query = """
-            FOR c IN commits
-            FILTER c.identifier == @ident
-            UPDATE { _key: c._key, gql: APPEND(@gql , c.gql ) } IN commits
-            """
-        for chunk in self.chunks_reversed(
-            res["repository"]["defaultBranchRef"]["last_commit"]["history"]["edges"][:-chunk_size],
-            chunk_size,
-        ):
-            vars = {
-                "ident": res["repository"]["nameWithOwner"],
-                "gql": chunk,
-            }
-            app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
-            console.log(f"inserted batch {batch_gql}")
-            batch_gql += 1
-
-        query = """
-            FOR c IN commits
-            FILTER c.identifier == @ident
-            UPDATE { _key: c._key, clone: APPEND(@clone , c.clone ) } IN commits
-            """
-        for chunk in self.chunks_reversed(comms[:-chunk_size], chunk_size):
-            vars = {
-                "ident": res["repository"]["nameWithOwner"],
-                "clone": chunk,
-            }
-            app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
-            console.log(f"inserted batch {batch_clone}")
-            batch_clone += 1
+        gql_edges = res["repository"]["defaultBranchRef"]["last_commit"]["history"][
+            "edges"
+        ]
+        for batch_num, chunk in enumerate(self.chunks(gql_edges, chunk_size)):
+            gql_docs = [
+                {
+                    "_key": e["node"]["oid"],
+                    "identifier": ident,
+                    "hash": e["node"]["oid"],
+                    "date": e["node"]["committedDate"],
+                    "data": e,
+                }
+                for e in chunk
+            ]
+            self.commits_gql.bulkSave(gql_docs, onDuplicate="ignore")
+            console.log(f"inserted gql batch {batch_num}")
 
     if not c_available:
         query = """
-            FOR c IN commits
+            FOR c IN commits_gql
             FILTER c.identifier == @ident
-            FOR u IN c.gql
-            LET x = u.node.author.user.login OR u.node.committer.user.login
+            LET x = c.data.node.author.user.login OR c.data.node.committer.user.login
             FILTER x //remove none
             COLLECT r = x WITH COUNT INTO length
             RETURN {login: r, contributions: length}
@@ -462,7 +472,11 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     index = 0
     while index < len(groups):
         try:
-            gql_users = MultiUser(login=groups[index]).ask_organizations().execute(rate_limit=True)
+            gql_users = (
+                MultiUser(login=groups[index])
+                .ask_organizations()
+                .execute(rate_limit=True)
+            )
             index += 1
             tmp = merge_dicts(tmp, gql_users)
         except gql.transport.exceptions.TransportQueryError as tqe:
@@ -572,22 +586,23 @@ def do_metrics(self, retval: str):
     # retrieve repo data from db and calculate metrics
 
     # this doc is mandatory
-    res = app.backend.db["repositories"].fetchDocument(retval["repository_key"], rawResults=True)
+    res = app.backend.db["repositories"].fetchDocument(
+        retval["repository_key"], rawResults=True
+    )
     # commits are not mandatory (to be stored separatedly)
     query = """
-        FOR c IN commits
+        FOR c IN commits_clone
         FILTER c.identifier == @ident
-        RETURN c.clone
+        SORT c.date DESC
+        RETURN c.data
         """
     vars = {
         "ident": res["repository"]["nameWithOwner"],
     }
     qres = app.backend.db.AQLQuery(query, rawResults=True, bindVars=vars)
-    try:
-        res["commits"] = qres[0]
-    except IndexError:
+    res["commits"] = list(qres)
+    if not res["commits"]:
         console.log("no commits found")
-        pass
     # try:
     #     # commits = self.commits.fetchDocument(res["repository"]["nameWithOwner"], rawResults=True)
     #     commits = self.commits.fetchFirstExample(
