@@ -3,7 +3,7 @@ import { json } from '@sveltejs/kit';
 import { aql } from "arangojs";
 
 const coll = db.collection("projects");
-const collections = ["repositories", "metrics", "bak_metrics", "task_results", "scans", "projects", "bak_repos", "commits"];
+const collections = ["repositories", "metrics", "bak_metrics", "task_results", "scans", "projects", "bak_repos", "commits_clone", "commits_gql"];
 
 /** @type {import('./$types').RequestHandler} */
 /**

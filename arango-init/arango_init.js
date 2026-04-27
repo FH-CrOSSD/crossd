@@ -21,7 +21,8 @@ try {
     db._createDocumentCollection("bak_repos");
     db._createDocumentCollection("metrics");
     db._createDocumentCollection("repositories");
-    db._createDocumentCollection("commits");
+    db._createDocumentCollection("commits_clone");
+    db._createDocumentCollection("commits_gql");
     db._createDocumentCollection("groups");
     db._createDocumentCollection("ai_metrics");
 }
