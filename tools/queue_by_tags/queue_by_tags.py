@@ -107,6 +107,8 @@ def main(args):
         if queue:
             app.send_task(DEFAULT_TASK, (owner, name, doc._id), queue=queue, routing_key=queue)
         else:
+            if "comments" in all_tags:
+                app.send_task(DEFAULT_TASK, (owner, name, doc._id), queue="comments", routing_key="comments")
             app.send_task(DEFAULT_TASK, (owner, name, doc._id))
 
 
