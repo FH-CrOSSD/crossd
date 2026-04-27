@@ -65,7 +65,7 @@ spec:
             - name: PYTHONUNBUFFERED
               value: "1"
             - name: LLM_MODEL
-              value: "gemma3:27b"
+              value: "gpt-oss:20b"
             - name: LLM_HOST
               value: "https://openwebui.ai.ustp.at/ollama"
             - name: LOG_DIR
