@@ -55,20 +55,29 @@ def main(args):
 
     # retrieve unique projects that have at least one of the specified tags
     aql = """
+        LET matched_ids = (
+            FOR doc IN tags
+                FILTER doc.tag IN @tags
+                RETURN DISTINCT doc.identifier
+        )
+
         FOR doc IN tags
-            FILTER doc.tag IN @tags
+            FILTER doc.identifier IN matched_ids
             COLLECT identifier = doc.identifier INTO groups
-            RETURN { identifier: identifier, matched_tags: groups[*].doc.tag }
+            RETURN {
+                identifier,
+                all_tags: groups[*].doc.tag
+            }
     """
     results = conn["crossd"].AQLQuery(aql, bindVars={"tags": args.tags}, rawResults=True)
 
     for entry in results:
         identifier = entry["identifier"]
-        matched_tags = entry["matched_tags"]
+        all_tags = entry["all_tags"]
         owner, name = identifier.split("/", 1)
 
         # use queue of first matched tag that has a mapping, otherwise let routing handle it
-        queue = next((queue_map[t] for t in matched_tags if t in queue_map), None)
+        queue = next((queue_map[t] for t in all_tags if t in queue_map), None)
 
         # create scan document
         doc = scans_coll.createDocument(
@@ -77,7 +86,7 @@ def main(args):
                 "tasks": {
                     DEFAULT_TASK: [owner, name],
                 },
-                "tags": list(set(matched_tags) | set(args.extra_tags)),
+                "tags": list(set(all_tags) | set(args.extra_tags)),
             }
         )
         doc.save()
