@@ -55,7 +55,6 @@ def main(args):
             {
                 "issuedAt": time.time(),
                 "tasks": {
-                    "bak_tasks": (owner, name),
                     "retrieve_github": (owner, name),
                 },
                 "tags": args.tag,
