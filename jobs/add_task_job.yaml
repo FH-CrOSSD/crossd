@@ -16,11 +16,16 @@ spec:
       containers:
         - name: add-task-job
           image: ghcr.io/fh-crossd/add-task:latest
+            #image: localhost:32000/add-task:latest
           command: ["sh", "-c"]
           args:
             - >
               python3 add_task.py --user $USER --password $PASSWORD -t manual
-              sveltejs/svelte
+              microsoft/vscode
+              #lorabridge/lorabridge
+              #golang/go
+              #Ebazhanov/linkedin-skill-assessments-quizzes
+              #Make-O-Matic/MOM-Base 
           env:
             - name: REQUESTS_CA_BUNDLE
               value: /etc/ssl/certs/ca-certificates.crt

@@ -19,12 +19,11 @@ spec:
         spec:
           containers:
             - name: weekly-most-starred-job
-              image: ghcr.io/fh-crossd/add-task:latest
+              image: ghcr.io/fh-crossd/queue-by-tags:latest
               command: ["sh", "-c"]
               args:
                 - >
-                  python3 add_task.py --user $USER --password $PASSWORD -t most-starred-09-04-2024 -t $(date -uI)
-                  $(cat /most-starred-repos.txt)
+                  python3 queue_by_tags.py --user $USER --password $PASSWORD most-starred-09-04-2024 -t $(date -uI)
               env:
                 - name: REQUESTS_CA_BUNDLE
                   value: /etc/ssl/certs/ca-certificates.crt

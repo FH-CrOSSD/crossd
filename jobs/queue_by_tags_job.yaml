@@ -2,32 +2,27 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   labels:
-    app: add-comment-job
+    app: queue-by-tags-job
     environment: prod
     app.kubernetes.io/name: crossd
     app.kubernetes.io/instance: crossd-alpha
     app.kubernetes.io/version: "0.1"
-    app.kubernetes.io/component: add-comment-job
+    app.kubernetes.io/component: queue-by-tags-job
     app.kubernetes.io/part-of: crossd
-  name: add-comment-job
+  name: queue-by-tags-job
 spec:
   template:
     spec:
       containers:
-        - name: add-comment-job
-          image: ghcr.io/fh-crossd/add-task:latest
-          #image: localhost:32000/add-task:latest
+        - name: queue-by-tags-job
+          # image: ghcr.io/fh-crossd/queue-by-tags:latest
+          image: queue-by-tags:latest
+          imagePullPolicy: Never
+            #image: localhost:32000/queue-by-tags:latest
           command: ["sh", "-c"]
           args:
             - >
-              python3 add_task.py --user $USER --password $PASSWORD -t manual --queue comments
-              CERTAIN-Project/aidoc-ap
-              #lorabridge2/lorabridge
-              #microsoft/vscode
-              #golang/go
-              #Ebazhanov/linkedin-skill-assessments-quizzes
-              #lorabridge/lorabridge
-              #Make-O-Matic/MOM-Base 
+              python3 queue_by_tags.py --user $USER --password $PASSWORD manual manual2
           env:
             - name: REQUESTS_CA_BUNDLE
               value: /etc/ssl/certs/ca-certificates.crt

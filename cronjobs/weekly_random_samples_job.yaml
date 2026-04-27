@@ -19,12 +19,11 @@ spec:
         spec:
           containers:
             - name: weekly-random-sample-job
-              image: ghcr.io/fh-crossd/add-task:latest
+              image: ghcr.io/fh-crossd/queue-by-tags:latest
               command: ["sh", "-c"]
               args:
                 - >
-                  python3 add_task.py --user $USER --password $PASSWORD -t random-sample-09-04-2024 -t $(date -uI)
-                  $(cat /random-sample-repos.txt)
+                  python3 queue_by_tags.py --user $USER --password $PASSWORD random-sample-09-04-2024 -t $(date -uI)
               env:
                 - name: REQUESTS_CA_BUNDLE
                   value: /etc/ssl/certs/ca-certificates.crt
