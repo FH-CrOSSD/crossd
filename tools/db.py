@@ -105,7 +105,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ArangoDB helper tools")
     parser.add_argument("--user", help="arangodb username", default="root")
     parser.add_argument(
-        "--url", help="arangodb username", type=URL, default="http://127.0.0.1"
+        "--url", help="arangodb url", type=URL, default="http://127.0.0.1"
     )
     parser.add_argument(
         "-p",
