@@ -20,7 +20,7 @@ COPY --from=build /usr/src/app/build ./
 
 COPY package.json package-lock.json ./
 
-RUN npm install --only=production
+RUN npm install --omit=dev
 
 USER 1337:1337
 ENV NODE_ENV=production
