@@ -155,7 +155,7 @@ app.backend.connection.resetSession(
     bind=True,
     autoretry_for=(Exception,),
     retry_backoff=10 * 60,
-    max_retries=0,
+    max_retries=int(os.environ.get("WORKER_MAX_RETRIES", 2)),
     retry_backoff_max=3500 * 60,
     retry_jitter=True,
 )
@@ -557,7 +557,7 @@ def retrieve_github(self, owner: str, name: str, scan: str, sub: bool = False):
     bind=True,
     autoretry_for=(Exception,),
     retry_backoff=10 * 60,
-    max_retries=0,
+    max_retries=int(os.environ.get("WORKER_MAX_RETRIES", 2)),
     retry_backoff_max=3500 * 60,
     retry_jitter=True,
 )
