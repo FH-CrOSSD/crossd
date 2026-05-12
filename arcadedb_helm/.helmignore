@@ -1,0 +1,28 @@
+# Patterns to ignore when packaging Helm charts.
+# These files won't be added to the chart tarball.
+
+# OS files
+.DS_Store
+
+# Version control
+.git/
+.gitignore
+.bzr/
+.hg/
+.hgignore
+.svn/
+
+# IDE
+.idea/
+.project
+.vscode/
+
+# Backup / temp
+*.swp
+*.tmp
+*.orig
+*.bak
+*~
+
+# helm-unittest test suites — not part of the published chart
+tests/

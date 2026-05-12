@@ -1,0 +1,12 @@
+{{- if .Values.extraManifests }}
+---
+
+{{- range $_key, $value := .Values.extraManifests }}
+{{- with $value }}
+{{ toYaml . }}
+{{- end }}
+
+---
+
+{{- end }}
+{{- end }}

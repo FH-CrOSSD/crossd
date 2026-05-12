@@ -1,0 +1,92 @@
+suite: NetworkPolicy
+templates:
+  - networkpolicy.yaml
+release:
+  name: test
+  namespace: default
+tests:
+  - it: is not rendered by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders two NetworkPolicies when enabled
+    set:
+      networkPolicy.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: http policy has correct name and selector
+    set:
+      networkPolicy.enabled: true
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: metadata.name
+          value: test-arcadedb-http
+      - equal:
+          path: spec.podSelector.matchLabels["app.kubernetes.io/name"]
+          value: arcadedb
+      - equal:
+          path: spec.podSelector.matchLabels["app.kubernetes.io/instance"]
+          value: test
+
+  - it: http policy allows ingress on port 2480 from any source (no `from`)
+    set:
+      networkPolicy.enabled: true
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.ingress[0].ports[0].port
+          value: 2480
+      - equal:
+          path: spec.ingress[0].ports[0].protocol
+          value: TCP
+      - notExists:
+          path: spec.ingress[0].from
+
+  - it: raft policy has correct name and restricts to ArcadeDB pods
+    set:
+      networkPolicy.enabled: true
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: metadata.name
+          value: test-arcadedb-raft
+      - equal:
+          path: spec.ingress[0].from[0].podSelector.matchLabels["app.kubernetes.io/name"]
+          value: arcadedb
+      - equal:
+          path: spec.ingress[0].from[0].podSelector.matchLabels["app.kubernetes.io/instance"]
+          value: test
+      - equal:
+          path: spec.ingress[0].ports[0].port
+          value: 2434
+      - equal:
+          path: spec.ingress[0].ports[0].protocol
+          value: TCP
+
+  - it: http policy port reflects custom service.http.port
+    set:
+      networkPolicy.enabled: true
+      service.http.port: 9090
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.ingress[0].ports[0].port
+          value: 9090
+
+  - it: raft policy port reflects custom service.rpc.port
+    set:
+      networkPolicy.enabled: true
+      service.rpc.port: 5555
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.ingress[0].ports[0].port
+          value: 5555

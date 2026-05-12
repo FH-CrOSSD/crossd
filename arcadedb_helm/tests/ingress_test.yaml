@@ -1,0 +1,123 @@
+suite: Ingress
+templates:
+  - ingress.yaml
+release:
+  name: test
+  namespace: default
+tests:
+  - it: is not rendered by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders with default host and path when enabled
+    set:
+      ingress.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.name
+          value: test-arcadedb
+      - equal:
+          path: spec.rules[0].host
+          value: chart-example.local
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: ImplementationSpecific
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: test-arcadedb-http
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 2480
+
+  - it: honors className when set
+    set:
+      ingress.enabled: true
+      ingress.className: nginx
+    asserts:
+      - equal:
+          path: spec.ingressClassName
+          value: nginx
+
+  - it: omits ingressClassName when className is empty
+    set:
+      ingress.enabled: true
+    asserts:
+      - notExists:
+          path: spec.ingressClassName
+
+  - it: flows annotations through
+    set:
+      ingress.enabled: true
+      ingress.annotations:
+        kubernetes.io/ingress.class: nginx
+        cert-manager.io/cluster-issuer: letsencrypt
+    asserts:
+      - equal:
+          path: metadata.annotations["kubernetes.io/ingress.class"]
+          value: nginx
+      - equal:
+          path: metadata.annotations["cert-manager.io/cluster-issuer"]
+          value: letsencrypt
+
+  - it: renders TLS configuration when set
+    set:
+      ingress.enabled: true
+      ingress.tls:
+        - secretName: my-tls
+          hosts:
+            - chart-example.local
+    asserts:
+      - equal:
+          path: spec.tls[0].secretName
+          value: my-tls
+      - equal:
+          path: spec.tls[0].hosts[0]
+          value: chart-example.local
+
+  - it: renders multiple hosts and paths
+    set:
+      ingress.enabled: true
+      ingress.hosts:
+        - host: a.example.com
+          paths:
+            - path: /
+              pathType: Prefix
+        - host: b.example.com
+          paths:
+            - path: /api
+              pathType: Prefix
+            - path: /studio
+              pathType: Exact
+    asserts:
+      - equal:
+          path: spec.rules[0].host
+          value: a.example.com
+      - equal:
+          path: spec.rules[1].host
+          value: b.example.com
+      - equal:
+          path: spec.rules[1].http.paths[0].path
+          value: /api
+      - equal:
+          path: spec.rules[1].http.paths[1].path
+          value: /studio
+      - equal:
+          path: spec.rules[1].http.paths[1].pathType
+          value: Exact
+
+  - it: backend service.port.number reflects custom service.http.port
+    set:
+      ingress.enabled: true
+      service.http.port: 9090
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 9090

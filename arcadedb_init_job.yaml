@@ -1,0 +1,87 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: arcadedb-init-job
+    environment: prod
+    app.kubernetes.io/name: crossd
+    app.kubernetes.io/instance: crossd-alpha
+    app.kubernetes.io/version: "0.1"
+    app.kubernetes.io/component: arcadedb-init-job
+    app.kubernetes.io/part-of: crossd
+  name: arcadedb-init-job
+spec:
+  template:
+    spec:
+      # initContainers:
+      #   - name: wait-for-cluster
+      #     image: curlimages/curl:latest
+      #     command:
+      #       [
+      #         "sh",
+      #         "-c",
+      #         'until test $(curl -s -o /dev/null -w "%{http_code}" https://arangodb-cluster-internal:8529 --insecure --connect-timeout 2 -L) -eq 200; do echo waiting for arango cluster init to finish; sleep 2; done',
+      #       ]
+      containers:
+        - name: arcadedb-init-job
+          image: python:3.14-alpine
+          command: ["sh", "-c"]
+          args:
+            - >
+              python /init.py
+          env:
+            # - name: ROOT_USER
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: arango-root-pwd
+            #       key: username
+            - name: ARCADEDB_URL
+              value: "https://my-arcadedb-https:2490"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: ROOT_PW
+              valueFrom:
+                secretKeyRef:
+                  name: arcadedb-credentials
+                  key: rootPassword
+            - name: FRONTEND_USER
+              valueFrom:
+                secretKeyRef:
+                  name: arcadedb-frontend-pwd
+                  key: username
+            - name: FRONTEND_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: arcadedb-frontend-pwd
+                  key: password
+            - name: WORKER_USER
+              valueFrom:
+                secretKeyRef:
+                  name: arcadedb-worker-pwd
+                  key: username
+            - name: WORKER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: arcadedb-worker-pwd
+                  key: password
+          volumeMounts:
+            - name: "arcadedb-init"
+              mountPath: "/init.py"
+              subPath: "init.py"
+            - name: ca-certificates
+              mountPath: /etc/ssl/certs/
+              readOnly: true
+      restartPolicy: Never
+      volumes:
+        - name: "arcadedb-init"
+          configMap:
+            name: "arcadedb-init"
+        - name: ca-certificates
+          configMap:
+            name: cert-bundle
+            defaultMode: 0644
+            optional: false
+            items:
+              - key: ca-certificates.crt
+                path: ca-certificates.crt
+  backoffLimit: 4

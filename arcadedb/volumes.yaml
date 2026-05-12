@@ -1,0 +1,50 @@
+volumeClaimTemplates:
+  # - metadata:
+  #     name: arcadedb-data
+  #   spec:
+  #     accessModes:
+  #       - ReadWriteOnce
+  #     resources:
+  #       requests:
+  #         storage: 100Gi
+  - metadata:
+      name: arcadedb-config
+    spec: 
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 2Gi
+
+volumes:
+  # - name: arcadedb-data
+  #   persistentVolumeClaim:
+  #     claimName: arcadedb-data
+  - name: arcadedb-config
+    persistentVolumeClaim:
+      claimName: arcadedb-config
+  - name: certs
+    secret:
+      secretName: arcadedb-cert-secret
+  - name: "arcadedb-groups"
+    configMap:
+      name: "arcadedb-groups"
+
+volumeMounts:
+  # - name: arcadedb-data
+  #   mountPath: /data
+  - name: arcadedb-config
+    mountPath: /home/arcadedb/config
+  - name: certs
+    mountPath: "/certs"
+    readOnly: true
+  - name: "arcadedb-groups"
+    mountPath: "/home/arcadedb/config/server-groups.json"
+    subPath: "server-groups.json"
+
+arcadedb:
+  databaseDirectory: "/data"
+
+persistence:
+  enabled: true
+  size: 100Gi

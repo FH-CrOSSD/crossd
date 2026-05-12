@@ -1,0 +1,46 @@
+arcadedb:
+  extraCommands:
+    - -Darcadedb.server.mode=development
+    - -Darcadedb.ssl.enabled=true
+    - -Darcadedb.ssl.keyStore=/certs/keystore.jks
+    - -Darcadedb.ssl.keyStorePassword=${keyStorePass}
+    - -Darcadedb.ssl.trustStore=/certs/truststore.jks
+    - -Darcadedb.ssl.trustStorePassword=${keyStorePass}
+  extraEnvironment:
+    - name: keyStorePass
+      valueFrom:
+        secretKeyRef:
+          name: arcadedb-jks-password-secret
+          key: password
+    # - name: trustStorePass
+    #   valueFrom:
+    #     secretKeyRef:
+    #       name: arcadedb-jks-password-secret
+    #       key: password
+  credentials:
+    rootPassword:
+      secret:
+        name: arcadedb-credentials
+        key: rootPassword
+
+  ## Uncomment and configure to enable wire-protocol plugins.
+  # plugins: 
+    # gremlin:
+    #   enabled: true
+    #   port: 8182
+    # postgres:
+    #   enabled: true
+    #   port: 5432
+    # mongo:
+    #   enabled: false
+    #   port: 27017
+    # redis:
+    #  enabled: false
+    #  port: 6379
+    # prometheus:
+    #   enabled: false
+    ## Custom plugin example:
+    # myPlugin:
+    #   enabled: true
+    #   port: 1234
+    #   class: com.example.MyPlugin

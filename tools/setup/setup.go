@@ -316,6 +316,24 @@ func main() {
 			doCommand("microk8s", "kubectl", "create", "configmap", "arango-init", "--from-file", "arango-init/arango_init.js")
 		}
 
+		cmd = mkCmd("microk8s", "kubectl", "get", "configmap", "arcadedb-init")
+		_, err = cmd.CombinedOutput()
+
+		if err == nil {
+			pterm.Info.Println("configmap arcadedb-init already exists")
+		} else {
+			doCommand("microk8s", "kubectl", "create", "configmap", "arcadedb-init", "--from-file", "arcadedb/init/init.py")
+		}
+
+		cmd = mkCmd("microk8s", "kubectl", "get", "configmap", "arcadedb-groups")
+		_, err = cmd.CombinedOutput()
+
+		if err == nil {
+			pterm.Info.Println("configmap arcadedb-groups already exists")
+		} else {
+			doCommand("microk8s", "kubectl", "create", "configmap", "arcadedb-groups", "--from-file", "arcadedb/config/server-groups.json")
+		}
+
 		pterm.Info.Println("Setting up cluster pods and services")
 		doCommand("microk8s", "kubectl", "apply", "-f", ".")
 

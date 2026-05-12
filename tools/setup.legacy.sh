@@ -41,4 +41,7 @@ microk8s kubectl apply -f arango
 microk8s kubectl apply -f secrets
 microk8s kubectl create configmap arango-init --from-file arango-init/arango_init.js
 
+microk8s kubectl create configmap arcadedb-init --from-file arcadedb/init/init.py
+microk8s kubectl create configmap arcadedb-groups --from-file arcadedb/config/server-groups.json
+
 microk8s kubectl apply -f .

@@ -1,0 +1,56 @@
+suite: Quorum guard and helper fail-assertions
+release:
+  name: test
+  namespace: default
+tests:
+  - it: HPA fails when minReplicas=1 violates quorum (maxReplicas=5 needs >=3)
+    templates:
+      - hpa.yaml
+    set:
+      autoscaling.enabled: true
+      autoscaling.minReplicas: 1
+      autoscaling.maxReplicas: 5
+    asserts:
+      - failedTemplate:
+          errorMessage: "autoscaling.minReplicas (1) must be >= floor(maxReplicas/2)+1 (3) to maintain Raft quorum with maxReplicas=5. Increase minReplicas or decrease maxReplicas."
+
+  - it: HPA fails just below boundary (minReplicas=2, maxReplicas=5 needs >=3)
+    templates:
+      - hpa.yaml
+    set:
+      autoscaling.enabled: true
+      autoscaling.minReplicas: 2
+      autoscaling.maxReplicas: 5
+    asserts:
+      - failedTemplate:
+          errorMessage: "autoscaling.minReplicas (2) must be >= floor(maxReplicas/2)+1 (3) to maintain Raft quorum with maxReplicas=5. Increase minReplicas or decrease maxReplicas."
+
+  - it: HPA renders at lower quorum boundary (minReplicas=3, maxReplicas=5)
+    templates:
+      - hpa.yaml
+    set:
+      autoscaling.enabled: true
+      autoscaling.minReplicas: 3
+      autoscaling.maxReplicas: 5
+    asserts:
+      - hasDocuments: { count: 1 }
+
+  - it: HPA renders at boundary for maxReplicas=3 (needs >=2)
+    templates:
+      - hpa.yaml
+    set:
+      autoscaling.enabled: true
+      autoscaling.minReplicas: 2
+      autoscaling.maxReplicas: 3
+    asserts:
+      - hasDocuments: { count: 1 }
+
+  - it: custom plugin without port fails with "no port specified"
+    templates:
+      - statefulset.yaml
+    set:
+      arcadedb.plugins.myplugin.enabled: true
+      arcadedb.plugins.myplugin.class: com.example.MyPlugin
+    asserts:
+      - failedTemplate:
+          errorMessage: "Custom plugin 'myplugin' has no port specified."

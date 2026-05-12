@@ -1,0 +1,68 @@
+{
+  "databases": {
+    "*": {
+      "groups": {
+        "admin": {
+          "resultSetLimit": -1,
+          "readTimeout": -1,
+          "access": [
+            "updateSecurity",
+            "updateSchema",
+            "updateDatabaseSettings"
+          ],
+          "types": {
+            "*": {
+              "access": [
+                "createRecord",
+                "readRecord",
+                "updateRecord",
+                "deleteRecord"
+              ]
+            }
+          }
+        },
+        "*": {
+          "resultSetLimit": -1,
+          "readTimeout": -1,
+          "access": [],
+          "types": {
+            "*": {
+              "access": []
+            }
+          }
+        }
+      }
+    },
+    "crossd": {
+      "groups": {
+        "readonly": {
+          "resultSetLimit": -1,
+          "readTimeout": -1,
+          "access": [],
+          "types": {
+            "*": {
+              "access": [
+                "readRecord"
+              ]
+            }
+          }
+        },
+        "readwrite": {
+          "resultSetLimit": -1,
+          "readTimeout": -1,
+          "access": [],
+          "types": {
+            "*": {
+              "access": [
+                "createRecord",
+                "readRecord",
+                "updateRecord"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "version": 2
+}

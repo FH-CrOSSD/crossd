@@ -1,0 +1,51 @@
+suite: NOTES.txt
+templates:
+  - NOTES.txt
+release:
+  name: test
+  namespace: default
+tests:
+  - it: includes the application URL preamble
+    asserts:
+      - matchRegex:
+          path: raw
+          pattern: "Get the application URL"
+
+  - it: shows port-forward instructions for default ClusterIP service type
+    asserts:
+      - matchRegex:
+          path: raw
+          pattern: "kubectl --namespace default port-forward"
+
+  - it: shows ingress URLs when ingress is enabled
+    set:
+      ingress.enabled: true
+    asserts:
+      - matchRegex:
+          path: raw
+          pattern: "http://chart-example.local/"
+
+  - it: shows https URL when ingress TLS is configured
+    set:
+      ingress.enabled: true
+      ingress.tls:
+        - secretName: my-tls
+          hosts: [chart-example.local]
+    asserts:
+      - matchRegex:
+          path: raw
+          pattern: "https://chart-example.local/"
+
+  - it: warns about ephemeral data when persistence is disabled
+    set:
+      persistence.enabled: false
+    asserts:
+      - matchRegex:
+          path: raw
+          pattern: "WARNING: persistence.enabled is false"
+
+  - it: does not warn when persistence is enabled (default)
+    asserts:
+      - notMatchRegex:
+          path: raw
+          pattern: "WARNING: persistence.enabled is false"

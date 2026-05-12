@@ -1,0 +1,8 @@
+service:
+  http:
+    type: NodePort
+  https:
+    type: NodePort
+    port: 2490
+  rpc:
+    port: 2434

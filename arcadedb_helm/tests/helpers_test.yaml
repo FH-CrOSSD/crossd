@@ -1,0 +1,103 @@
+suite: Template helpers (asserted via StatefulSet)
+templates:
+  - statefulset.yaml
+release:
+  name: test
+  namespace: default
+tests:
+  - it: arcadedb.fullname produces release-name + chart-name when release name does not contain chart name
+    asserts:
+      - equal: { path: metadata.name, value: test-arcadedb }
+
+  - it: arcadedb.fullname uses release name alone when it already contains chart name
+    release:
+      name: my-arcadedb
+    asserts:
+      - equal: { path: metadata.name, value: my-arcadedb }
+
+  - it: fullnameOverride wins over auto-derived fullname
+    set:
+      fullnameOverride: custom-name
+    asserts:
+      - equal: { path: metadata.name, value: custom-name }
+
+  - it: arcadedb.k8sSuffix appears in HA command flag
+    set:
+      replicaCount: 3
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.ha.k8sSuffix=.test-arcadedb.default.svc.cluster.local"
+
+  - it: arcadedb.nodenames produces FQDN list sized to replicaCount when HPA disabled
+    set:
+      replicaCount: 3
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.ha.serverList=test-arcadedb-0.test-arcadedb.default.svc.cluster.local:2434,test-arcadedb-1.test-arcadedb.default.svc.cluster.local:2434,test-arcadedb-2.test-arcadedb.default.svc.cluster.local:2434"
+
+  - it: arcadedb.nodenames sizes to autoscaling.maxReplicas when HPA enabled and larger than replicaCount
+    set:
+      replicaCount: 3
+      autoscaling.enabled: true
+      autoscaling.minReplicas: 3
+      autoscaling.maxReplicas: 5
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.ha.serverList=test-arcadedb-0.test-arcadedb.default.svc.cluster.local:2434,test-arcadedb-1.test-arcadedb.default.svc.cluster.local:2434,test-arcadedb-2.test-arcadedb.default.svc.cluster.local:2434,test-arcadedb-3.test-arcadedb.default.svc.cluster.local:2434,test-arcadedb-4.test-arcadedb.default.svc.cluster.local:2434"
+
+  - it: arcadedb.nodenames uses custom rpc port
+    set:
+      replicaCount: 2
+      service.rpc.port: 5555
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.ha.serverList=test-arcadedb-0.test-arcadedb.default.svc.cluster.local:5555,test-arcadedb-1.test-arcadedb.default.svc.cluster.local:5555"
+
+  - it: arcadedb.plugin.parameters emits gremlin plugin entry and port
+    set:
+      arcadedb.plugins.gremlin.enabled: true
+      arcadedb.plugins.gremlin.port: 8182
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.server.plugins=GremlinServer:com.arcadedb.server.gremlin.GremlinServerPlugin"
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.gremlin.port=8182"
+
+  - it: arcadedb.plugin.parameters emits postgres plugin entry and port
+    set:
+      arcadedb.plugins.postgres.enabled: true
+      arcadedb.plugins.postgres.port: 5432
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.server.plugins=Postgres:com.arcadedb.postgres.PostgresProtocolPlugin"
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.postgres.port=5432"
+
+  - it: arcadedb.plugin.parameters emits prometheus plugin without port flag
+    set:
+      arcadedb.plugins.prometheus.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.server.plugins=Prometheus:com.arcadedb.metrics.prometheus.PrometheusMetricsPlugin"
+      - notContains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.prometheus.port=0"
+
+  - it: arcadedb.plugin.parameters emits custom plugin entry with class
+    set:
+      arcadedb.plugins.myplugin.enabled: true
+      arcadedb.plugins.myplugin.port: 1234
+      arcadedb.plugins.myplugin.class: com.example.MyPlugin
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.server.plugins=myplugin:com.example.MyPlugin"

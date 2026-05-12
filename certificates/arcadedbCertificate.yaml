@@ -1,0 +1,24 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: arcadedb-cert
+spec:
+  secretName: arcadedb-cert-secret
+  isCA: false
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+    - "my-arcadedb-http"
+    - "my-arcadedb-https"
+    - "my-arcadedb-https-external"
+    - "my-arcadedb"
+  issuerRef:
+    name: my-ca-issuer
+    kind: ClusterIssuer
+  keystores:
+    jks:
+      create: true
+      passwordSecretRef: # Password used to encrypt the keystore
+        key: password
+        name: arcadedb-jks-password-secret

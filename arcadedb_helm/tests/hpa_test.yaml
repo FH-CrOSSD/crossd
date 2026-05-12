@@ -1,0 +1,91 @@
+suite: HorizontalPodAutoscaler
+templates:
+  - hpa.yaml
+release:
+  name: test
+  namespace: default
+tests:
+  - it: is not rendered by default
+    asserts:
+      - hasDocuments: { count: 0 }
+
+  - it: renders with valid quorum
+    set:
+      autoscaling.enabled: true
+      autoscaling.minReplicas: 3
+      autoscaling.maxReplicas: 5
+    asserts:
+      - hasDocuments: { count: 1 }
+      - isKind: { of: HorizontalPodAutoscaler }
+      - equal: { path: metadata.name, value: test-arcadedb }
+      - equal: { path: spec.minReplicas, value: 3 }
+      - equal: { path: spec.maxReplicas, value: 5 }
+      - equal: { path: spec.scaleTargetRef.apiVersion, value: apps/v1 }
+      - equal: { path: spec.scaleTargetRef.kind, value: StatefulSet }
+      - equal: { path: spec.scaleTargetRef.name, value: test-arcadedb }
+
+  - it: includes CPU metric by default (targetCPUUtilizationPercentage=80 in values.yaml)
+    set:
+      autoscaling.enabled: true
+      autoscaling.minReplicas: 3
+      autoscaling.maxReplicas: 5
+    asserts:
+      - contains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 80
+
+  - it: omits CPU metric when targetCPUUtilizationPercentage is null
+    set:
+      autoscaling.enabled: true
+      autoscaling.minReplicas: 3
+      autoscaling.maxReplicas: 5
+      autoscaling.targetCPUUtilizationPercentage: null
+    asserts:
+      - equal:
+          path: spec.metrics
+          value: null
+
+  - it: includes memory metric when targetMemoryUtilizationPercentage is set
+    set:
+      autoscaling.enabled: true
+      autoscaling.minReplicas: 3
+      autoscaling.maxReplicas: 5
+      autoscaling.targetMemoryUtilizationPercentage: 75
+    asserts:
+      - contains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: memory
+              target:
+                type: Utilization
+                averageUtilization: 75
+
+  - it: omits memory metric by default
+    set:
+      autoscaling.enabled: true
+      autoscaling.minReplicas: 3
+      autoscaling.maxReplicas: 5
+    asserts:
+      - notContains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: memory
+
+  - it: respects custom min/max
+    set:
+      autoscaling.enabled: true
+      autoscaling.minReplicas: 4
+      autoscaling.maxReplicas: 7
+    asserts:
+      - equal: { path: spec.minReplicas, value: 4 }
+      - equal: { path: spec.maxReplicas, value: 7 }

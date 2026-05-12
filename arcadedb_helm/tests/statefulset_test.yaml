@@ -1,0 +1,462 @@
+suite: StatefulSet
+templates:
+  - statefulset.yaml
+release:
+  name: test
+  namespace: default
+tests:
+  - it: renders one StatefulSet by default
+    asserts:
+      - hasDocuments: { count: 1 }
+      - isKind: { of: StatefulSet }
+      - equal: { path: metadata.name, value: test-arcadedb }
+      - equal: { path: spec.serviceName, value: test-arcadedb }
+
+  - it: podManagementPolicy is Parallel for reliable HA bootstrap
+    asserts:
+      - equal: { path: spec.podManagementPolicy, value: Parallel }
+
+  - it: default replicas is 1
+    asserts:
+      - equal: { path: spec.replicas, value: 1 }
+
+  - it: replicas field is omitted when autoscaling is enabled
+    set:
+      autoscaling.enabled: true
+      autoscaling.minReplicas: 3
+      autoscaling.maxReplicas: 5
+    asserts:
+      - notExists: { path: spec.replicas }
+
+  - it: respects custom replicaCount
+    set:
+      replicaCount: 3
+    asserts:
+      - equal: { path: spec.replicas, value: 3 }
+
+  - it: selector matches expected app labels
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/name"]
+          value: arcadedb
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/instance"]
+          value: test
+
+  - it: image string composes registry/repository:tag, defaulting tag to AppVersion
+    asserts:
+      - equal:
+          path: "spec.template.spec.containers[0].image"
+          value: arcadedata/arcadedb:26.4.2
+
+  - it: image.tag override wins over AppVersion default
+    set:
+      image.tag: "27.0.0-rc1"
+    asserts:
+      - equal:
+          path: "spec.template.spec.containers[0].image"
+          value: arcadedata/arcadedb:27.0.0-rc1
+
+  - it: image.registry and image.repository overrides flow through
+    set:
+      image.registry: my-registry.example.com
+      image.repository: arcadedb-fork
+    asserts:
+      - equal:
+          path: "spec.template.spec.containers[0].image"
+          value: my-registry.example.com/arcadedb-fork:26.4.2
+
+  - it: image.pullPolicy default is IfNotPresent and is overridable
+    asserts:
+      - equal:
+          path: "spec.template.spec.containers[0].imagePullPolicy"
+          value: IfNotPresent
+
+  - it: image.pullPolicy override flows through
+    set:
+      image.pullPolicy: Always
+    asserts:
+      - equal:
+          path: "spec.template.spec.containers[0].imagePullPolicy"
+          value: Always
+
+  - it: container exposes http port 2480 and rpc port 2434 by default
+    asserts:
+      - contains:
+          path: "spec.template.spec.containers[0].ports"
+          content: { name: http, containerPort: 2480, protocol: TCP }
+      - contains:
+          path: "spec.template.spec.containers[0].ports"
+          content: { name: rpc, containerPort: 2434, protocol: TCP }
+
+  - it: container ports reflect custom service.http.port and service.rpc.port
+    set:
+      service.http.port: 9090
+      service.rpc.port: 5555
+    asserts:
+      - contains:
+          path: "spec.template.spec.containers[0].ports"
+          content: { name: http, containerPort: 9090, protocol: TCP }
+      - contains:
+          path: "spec.template.spec.containers[0].ports"
+          content: { name: rpc, containerPort: 5555, protocol: TCP }
+
+  - it: liveness and readiness probes default to /api/v1/ready on http port
+    asserts:
+      - equal:
+          path: "spec.template.spec.containers[0].livenessProbe.httpGet.path"
+          value: /api/v1/ready
+      - equal:
+          path: "spec.template.spec.containers[0].livenessProbe.httpGet.port"
+          value: http
+      - equal:
+          path: "spec.template.spec.containers[0].readinessProbe.httpGet.path"
+          value: /api/v1/ready
+      - equal:
+          path: "spec.template.spec.containers[0].readinessProbe.httpGet.port"
+          value: http
+
+  - it: HA flags are absent when replicaCount is 1 and autoscaling is disabled
+    asserts:
+      - notContains:
+          path: "spec.template.spec.containers[0].command"
+          content: "-Darcadedb.ha.enabled=true"
+      - notContains:
+          path: "spec.template.spec.containers[0].command"
+          content: "-Darcadedb.ha.k8s=true"
+
+  - it: HA flags render when replicaCount > 1
+    set:
+      replicaCount: 3
+    asserts:
+      - contains:
+          path: "spec.template.spec.containers[0].command"
+          content: "-Darcadedb.ha.enabled=true"
+      - contains:
+          path: "spec.template.spec.containers[0].command"
+          content: "-Darcadedb.ha.k8s=true"
+      - contains:
+          path: "spec.template.spec.containers[0].command"
+          content: "-Darcadedb.ha.raftPort=2434"
+
+  - it: HA flags render when autoscaling is enabled even with replicaCount 1
+    set:
+      autoscaling.enabled: true
+      autoscaling.minReplicas: 3
+      autoscaling.maxReplicas: 5
+    asserts:
+      - contains:
+          path: "spec.template.spec.containers[0].command"
+          content: "-Darcadedb.ha.enabled=true"
+
+  - it: serviceAccountName flows from arcadedb.serviceAccountName helper
+    asserts:
+      - equal: { path: spec.template.spec.serviceAccountName, value: test-arcadedb }
+
+  - it: serviceAccountName falls back to "default" when create=false and no name
+    set:
+      serviceAccount.create: false
+    asserts:
+      - equal: { path: spec.template.spec.serviceAccountName, value: default }
+
+  - it: serviceAccountName uses custom name when provided
+    set:
+      serviceAccount.name: my-sa
+    asserts:
+      - equal: { path: spec.template.spec.serviceAccountName, value: my-sa }
+
+  - it: env contains HOSTNAME from metadata.name field reference
+    asserts:
+      - contains:
+          path: "spec.template.spec.containers[0].env"
+          content:
+            name: HOSTNAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+
+  - it: env contains POD_ID from status.podIP field reference
+    asserts:
+      - contains:
+          path: "spec.template.spec.containers[0].env"
+          content:
+            name: POD_ID
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+
+  - it: pod-level security context defaults render
+    asserts:
+      - equal: { path: spec.template.spec.securityContext.runAsNonRoot, value: true }
+      - equal: { path: spec.template.spec.securityContext.fsGroup, value: 1000 }
+
+  - it: container-level security context defaults render
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsGroup
+          value: 1000
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.capabilities.drop[0]
+          value: ALL
+
+  - it: pod-level security context can be overridden
+    set:
+      podSecurityContext:
+        runAsNonRoot: false
+        fsGroup: 2000
+    asserts:
+      - equal: { path: spec.template.spec.securityContext.runAsNonRoot, value: false }
+      - equal: { path: spec.template.spec.securityContext.fsGroup, value: 2000 }
+
+  - it: persistence enabled by default renders volumeMount and volumeClaimTemplate
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: arcadedb-data
+            mountPath: /home/arcadedb/databases
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: arcadedb-data
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: ReadWriteOnce
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 8Gi
+
+  - it: persistence disabled removes volumeMount and volumeClaimTemplate
+    set:
+      persistence.enabled: false
+    asserts:
+      - isEmpty:
+          path: spec.volumeClaimTemplates
+      - isEmpty:
+          path: spec.template.spec.containers[0].volumeMounts
+
+  - it: persistence size and storageClass overrides flow through
+    set:
+      persistence.size: 100Gi
+      persistence.storageClass: fast-ssd
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 100Gi
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: fast-ssd
+
+  - it: persistence accessMode override flows through
+    set:
+      persistence.accessMode: ReadWriteMany
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: ReadWriteMany
+
+  - it: rootPassword env defaults to auto-generated secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: rootPassword
+            valueFrom:
+              secretKeyRef:
+                name: arcadedb-credentials-secret
+                key: rootPassword
+
+  - it: rootPassword env points at user-supplied secret when configured
+    set:
+      arcadedb.credentials.rootPassword.secret.name: my-secret
+      arcadedb.credentials.rootPassword.secret.key: my-key
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: rootPassword
+            valueFrom:
+              secretKeyRef:
+                name: my-secret
+                key: my-key
+                optional: false
+
+  - it: imagePullSecrets flow through when set
+    set:
+      imagePullSecrets:
+        - name: regcred
+    asserts:
+      - contains:
+          path: spec.template.spec.imagePullSecrets
+          content: { name: regcred }
+
+  - it: imagePullSecrets are absent by default
+    asserts:
+      - notExists: { path: spec.template.spec.imagePullSecrets }
+
+  - it: podAnnotations flow through
+    set:
+      podAnnotations:
+        prometheus.io/scrape: "true"
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+
+  - it: podLabels flow through (merged with chart labels)
+    set:
+      podLabels:
+        my-team: data
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels["my-team"]
+          value: data
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/name"]
+          value: arcadedb
+
+  - it: nodeSelector flows through
+    set:
+      nodeSelector:
+        disktype: ssd
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector.disktype
+          value: ssd
+
+  - it: tolerations flow through
+    set:
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: arcadedb
+          effect: NoSchedule
+    asserts:
+      - contains:
+          path: spec.template.spec.tolerations
+          content: { key: dedicated, operator: Equal, value: arcadedb, effect: NoSchedule }
+
+  - it: affinity defaults render podAntiAffinity
+    asserts:
+      - exists:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution
+
+  - it: affinity can be overridden
+    set:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values: [linux]
+    asserts:
+      - exists:
+          path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution
+
+  - it: resources flow through when set
+    set:
+      resources:
+        requests:
+          cpu: 500m
+          memory: 2Gi
+        limits:
+          memory: 4Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "500m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: "2Gi"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "4Gi"
+
+  - it: resources are empty by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].resources
+
+  - it: arcadedb.extraCommands appear in container command
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.server.mode=production"
+
+  - it: arcadedb.extraEnvironment flows through to env
+    set:
+      arcadedb.extraEnvironment:
+        - name: MY_VAR
+          value: my-value
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MY_VAR
+            value: my-value
+
+  - it: extra volumes flow through
+    set:
+      volumes:
+        - name: config
+          configMap:
+            name: my-config
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config
+            configMap: { name: my-config }
+
+  - it: extra volumeMounts flow through
+    set:
+      volumeMounts:
+        - name: config
+          mountPath: /etc/arcadedb
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: config
+            mountPath: /etc/arcadedb
+
+  - it: extra volumeClaimTemplates flow through alongside the data PVC
+    set:
+      volumeClaimTemplates:
+        - metadata: { name: arcadedb-config }
+          spec:
+            accessModes: [ReadWriteOnce]
+            resources: { requests: { storage: 1Gi } }
+    asserts:
+      - lengthEqual: { path: spec.volumeClaimTemplates, count: 2 }
+      - equal:
+          path: spec.volumeClaimTemplates[1].metadata.name
+          value: arcadedb-config
+
+  - it: command includes default databaseDirectory and defaultDatabases flags
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.server.databaseDirectory=/home/arcadedb/databases"
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.server.defaultDatabases="
+
+  - it: arcadedb.databaseDirectory and defaultDatabases flow through
+    set:
+      arcadedb.databaseDirectory: /custom/dir
+      arcadedb.defaultDatabases: "Universe[admin:pwd]"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.server.databaseDirectory=/custom/dir"
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "-Darcadedb.server.defaultDatabases=Universe[admin:pwd]"

@@ -13,3 +13,6 @@ spec:
   target:
     configMap:
       key: "ca-certificates.crt"
+    additionalFormats:
+      jks:
+        key: "bundle.jks"

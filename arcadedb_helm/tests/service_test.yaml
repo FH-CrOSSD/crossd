@@ -1,0 +1,139 @@
+suite: Service
+templates:
+  - service.yaml
+release:
+  name: test
+  namespace: default
+tests:
+  - it: renders two services by default (client + headless)
+    asserts:
+      - hasDocuments: { count: 2 }
+
+  - it: client service has correct name, type, and http port
+    documentIndex: 0
+    asserts:
+      - isKind: { of: Service }
+      - equal: { path: metadata.name, value: test-arcadedb-http }
+      - equal: { path: spec.type, value: ClusterIP }
+      - contains:
+          path: spec.ports
+          content: { port: 2480, targetPort: http, protocol: TCP, name: http }
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
+          value: arcadedb
+      - equal:
+          path: spec.selector["app.kubernetes.io/instance"]
+          value: test
+
+  - it: client service type can be overridden to LoadBalancer
+    set:
+      service.http.type: LoadBalancer
+    documentIndex: 0
+    asserts:
+      - equal: { path: spec.type, value: LoadBalancer }
+
+  - it: client service http port can be overridden
+    set:
+      service.http.port: 8080
+    documentIndex: 0
+    asserts:
+      - contains:
+          path: spec.ports
+          content: { port: 8080, targetPort: http, protocol: TCP, name: http }
+
+  - it: headless service is named after the chart fullname and has clusterIP None
+    documentIndex: 1
+    asserts:
+      - isKind: { of: Service }
+      - equal: { path: metadata.name, value: test-arcadedb }
+      - equal: { path: spec.clusterIP, value: None }
+      - equal: { path: spec.publishNotReadyAddresses, value: true }
+
+  - it: headless service exposes both http and rpc ports by default
+    documentIndex: 1
+    asserts:
+      - contains:
+          path: spec.ports
+          content: { port: 2480, targetPort: http, protocol: TCP, name: http }
+      - contains:
+          path: spec.ports
+          content: { port: 2434, targetPort: rpc, protocol: TCP, name: rpc }
+
+  - it: headless service rpc port can be overridden
+    set:
+      service.rpc.port: 5000
+    documentIndex: 1
+    asserts:
+      - contains:
+          path: spec.ports
+          content: { port: 5000, targetPort: rpc, protocol: TCP, name: rpc }
+
+  - it: headless service exposes gremlin plugin port when enabled
+    set:
+      arcadedb.plugins.gremlin.enabled: true
+      arcadedb.plugins.gremlin.port: 8182
+    documentIndex: 1
+    asserts:
+      - contains:
+          path: spec.ports
+          content: { port: 8182, targetPort: 8182, protocol: TCP, name: gremlin-port }
+
+  - it: headless service exposes postgres plugin port when enabled
+    set:
+      arcadedb.plugins.postgres.enabled: true
+      arcadedb.plugins.postgres.port: 5432
+    documentIndex: 1
+    asserts:
+      - contains:
+          path: spec.ports
+          content: { port: 5432, targetPort: 5432, protocol: TCP, name: postgres-port }
+
+  - it: headless service exposes mongo plugin port when enabled
+    set:
+      arcadedb.plugins.mongo.enabled: true
+      arcadedb.plugins.mongo.port: 27017
+    documentIndex: 1
+    asserts:
+      - contains:
+          path: spec.ports
+          content: { port: 27017, targetPort: 27017, protocol: TCP, name: mongo-port }
+
+  - it: headless service exposes redis plugin port when enabled
+    set:
+      arcadedb.plugins.redis.enabled: true
+      arcadedb.plugins.redis.port: 6379
+    documentIndex: 1
+    asserts:
+      - contains:
+          path: spec.ports
+          content: { port: 6379, targetPort: 6379, protocol: TCP, name: redis-port }
+
+  - it: prometheus plugin does not add a service port (port = -1 sentinel)
+    set:
+      arcadedb.plugins.prometheus.enabled: true
+    documentIndex: 1
+    asserts:
+      - notContains:
+          path: spec.ports
+          content: { name: prometheus-port }
+
+  - it: custom plugin with port adds a service port
+    set:
+      arcadedb.plugins.myplugin.enabled: true
+      arcadedb.plugins.myplugin.port: 1234
+      arcadedb.plugins.myplugin.class: com.example.MyPlugin
+    documentIndex: 1
+    asserts:
+      - contains:
+          path: spec.ports
+          content: { port: 1234, targetPort: 1234, protocol: TCP, name: myplugin-port }
+
+  - it: headless service selector matches StatefulSet selector
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
+          value: arcadedb
+      - equal:
+          path: spec.selector["app.kubernetes.io/instance"]
+          value: test

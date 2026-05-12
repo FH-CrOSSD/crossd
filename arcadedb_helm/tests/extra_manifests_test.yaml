@@ -1,0 +1,41 @@
+suite: Extra manifests
+templates:
+  - extra-manifests.yaml
+release:
+  name: test
+  namespace: default
+tests:
+  - it: renders nothing by default
+    asserts:
+      - hasDocuments: { count: 0 }
+
+  - it: renders a single ConfigMap from extraManifests
+    set:
+      extraManifests:
+        myConfigMap:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: my-config
+          data:
+            key: value
+    asserts:
+      - hasDocuments: { count: 1 }
+      - isKind: { of: ConfigMap }
+      - equal: { path: metadata.name, value: my-config }
+      - equal: { path: data.key, value: value }
+
+  - it: renders multiple manifests as separate documents
+    set:
+      extraManifests:
+        cm:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata: { name: cm1 }
+        secret:
+          apiVersion: v1
+          kind: Secret
+          metadata: { name: secret1 }
+          type: Opaque
+    asserts:
+      - hasDocuments: { count: 2 }
