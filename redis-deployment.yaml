@@ -31,7 +31,7 @@ spec:
         runAsUser: 1337
         runAsGroup: 1337
       containers:
-        - image: redis:7
+        - image: valkey/valkey:9-alpine #redis:7
           args:
             - sh
             - -c
@@ -58,7 +58,7 @@ spec:
       volumes:
         - name: redis-pvc
           persistentVolumeClaim:
-            claimName: redis-pvc
+            claimName: valkey-pvc
         - name: certs
           secret:
             secretName: redis-cert-secret
