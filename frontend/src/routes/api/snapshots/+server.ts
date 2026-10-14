@@ -5,6 +5,7 @@ import { aql } from "arangojs";
 
 const projectsColl = db.collection("projects");
 const scansColl = db.collection("scans");
+const metricsColl = db.collection("metrics");
 
 /** @type {import('./$types').RequestHandler} */
 /**
@@ -37,18 +38,17 @@ export async function POST({ request }) {
         const res = await db.query(aql`
         FOR doc IN ${projectsColl}
         FILTER doc.identifier == ${term}
-        LET ts = (
-            FOR scan IN doc.scans
-            FOR entry IN ${scansColl}
+        FOR scan IN doc.scans
+        FOR entry IN ${scansColl}
             FILTER scan == entry._id
-            SORT entry.issuedAt
-            RETURN entry.issuedAt
-        )
-        RETURN ts
+            FOR metric in ${metricsColl}
+                filter metric.scan_id == entry._id
+                SORT entry.issuedAt
+                RETURN entry.issuedAt
     `);
         let all = await res.all();
         // list of timestamps or empty list
-        return json(all?.[0] ?? []);
+        return json(all ?? []);
     } catch (err: any) {
         console.error(err.message);
     }
