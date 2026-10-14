@@ -46,15 +46,22 @@ export async function POST({ request }) {
         const res = await db.query(aql`
         FOR doc IN ${collection}
         FILTER LOWER(doc.identifier) LIKE LOWER(${sterm})
+
+         LET completed_scans = (
+            FOR scan in REVERSE(doc.scans)
+            FOR repo IN repositories
+            FILTER repo.scan_id == scan
+            RETURN scan
+        )
         LET timestamp = (
             FOR scan IN scans 
-            FILTER scan._id == LAST(doc.scans)
+            FILTER scan._id == FIRST(completed_scans)
             LIMIT 1
             RETURN scan.issuedAt
         )
         LET info = (
             FOR repo IN repositories
-            FILTER LAST(doc.scans) == repo.scan_id
+            FILTER FIRST(completed_scans) == repo.scan_id
             RETURN {"nameWithOwner":repo.repository.nameWithOwner,"description":repo.repository.description, "readmes":repo.repository.readmes}
         )
         LET result_available = (
