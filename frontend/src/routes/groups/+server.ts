@@ -30,19 +30,8 @@ export async function POST({ request }) {
             RETURN scan._id
         )
 
-        // Get all projects referencing those scans
-        LET projects_ = (
-            FOR project IN ${projectsColl}
-            FILTER LENGTH(INTERSECTION(project.scans, scanIds)) > 0
-            SORT project.identifier
-            RETURN project.identifier
-        )
-
         RETURN {
-            group: UNSET(group, "_key", "_id", "_rev"),
-            //scanIds: scanIds,
-            //projects: projects_
-            projects: LENGTH(projects_)
+            group: UNSET(group, "_key", "_id", "_rev")
         }
     `);
         let all = await res.all();

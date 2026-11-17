@@ -29,9 +29,9 @@
 	{:then groups}
 		{#each groups.data as group}
 			<Card size="xs" class="h-38 p-2" href="/groups/{group.group.name}">
-				<Heading tag="h5" class="">{group.group.name}</Heading>
-				<Hr class="w-full my-1" />
-				<P># of projects: {group.projects}</P>
+				<Heading tag="h5" class="mx-auto my-auto">{group.group.name}</Heading>
+				<!-- <Hr class="w-full my-1" />
+				<P># of projects: {group.projects}</P> -->
 			</Card>
 		{/each}
 	{/await}
