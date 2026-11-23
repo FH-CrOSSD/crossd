@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: flower
-          image: mher/flower:2.1
+          image: mher/flower:2.2
           ports:
             - containerPort: 5555
           command: ["sh", "-c"]
